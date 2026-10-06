@@ -1,0 +1,85 @@
+# ===== 敏感：绝不提交（密钥 / 授权 / 私有数据）=====
+*.keys
+prod.keys
+title.keys
+keys.txt
+work.bin
+*.zrif
+zrif.txt
+games.json
+# PSV / Switch 解密相关
+psvdec/
+psvdec_tmp/
+hactool*
+pkg2zip*
+*.tik
+*.nca
+*.nsp
+*.xci
+*.pkg
+
+# ===== 游戏本体 / 解包产物（体积大 + 版权）=====
+*.iso
+*.bin
+*.cpk
+*.psarc
+*.pfs
+*.dat
+*.mrg
+*.mzp
+*.xp3
+*.nsa
+*.arc
+*.7z
+*.rar
+*.zip
+*.gz
+# 提取工作缓冲与成品
+提取结果/
+_src_*/
+_work_*/
+tmp_*/
+out_*/
+sc_out/
+dec/
+romfs/
+
+# ===== 第三方工具与源码（请按 references/third-party.md 自行获取）=====
+garbro/
+kuriimu2_src/
+CriPakTools*/
+innoextract/
+criptools/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ===== 编辑器 / IDE =====
+.vscode/
+.idea/
+*.swp
+*~
+*.sublime-*
+
+# ===== 操作系统 =====
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# ===== 其他 =====
+*.log
+*.tmp
+*.bak
