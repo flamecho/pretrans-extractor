@@ -1,8 +1,10 @@
 import struct, sys
+import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 import capstone as C
 import capstone.x86 as X
 
-path = sys.argv[1] if len(sys.argv) > 1 else 'psvpfsparser.exe'
+path = os.path.join(VNTRANS_HOME, '<psvdec>/bin/win64/psvpfsparser.exe')
 data = bytearray(open(path, 'rb').read())
 e_lfanew = struct.unpack_from('<I', data, 0x3C)[0]
 coff = e_lfanew + 4

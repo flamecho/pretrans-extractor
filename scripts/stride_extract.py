@@ -5,21 +5,21 @@
 管线（2026-10-06 定稿）:
   1. RAR 解包        -> app/PCSG00491/  (NoNpDrm dump)
   2. PFS 解密        -> psvpfsparser -i <titleid dir> -o <out> -z <zRIF> -f cma.henkaku.xyz
+                        zRIF 需自备（见 references/third-party.md）
                         成功标志: keystone: matched retail hmac
-  3. eboot -> ELF    -> self2elf.py -i eboot.bin -o eboot_elf.bin -k sce_sys/package/work.bin
+  3. eboot -> ELF    -> util/self2elf.py -i eboot.bin -o eboot_elf.bin -k sce_sys/package/work.bin
   4. CPK 解包        -> scripts/cpk.py  (sc.cpk 272 / union.cpk 1927)
   5. 文本探查        -> scan_text()
 
-结论: 全库无明文日文文本。本作文本以「字形索引 / 自研编码」形式存储，需进一步逆向。
+结论: 全库无明文日文文本（见本作品解析报告）。
+      本作文本以「字形索引 / 自研编码」形式存储，需进一步逆向。
 """
 import os, sys, re, struct, zlib, hashlib, collections
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-# zRIF 与 psvdec 工具需自备（见 references/third-party.md）
-ZRIF = os.environ.get('ZRIF', '')
-PSVDEC = os.environ.get('PSVDEC', os.path.join(HERE, 'psvdec'))
-PSVPARSE = os.path.join(PSVDEC, 'bin/win64/psvpfsparser.exe')
-SELF2ELF = os.path.join(PSVDEC, 'util/self2elf.py')
+ZRIF = os.environ.get('ZRIF','')
+PSVPARSE = os.path.join(HERE, 'psvdec_tmp/psvdec-main/bin/win64/psvpfsparser.exe')
+SELF2ELF = os.path.join(HERE, 'psvdec_tmp/psvdec-main/util/self2elf.py')
 
 # ---------- 文本探查 ----------
 

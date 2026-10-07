@@ -8,6 +8,7 @@ For each ISO:
   - delete the temp QPK/QPI files for that ISO
 """
 import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 import re
 import sys
 import glob
@@ -17,11 +18,10 @@ import subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from extract_alice import extract_qpk, extract_cpk
 
-HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 Z = os.environ.get('SEVENZ', r"C:\Program Files\7-Zip\7z.exe")
-ISO_DIR = HOME
-OUT_DIR = HOME
-TMP = os.path.join(HOME, 'tmp_alice')
+ISO_DIR = VNTRANS_HOME
+OUT_DIR = VNTRANS_HOME
+TMP = os.path.join(VNTRANS_HOME, 'tmp_alice')
 
 # (required_substrings, exclude_substring_or_None, output_base_name)
 GAMES = [

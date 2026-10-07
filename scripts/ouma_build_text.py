@@ -11,6 +11,7 @@
 输出格式（用户既定规范）：UTF-8-BOM / 纯 LF / 一条一行 / 行内换行合并。
 """
 import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 import re
 import struct
 import sys
@@ -20,7 +21,7 @@ from nsac import Nsac  # noqa
 
 JP = re.compile(r'[\u3040-\u30ff\u4e00-\u9fff\uff00-\uffef\u3000-\u303f]')
 BIN = re.compile(r'[\x00-\x08\x0e-\x1f\x7f-\x9f]')
-DB = os.environ.get('VNTRANS_HOME', os.getcwd()) + '/tmp_ouma/dec/database.dat'
+DB = os.path.join(VNTRANS_HOME, 'tmp_ouma/dec/database.dat')
 
 
 def dbread(b):
@@ -116,7 +117,7 @@ def build_storytext(raw):
 def main():
     arc = Nsac(open(DB, 'rb').read())
     raw = {n: arc.b[o:o + s] for n, o, s in arc.named}
-    outdir = os.environ.get('VNTRANS_HOME', os.getcwd()) + '/tmp_ouma/out'
+    outdir = os.path.join(VNTRANS_HOME, 'tmp_ouma/out')
     os.makedirs(outdir, exist_ok=True)
 
     glossary = build_glossary(raw)

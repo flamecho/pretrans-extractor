@@ -5,9 +5,10 @@
       + W*H*bpp/8 像素;  W=2^(dim&0xF), H=2^((dim>>4)&0xF)
 格式: Vita 表 0x12/0x08=DXT5, 0x10/0x06=DXT1, 0x00=RGBA8888, 0x01=BGRA8888
 """
-import struct, zlib, sys, os
-
+import struct, zlib, sys
+import os
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
+
 PATH = os.path.join(VNTRANS_HOME, 'tmp_c2ff/dec/DATA.BIN')
 
 

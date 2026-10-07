@@ -40,11 +40,11 @@
 """
 
 import os, re, collections
-
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
+
 SRC = os.path.join(VNTRANS_HOME, '_asakiyumemishi/extracted/asaki_hitotose')
 SPT = os.path.join(SRC, 'spt')
-OUTDIR = os.environ.get('VN_OUTDIR', os.path.join(VNTRANS_HOME, '提取结果'))
+OUTDIR = os.path.join(VNTRANS_HOME, '待提取/提取结果')
 TITLE = 'あさき、ゆめみし～ひととせ～'
 PROTAG = '沙耶'
 

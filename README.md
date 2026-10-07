@@ -2,7 +2,7 @@
 
 从日文 VN / AVG 游戏的封包资源中取出剧本文本，整理为纯文本，供制作 LunaTranslator 预翻译文件使用。
 
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB) ![Version](https://img.shields.io/badge/version-1.1.0-blue)
 
 ## 简介
 
@@ -10,8 +10,8 @@
 
 仓库包含两部分：
 
-- `scripts/` —— 可直接运行的 Python 脚本（容器解包工具 + 各引擎提取器 + 探查助手）；
-- `SKILL.md` —— 一份 Agent Skill，供支持该约定的 Agent 识别与调用。
+- `scripts/` —— 可直接运行的 Python 脚本（容器解包工具 + 各引擎提取器 + 探查助手 + 交付前品检）；
+- `SKILL.md` + `references/` —— 一份 Agent Skill，采用**渐进式披露**：主文件只放必守规则与流程骨架，细节按需读分册。
 
 ## 用途与边界
 
@@ -44,6 +44,7 @@
 | Regista advGame | 自研 PRNG 流密码 |
 | Takuyo gss | `LSDARC` 容器 + `SCR 2.00` |
 | HuneX Ogre / MZX0 | `MZX0` → CP932 `_CMD()` |
+| Nitroplus NPA / NSS | NPA 归档 + 自研 NSS 脚本；`<PRE boxNN>` = 一个文本对象 |
 
 ## 快速开始
 
@@ -69,6 +70,9 @@ export VN_OUTDIR=/path/to/work/提取结果     # 输出目录
 
 python scripts/cpk.py game.cpk out/        # 解 CPK
 python scripts/scan_nested.py game_dir     # 逐层扫描，定位含日文的层
+
+# 交付前自检（退出码 0 = 通过）
+python scripts/check_text.py "提取结果/XX_全文本.txt" --name 主角名
 ```
 
 各脚本用法见文件头 docstring 与 [`scripts/INDEX.md`](scripts/INDEX.md)。
@@ -78,7 +82,7 @@ python scripts/scan_nested.py game_dir     # 逐层扫描，定位含日文的�
 | 层面 | 说明 |
 |---|---|
 | `scripts/` 下的脚本 | 纯 Python，与 Agent 无关，可独立运行 |
-| `SKILL.md` | 遵循 Agent Skills 通用约定（`SKILL.md` + `name`/`description` frontmatter）。Claude Code、WorkBuddy 等可识别；其他仅支持自有插件格式的工具需少量适配 |
+| `SKILL.md` + `references/` | 遵循 Agent Skills 通用约定（`SKILL.md` + `name`/`description` frontmatter）。Claude Code、WorkBuddy 等可识别；其他仅支持自有插件格式的工具需少量适配 |
 
 ## 输出规范
 
@@ -89,9 +93,10 @@ python scripts/scan_nested.py game_dir     # 逐层扫描，定位含日文的�
 - 主角名、术语引用、`%s` 等占位符行内展开；
 - 清除控制码，注音只保留基字；
 - 专有名词经外部资料（vndb、官方站）核对；
-- 无法解析的码位保留原码并单独列出，不作猜测。
+- 无法解析的码位保留原码并单独列出，不作猜测；
+- 只含正文与选项，不含系统 / UI 文本、说话人表等附属产物。
 
-细则见 [`references/output-spec.md`](references/output-spec.md)、[`references/workflow-checklist.md`](references/workflow-checklist.md)。
+细则见 [`SKILL.md`](SKILL.md) §0（输出规范）与 [`references/04-verify-and-report.md`](references/04-verify-and-report.md)。
 
 ## 环境变量
 
@@ -107,22 +112,28 @@ python scripts/scan_nested.py game_dir     # 逐层扫描，定位含日文的�
 
 ```
 pretrans-extractor/
-├── SKILL.md                     # Agent Skill 主文件
+├── SKILL.md                       # 主文件：必守规则 + 流程骨架 + 坑索引（先读这个）
 ├── README.md
-├── LICENSE                      # MIT
+├── CHANGELOG.md
+├── LICENSE                        # MIT
 ├── .gitignore
+├── docs/release-v1.1.0.md         # v1.1.0 版本说明
 ├── references/
-│   ├── engines.md               # 各引擎的复用要点
-│   ├── output-spec.md           # 输出规范细目
-│   ├── workflow-checklist.md    # 交付前检查清单
-│   └── third-party.md           # 第三方工具获取方式
+│   ├── 01-decrypt-decode.md       # 解密 / 解压 / 化け修复 / 官方补丁
+│   ├── 02-script-reverse.md       # 脚本结构、消息格式、宏、分支回填、点击语义
+│   ├── 03-pitfalls.md             # 全量坑 + 真实返工案例（开工前必读）
+│   ├── 04-verify-and-report.md    # 自检 / 外部核对 / 验收 / 报告
+│   ├── 05-workspace-and-tools.md  # 工作区、脚本形态、流程约定
+│   ├── engines.md                 # 30+ 引擎逐条复用要点
+│   └── third-party.md             # 第三方工具与依赖（自备）
 └── scripts/
-    ├── INDEX.md                 # 脚本与引擎的对应关系
-    ├── *_extract.py             # 各引擎提取器
-    ├── cpk.py / psarc_extract.py / cdar.py / nsac.py …   # 通用容器工具
-    ├── scan*.py / renderfont.py …                        # 探查与字体助手
-    ├── koei/                    # CRI/Koei 相关 C# 参考实现
-    └── hunex/                   # HuneX MZX0 / mrgd00 解包器
+    ├── INDEX.md                   # 脚本 → 引擎 映射
+    ├── check_text.py              # 交付前通用品检
+    ├── *_extract.py               # 各引擎提取器
+    ├── cpk.py / psarc_extract.py / cdar.py / xp3.py / nsac.py …   # 通用容器工具
+    ├── scan*.py / renderfont.py …                                  # 探查与字体助手
+    ├── koei/                      # Koei CDAR 相关 C# 参考实现
+    └── hunex/                     # HuneX MZX0 / mrgd00 解包器
 ```
 
 ## 隐私与安全
@@ -140,12 +151,16 @@ pretrans-extractor/
 
 | 内容 | 位置 |
 |---|---|
-| 方法与规范 | [`SKILL.md`](SKILL.md) |
+| 规范与流程骨架 | [`SKILL.md`](SKILL.md) |
+| 解密 / 化け修复 | [`references/01-decrypt-decode.md`](references/01-decrypt-decode.md) |
+| 脚本结构逆向 | [`references/02-script-reverse.md`](references/02-script-reverse.md) |
+| 全量坑与案例 | [`references/03-pitfalls.md`](references/03-pitfalls.md) |
+| 自检 / 核对 / 报告 | [`references/04-verify-and-report.md`](references/04-verify-and-report.md) |
+| 工作区与工具约定 | [`references/05-workspace-and-tools.md`](references/05-workspace-and-tools.md) |
 | 各引擎做法 | [`references/engines.md`](references/engines.md) |
-| 输出格式 | [`references/output-spec.md`](references/output-spec.md) |
-| 交付前自检 | [`references/workflow-checklist.md`](references/workflow-checklist.md) |
 | 第三方工具 | [`references/third-party.md`](references/third-party.md) |
 | 脚本索引 | [`scripts/INDEX.md`](scripts/INDEX.md) |
+| 更新日志 | [`CHANGELOG.md`](CHANGELOG.md) |
 
 ## 依赖
 

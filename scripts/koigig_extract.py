@@ -7,6 +7,7 @@ UI/系统: data35.mma 内 *_mode / SystemInfo
 规范: 一次点击 = 一行；行内换行合并；保留日文；不加说话人前缀；主角名 inline
 """
 import os, re, sys, struct
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 
 # ---------- MNP / MMA 解码 ----------
 KEY = bytes([
@@ -181,7 +182,6 @@ def main(src, dst):
     return stats
 
 if __name__=='__main__':
-    home=os.environ.get('VNTRANS_HOME', os.getcwd())
-    src=sys.argv[1] if len(sys.argv)>1 else os.path.join(home, '_work/koigig/iso/Setup/Disc1')
-    dst=sys.argv[2] if len(sys.argv)>2 else os.path.join(home, '_work/koigig/out.txt')
+    src=sys.argv[1] if len(sys.argv)>1 else os.path.join(VNTRANS_HOME, '_work/koigig/iso/Setup/Disc1')
+    dst=sys.argv[2] if len(sys.argv)>2 else os.path.join(VNTRANS_HOME, '_work/koigig/out.txt')
     main(src,dst)

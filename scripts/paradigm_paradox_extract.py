@@ -167,7 +167,7 @@ def extract_lines(dec: bytes):
 
 def main():
     xci, outdir = sys.argv[1], sys.argv[2]
-    keys = load_keys(os.environ.get('PROD_KEYS', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'prod.keys')))
+    keys = load_keys(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '_sw', 'prod.keys'))
     f = open(xci, 'rb')
     # root HFS0
     f.seek(0x100 + 0x30)

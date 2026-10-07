@@ -15,11 +15,12 @@ PSP アラビアンズ・シリーズ 脚本テキスト抽出
 - 出力: UTF-8 (BOM付) 、1ゲーム1ファイル
 """
 import os, re, sys
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cpk import CPK
 
-BASE = os.environ.get('VNTRANS_HOME', os.getcwd())
+BASE = VNTRANS_HOME
 
 # ロスト nam_*.png -> 日本語話者名 (26名)
 # 全て文脈またはダウト側の明示日本語名・クロス対話で検証済

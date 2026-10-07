@@ -24,7 +24,7 @@ Tiny×MACHINEGUN THE GAME  (Rejet / PC-JP)  剧本・辞典文本提取器  —�
 """
 import sys, os, re, io, struct, sqlite3, subprocess, tempfile, shutil
 
-SEVENZ = os.environ.get('SEVENZ', r"C:\Program Files\7-Zip\7z.exe")
+SEVENZ = r"C:\Program Files\7-Zip\7z.exe"
 XOR = lambda b: bytes(x ^ 0xFF for x in b)
 
 TAGRE = re.compile(r"<[^>]*>")

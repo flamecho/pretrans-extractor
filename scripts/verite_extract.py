@@ -25,16 +25,16 @@
 输出规范: UTF-8-BOM, 纯 LF, 一次点击 = 一行, 框内换行合并, 保留日文, 不加说话人前缀
 """
 import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 import re
 import sys
 import struct
 import collections
 
-HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
-BASE = os.path.join(HOME, '_work_verite')
+BASE = os.path.join(VNTRANS_HOME, '_work_verite')
 TA_DIR = os.path.join(BASE, 'textassets')
 BUNDLE = os.path.join(BASE, 'dec/PCSG00708/Media/StreamingAssets/scene@2d')
-OUT_DIR = os.environ.get('VN_OUTDIR', os.path.join(HOME, '提取结果'))
+OUT_DIR = os.path.join(VNTRANS_HOME, '提取结果')
 
 NAME = ['リーゼ', 'フォルスター']   # GMDEF.NAME = { "リーゼ", "フォルスター" }
 

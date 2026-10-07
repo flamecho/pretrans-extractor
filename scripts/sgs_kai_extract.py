@@ -4,12 +4,12 @@
 依赖：sgs_kai_ddp.py（同目录）
 """
 import sys, os, re
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import sgs_kai_ddp as K
 
-HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
-SRC = os.path.join(HOME, '_src_sgs_kai')
-OUT = os.environ.get('VN_OUTDIR', os.path.join(HOME, '提取结果'))
+SRC = os.path.join(VNTRANS_HOME, '_src_sgs_kai')
+OUT = os.path.join(VNTRANS_HOME, '提取结果')
 MSG_PFX = b'\x03\x0d\x36\xff\x01\x80'   # 剧情消息命令
 CHOICE_PFX = b'\x03\x0d\x32\xff\x02\x0d\x0c\xff\x01\x80'  # 选项/心声命令
 STR_OP  = b'\xff\x01\x80'                # 字符串参数

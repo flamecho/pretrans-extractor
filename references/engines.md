@@ -1,11 +1,11 @@
-# 项目 _trans —— 引擎复用要点（全量）
+# 引擎复用要点（全量）
 
-> 引擎复用要点全集。每个引擎含：平台/源、容器格式、解密/解压步骤、脚本结构、文本语义、陷阱、对应脚本。
-> 跨引擎的通用铁律见 `SKILL.md`；命令行手册见 `SKILL.md` §工作流。
+> 引擎复用要点全集（30+ 引擎）。每引擎含：平台/源、容器格式、解密/解压、脚本结构、文本语义、陷阱、对应脚本。
+> 跨引擎通用规则见 `SKILL.md`；脚本索引见 `../scripts/INDEX.md`。
 
 ## 引擎复用要点
 
-- **PSV NoNpDrm**：pkg2zip -x → `<psvdec>/…/psvpfsparser.exe -i app/<ID> -o dec -z <zRIF> -f cma.henkaku.xyz`（zRIF 由你自己的 dump 生成；放行 `cma.henkaku.xyz:80`，前台运行）。
+- **PSV NoNpDrm**：pkg2zip -x → `<psvdec>/…/psvpfsparser.exe -i app/<ID> -o dec -z <zRIF> -f cma.henkaku.xyz`（zRIF 见 `games.json`；放行 `cma.henkaku.xyz:80`，前台运行）。
 - **Switch XCI/NCA/NSP**（Paradigm Paradox 定案）：XCI 卡带分区可**明文**，root HFS0 偏移在 XCI 头 0x130；NSP(PFS0) 条目 `{u64 off,u64 size,u32 nameoff,u32 pad}`（0x18/条，表在 0x10，数据基址=0x10+N*0x18+strsize）。**NCA3 明文头在 0x200**（0x00 Fixed-Key / 0x100 NPDM 签名）；keygen=`max(hdr[0x206],hdr[0x220])-1`；段头 `@0x400+i*0x200`。**头 XTS 用大端 sector tweak**（`AES(k2, sector.to_bytes(16,'big'))`）。段数据 CTR：key=解密后 key area **slot2**；计数器=`rev(section_ctr)`‖`BE(pos>>4)`，须 16B 对齐起解；key_area 用 `key_area_key_application_XX`(XX=max(crypto,crypto2)-1)；RomFS 在 IVFC 末级。**Titlekey** `=AES_ECB_dec(titlekek_keygen, tik[0x180:0x190])`；★ hactool `--titlekey=` 传**加密 titlekey**。`prod.keys` 里 17B 的 `mariko_master_kek_source_*` 坏条目会让 hactool 报错 → 先过滤。参考 `<kuriimu2 源码>`。
   - ★★ **NSP 实测补充（悪役令嬢，2026-10-05）**：① **hactool 选项须写 `--keyset=<path>`，`-k <path>` 这份 build 不生效**（会回落到默认 prod.keys）。② **`hactool --titlekey=` 收的是 `.tik[0x180:0x190]` 里那段「加密」titlekey**，hactool 会自己再解一遍并打印 `Titlekey (Decrypted) (From CLI)`；真正生效的 titlekey = `AES_ECB_dec(titlekek_N, tik[0x180:0x190])`。③ **titlekek 索引 = NCA 的 Master Key Revision（`max(hdr[0x206],hdr[0x220])-1`），不是 ticket 的 0x285**（两者可差 1：本体 NCA 0x10 / ticket 0x11；更新 NCA 0x11 / ticket 0x12）。④ ticket 布局：sig(0x140)+Issuer(0x40)+TitleKeyBlock(0x100 @0x180)+…，`0x280` 版本、`0x281` titlekey type、`0x285` master key rev、`0x2A0` rights id。⑤ **旧 hactool(2020) 本体（titlekey crypto）能整段解 RomFS**；但遇 **BKTR 增量更新段会 segfault**，`--baseromfs`(用 `--romfs=`/`--section1=` 的产物) 亦报 `Failed to read RomFS directory cache!` ⇒ 增量更新落不了地；此时可**直接解更新段的 section1 并读其中 RomFS 文件表**（文件名明文可辨）来判断更新是否动了文本。⑥ `--exefsdir=`/`--romfsdir=` 可一次解出。⑦ 判定更新只加语言的实例：更新段文件表里同时出现 `adv101.CSR` 与 `adv101_en.CSR` → 仅补英文化。
 - **Koei CDAR v2/v4（コルダ/遥か）**：文本记录 `04 <u16 len> <cp932> 00`；一次点击=框边界 BOUND/M91/C7。参考 `koei/Cdar.cs`。工具 `corda_*_extract.py`/`haruka*_extract.py`/`geten_extract.py`。
@@ -210,3 +210,114 @@
 - **辞典/教程**：本作**无用語辞典、无教程文本**；全脚本检索关键词仅命中台词；UI/教程为图片（BMPDATA）。
 - **工具**：`scripts/himehibi_lsdarc.py`（LSDARC 读取）+ `himehibi_disasm.py`（SCR2.00 反汇编，含 size 表）
   + `himehibi_crawl.py`（调用图）+ `himehibi_extract.py`（文本提取）。
+
+## 自研「SJIS 索引码」—— 花宵ロマネスク（PS2, Marvelous/Vridge 2008）
+
+- **容器**：ISO9660 单轨。`DATA/*.AFS` = **CRI AFS**：头 `AFS\0` + `u32 count` + `count×{u32 offset,u32 size}`（**无独立数据起始字段，首项 offset 即数据区**）。剧本 = `DATA/SC.AFS`（SC_000 本篇 / SC_001 追加 / SC_002 语音占位 / SC_003 会話モード）。工具 `scripts/hanayoi_afs.py`。
+- **编码（核心）**：引擎把「有效 SJIS 双字节字符按码位排序后的**序号**」当内部字符码。表 = 自 SJIS 0x8140 起、按 (lead 0x81-0x9F,0xE0-0xFC × trail 0x40-0x7E,0x80-0xFC) 枚举、cp932 可解的全部双字节字符（**9,592**）。偏移分 3 段：
+  `index = code`（code ≤ 0x00CF）／`= code + 1`（0x00D0..0x01E9）／`= code + 0x74`（≥ 0x01EA）。
+  控制码 ≥ 0xF000；`0x0000` = 全角空格占位；`0x0010` = 命令操作数（记录尾/参数分隔，须跳）。
+- **★ 两处「表内错位」，勿用 cp932 直读**：
+  1. **符号/数字/全角拉丁区（表索引 0x0092..0x00CF）整体 −1 槽**：引擎字体未收 `◯`(0x81FC)，该槽缺失 ⇒ 其后前移一位，至平假名区（0x00D1 ぁ）因补入 1 字形而复位。
+     ⇒ `_L[k] = _L_snapshot[k+1]`（k∈[0x92,0xCF]）。佐证：表 0x92(◯)→实际「０」、0x93(０)→「１」…0x9B(８)→「９」；0xA1(Ｅ)→Ｆ、0xA7(Ｋ)→Ｌ、0xAA(Ｎ)→Ｏ、0xB0(Ｔ)→Ｕ。
+     实例：`０◯分`→**１０分**、`２◯を過ぎて`→**３０を過ぎて**、`０８時`→**１９時**、`４人家族`→**５人家族**、`Ｔターン`→**Ｕターン**、`ＮＫ風`→**ＯＬ風**、`『ＮＥＥ』`→**『ＯＦＦ』**。
+  2. **二级汉字块（表索引 0x0DF4 起，3,390 槽）为私有排序**：既非 SJIS 序、亦非 Unicode/JIS 序（57 样本检验均不单调），随游戏字体走。全篇仅用到 60 字，已逐字以文内语境/文内注音确证 **56 字**（映射表 `_LV2_FIX`，键 = 槽位）。例：丐→菫（注音スミレ）、个→奢（華奢）、丶→璧（完璧）、丼→凛（凛と）、丿→舐、乂→囁、乖→頷、乘→儚、亅→鬱、豫→嘲（自嘲）、亊→呟、舒→騙、弍→踪（失踪）、于→宥、亟→嗚（嗚咽）、亢→訝、亰→嘔、亳亶→霹靂、从→絆、仍→罠、仄→揉（揉め事）、仆→埃、仂仗→躊躇（注音チュウチョ）、仭→拗、仟→腑（腑に落ちない）、价→痺、伉佚→眩暈、估→嘆、佛→諍（諍（イサカ）い）、佝→几（几帳面）、佗→柩（霊柩車）、侘→嗅、佰→淹（紅茶を淹れ直す）、佯→佇、俑→梳、俔→轢、俟→曖、俎俘→琥珀、俛→傲、俚→辟（辟易）、倨→覗、亠→蕾。**待佐证 3 字**（各仅 1 处）：槽 31 `仞`、槽 46 `佻`、槽 51 `來`。
+- **消息结构（一条记录 = 一个文本框 = 一次点击）**：`FFF0`（记录起点）→ 首个 `FFFF` 之前的字符段 = **说话人名**（附 1 个槽位噪声字符，输出时略去）→ `FFFF` = 正文起点 → 正文中 **`FFFE` = 框内换行（合并）** → **`FFFE` 后继 `FFFB`/`FFFD` = 记录终止**（全量 32,108 条记录 **0 例外**；框内 ≤3 行 = 3 行文本框）。其余 ≥0xF000 跳过。
+- **★ 主人公名插入宏**：`0xFFE6` = **苗字**、`0xFFE7` = **名前**（可分开用：`<ffe6>先生`=「桐原先生」、`<ffe7>ちゃん`=「珠美ちゃん」、`<ffe6><ffe7>`=「桐原珠美」）。默认名出处：**eboot 默认名表 @0x152810**（`桐原 ⟨sep⟩ 珠美`），与 vndb v7749 主人公 Kirihara Tamami 一致。**绝不可当空控制码丢弃**。
+- **产物**：`提取结果/花宵ロマネスク_全文本.txt`（32,108 行）。工具 `scripts/hanayoi_extract.py`（解码表 + `parse_boxes`）/`hanayoi_run.py`/`hanayoi_afs.py`。
+
+## Malie System —— GreenWood（OmegaVampire repack 实证；Camellia 系）
+
+- **识别**：游戏根 `malie.ini` + `as.ini` + `maliesetup.dll`；exe manifest 含 `GreenWood.Light.malie.exe`。
+- **外层容器**：本作以 **WinRAR SFX**（WinRAR SFX module）封装，内嵌 **RAR5**（签名 `Rar!\x1a\x07\x01\x00` @ `0x48E00`，无加密、Solid）。
+  7z 可直接 `x` SFX，或按偏移切出 `.rar` 再解。资源：`data/{game,cg,voice,sound,movie}.dat`、`system/exec.dat`。
+- **资源归档 = LIBP（Camellia 加密）**：
+  - 头 `LIBP` + `u32 entry1_count` + `u32 entry2_count` + `u32 unk`（整体加密，熵 8.0）。
+  - 之后依次（**全部同样加密**）：`entry1[count1]`（32B/条：`char name[20]` + `u32 flags` + `u32 offset_index` + `u32 length`）、
+    `entry2[count2]`（`u32 offset`，单位 1024B）；数据区基址 = 表后 **1024 对齐**（v2；v1 为 4096）。
+  - `flags & 0x10000` = 文件，否则为目录（目录的 `offset_index`=entry1 起始下标、`length`=条数，递归）。
+    文件真实偏移 = `base + entry2[offset_index]*1024`。
+  - 解密 = **按 16B 块整块解密**，`DecryptBlock(block_offset)` 依赖绝对偏移（块内位移参与轮数），故支持随机访问。
+- **Camellia 解密（asmodean exdieslib 版）**：20 组**预计算密钥调度** `KEYS[20][56]`（非 raw key），
+  自实现 Camellia-128 轮函数 + 4 张 S 盒，外加每块「按偏移旋转 + 半字节交换(mutate)」。密钥靠**试用**匹配：
+  解密首 16B 得 `LIBP`/`LIBU` 即命中。
+  - **OmegaVampire repack 命中 index 11**（该槽在 exdieslib 中以《オメルタ～沈黙の掟～》命名；表 20 组覆盖 OmegaVampire/Omerta/Dies irae/神咒神威神楽 等 Camellia-Malie 家族）。
+- **剧本 = `system/exec.dat`（明文，非归档）** —— 编译后的 Malie VM 脚本：
+  ```
+  u32 全局变量数 → N×{ u32 名长(hi bit=flag) | UTF-16 名 | 递归类型链(u32 flag;≠0→跳4再递归) | 4×u32 }
+  u32 跳过1 | u32 函数数 → N×{ u32 名长 | UTF-16 名 | u32 id | u32 res | u32 codeOffset }
+  u32 标签数 → N×{ u32 名长 | UTF-16 名 | u32 codeOffset }
+  u32 VM_DATA大小 | VM_DATA        （内联 tag/标签字符串，UTF-16）
+  u32 VM_CODE大小 | VM_CODE        （字节码）
+  u32 字符串数cnt | STRING_INFO[cnt]{u32 off,u32 len} | u32 表大小 | 字符串表
+  ```
+  （另有「压缩/加密字符串表」分支：`unk*8 > 剩余文件` 时 unk=压缩长度；本作走普通分支。）
+- **VM 指令**（1B opcode）：`0x00/01/02` jmp/jnz/jz(+4B)、`0x03` call(4B id+1B argc)、`0x04` call(1B id+1B argc)、
+  `0x08/0x0D` push imm32、`0x09/0x0A/0x0C` pushStr(VM_DATA 偏移 1/2/4B)、`0x11` push imm8、`0x12` push[sp]、
+  `0x2D` vCall(4B id)、`0x31` initStack、`0x32/0x33` jmp-short/ret。
+- **文本提取**：从 `maliescenario`(函数名，本作 id 0x5D) 的 codeOffset 起线性解析至首条 `0x33`。
+  **一次点击 = 一条 `_ms_message`(id 0x2D) 调用**，其栈顶参数 = **字符串表下标**；正文 = `字符串表[vIdx[idx].off : +len]`（UTF-16LE）。
+  `MALIE_NAME`(0x48)=说话人名、`tag`(0x23)=`<layer>/<cg>/<chapter …>`、`MALIE_LABLE`(0x31) 等忽略。
+- **消息字符串内控制码（2026-10-07 修正）**：**`0x0007 0x0006` = 文本框分隔符（= 一次玩家点击）→ 必须切分成多行** ⚠️
+  （首版误当「句尾」直接丢弃，会把同一条 `_ms_message` 里的多个文本框并成一行 —— OmegaVampire 序章曾被并到 309 字）、
+  `0x0007 0x0008 <语音名NUL>`=LoadVoice、`0x0007 0x0009`=LoadVoice 结束、`0x0007 0x0001 <本体>0x0A<读音>00`=**注音**（留本体丢读音）、
+  **`0x0007 0x000C <id> 0x0000` = 主人公名宏**、`0x0000`=语音名终止/段分隔、`0x000A`=框内软换行（合并）、`0x0007 0x0004`=句内停顿（丢）、`0x0001..0x0006`=内联（跳 4/1/2/1/2/2 字符）。
+- **本作结论（OmegaVampire repack）**：34,940 条消息 ↔ 字符串表 34,940 条**一一对应**；
+  控制码归零后 30,397 行正文；主人公名宏默认 **マリア**。
+  ⚠️ **该 repack 的 `system/exec.dat` 正文实为《断罪のマリア THE EXORCISM OF MARIA》**，而其余资源为 OmegaVampire（混装包）。
+- **工具**：`scripts/malie_extract.py` —— 自带 S 盒 + 20 组密钥；`--list/--extract`（LIBP）、`--text`（exec.dat→txt）。
+
+### Malie 自保护（AlphaROM）＋内嵌剧本资源（OmegaVampire 官方版实证）
+- **引擎可把剧本内嵌进主 exe**（不落地 exec.dat）：资源 **类型 `EXEC` / 名 `MalieScenario`**。
+  `maliesetup.dll` / `KarinCfg.exe` 里同一「Install 命令」= **按名找资源(13B `repe cmpsb` "MalieScenario") → 建 z_stream → `inflateInit_`（版本串 `"1.1.4"`，zlib 1.1.4）→ 解压写出 `exec.dat`**。
+  ⇒ **该资源(解壳后)就是 zlib 流＝真 exec.dat**。辅助串：`ZLibIn_Full %s`、`LIBU`、`getLibSector %s : %d %d`、16B 串 `2JEV~fC],)kv-L]Z`。
+- **主 exe 常被 AlphaROM 加壳**（本作包内自带 `AlphaROMdiE-Build20140214` 破解器即证据）。
+  识别特征：导入表被洗成「**每 DLL 仅 1 个**」且含指纹 **`GetKeyboardType`**；`.text` 熵≈8.0、无 `55 8B EC`；段名被改坏（`.data\x009\t`）；大块原数据搬进 `.data9` 类段；有 `.detour` 段藏**原 PE 头副本**。
+  `AlphaROMdiE.exe` 用 `CreateProcessW`+`WriteProcessMemory`（**运行时内存改写**），**不能静态脱壳**。
+- **⚠️ 取证铁律：exe 内的资源目录可能是「诱饵」**——多个资源的 rva/size 区间互相重叠即证（被壳虚拟化）。
+  加壳后**不可按 rva 直读资源**；且 FIXED：`\x89PNG/IHDR/OggS/g_index/MALIE_NAME` 全 0，`78 xx` 位置 zlib 全败，raw-deflate/XOR/ADD/SUB/Camellia(20 键) 全不通 ⇒ **资源数据确被加密，纯静态拿不到**（只有 Windows 标准资源 MANIFEST/VERSION/ICON 明文可读）。
+- **正规取法（实测成功）——运行时内存转储**：
+  1. 启动游戏（**必须在交互式桌面**；沙箱/无桌面环境启动会 exit 0、无窗口、无子进程）。
+  2. `OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ)` + `VirtualQueryEx`/`ReadProcessMemory` 全量转储（本作 769 区域 / **338 MB**）——**不结束用户进程**。
+  3. **定位脚本缓冲区**：找变量表特征 `u32 0x80000012 + UTF-16 名`（如 `g_index1`）或已知角色名；本作脚本在 **VA `0x74e000`, size `0x4d1000`**（另有同内容副本 @ VA `0x6680000`），**脚本起始 = 该区域偏移 `+0xc58`**（其前 0xc58 字节是引擎另一段数据）。
+  4. 用 `parse_exec` 从该偏移解析（格式自带严格校验 → 可**逐偏移试探**自动定位起点）。
+  5. **完整性验证**：`walk_script` 取到的消息数应 == 字符串表条数、下标互异且无未引用；再对**全部函数**分别反汇编取并集比对（本作 21,568 == 21,568，0 未引用）。
+  - ⚠️ 引擎内建函数名字符串（`MALIE_NAME`/`_ms_message`/`maliescenario`/`tag`）**位于 exe 的 `.text` 区（本作 VA 0x401000）**，别误当剧本；剧本靠 `g_index` 变量表/角色名定位。
+  - 工具：`_work_omega/dump_pid.py`（按 PID 转储）、`carve.py`（定位+解析）、`final_extract.py`（出成品）、`verify.py`（完整性）。
+
+## Nitroplus NPA / NSS —— Lamento -BEYOND THE VOID- (W10, PC；NITRO CHiRAL 2006)
+> 来源：`<原始 dump 目录>/[PC-JP]Lamento -BEYOND THE VOID- Windows 10 Support Edition/L_W10.rar`
+> (RAR5 **头部加密**，密码 `Bought_by_XD92_Only_For_Anime-Sharing_2025` ← 同目录 42B `新建文本文档.txt`)
+> 成品 `提取结果/Lamento -BEYOND THE VOID-_全文本.txt`（37,310 行）。工具 `scripts/lamento_extract.py`。
+> ⚠️ **规范（用户 2026-10-07 定）：只取「显示用」文本 ⇒ `SetBacklog` 不取**（日志专用；含 6 行唯一文本被有意舍弃，见下）。
+
+- **外层**：RAR5（`Encrypted = +`，7z 不带密码连文件名都列不出）。只需解 `nss.npa`(1.7MB)/`system.npa`(2.5KB)/主 exe，CG/voice/sound ~1.9GB 免解。
+- **归档 `.npa`（NPA\x01）**：`"NPA\x01"` + u16 0 + u8 0 + **i32 key1 + i32 key2** + u8 compressed + u8 encrypted + i32 total + i32 folder + i32 file + i64 0 + u32 dir_size；entry 从 **偏移 41** 起，每项 `i32 nameLen + name + u8 type + i32 folderId + u32 off + u32 size + u32 unpacked`（步长 `4+nameLen+17`）；`entry.Offset = dir_size + off + 41`。
+- **索引名解密**：`raw[x] += DecryptName(x, i, arc_key)`，其中
+  `key = (0xFC*x - b(arc_key) - b(curfile)) & 0xFF`，`b(k)=k>>24 + k>>16 + k>>8 + k`（**注意用带符号 32 位**）；
+  `arc_key = key1+key2`（LAMENTO）或 **`key1*key2`（其余全部标题）**。名字解出可读即证明走乘积分支。
+- **★ 内容加密（本作实证）**：前 `0x1000(+nameLen)` 字节 `buf[i] = key_table[buf[i]] - key - i`（LAMENTO 则无 `-i`），
+  `key = ((NameKey - Σndecrypted_name) * nameLen [非LAMENTO: + arc_key, * unpackedSize]) & 0xFF`。
+  `key_table` = 由 `Order` 生成的 256 置换（算法见 GARbro `ArcNPA.GenerateKeyTable` / 本仓库 `lamento_extract.py::gen_table`，含 `BASE_TABLE`）。
+- **25 套预置方案（NpaTitleId: NotEncrypted/CHAOSHEAD…LAMENTO/SWEETPOOL/…/TOTONO(需再变换)/HANACHIRASU）**
+  存于 **GARbro `GameData/Formats.dat`**（头 `GARbroDB` + u32 + zlib；内容是 .NET **BinaryFormatter(NRBF)**）。
+  解析法：自写 MS-NRBF 读取器（记录 0..17；类的 member 值为 **Record**（含 String 型！）而非 inline 字符串；
+  ClassWithId 引用元数据，enum 被序列化为带 `value__` 的类）。提取出 `EncryptionScheme{TitleId,NameKey,Order}` 25 套。
+- **★ 方案认定法**：对每个候选方案试解 entry#0，判定式 = **能否还原合法 zlib 流**（0x78..）。本作唯一命中 **DJANGO**
+  （TitleId=7, NameKey=0x87654321, Order=`ee…ee 1e4e66b6`(20B)）→ 解密首行 `#base_path "../"`。
+  ⇒ **W10 版 Lamento 的 nss.npa 用的是 DJANGO 方案，不是 LAMENTO**。
+- **脚本 `.nss`（Nitroplus 自研 = NScripter 派生）**：**cp932，CRLF**。语法含 `#base_path/#include`、`scene/chapter/cut{}`、`call_chapter/call_scene/call_cut`、`function`、`{Command(...);}` 行内演出、`//` 行注释。
+- **文本载体**：
+  - `<PRE boxNN>` … `</PRE>` = **一个文本对象 = 一次 `TypeBegin("@boxNN","@textNNN")` 显示**；内部 `[textNNN]` 为标签行。
+  - 行内：`<voice name="人名" class=.. src=..>`（语音挂点，含说话人名）、`<RUBY text="…">本体</RUBY>`（注音）、`<FONT>/<I>` 标记、`<?>`。
+  - **`<K>`/`<k>`/`<Ｋ>` = クリック待ち（一次点击）**；`CreateText("extextNNN",…,"文本")`（扉文/歌詞）、`SetChoice02/03("A","B"[,C])`（选项）、`TextMirror01/02` 亦含**显示用**文本。
+  - ⚠️ **`SetBacklog("…")` = 日志专用 ⇒ 不取**（规范「只要显示用的」）。其文本经 `CreateText`/`extext` 另行上屏；
+    两处常改稿不同步（实证 `la0002` 旅人のうた `五本/陽射し/砕け散る`(显示稿) vs `５本/陽光/砕け散った`(日志稿)）⇒ 收入会造成「差一两个字的重复行」。
+  - ⚠️ **整块被 `//` 注释掉的 `<PRE>` = 作者废弃的差分/草稿，必须剔除**（否则巨量串行）。⚠️ 有**闭合括号缺失的坏标签** `[text063d`（无 `]`）→ 标签剥离须容许。
+- **「一次点击 = 一行」落地**：`<PRE>` 内**空行 = 消息分隔**，`<K>/<?>` = 显式点击；⇒ **按「空行 或 K」切分，段内连续行合并为一行**。
+  （据此跨行台词 `「そりゃ……、\n　自分が一番大事ってことか？」` 正确合并；而空行分隔的叙述行各自成行。）
+- **顺序**：`la0000` 为纯路由（无文本）；正篇按 `la/lb/lc + 4桁号` 数字序 = 剧情顺序（`la`=第一部 8,769 行 / `lb`=第二部 10,758 行 / `lc`=第三部 17,738 行）；
+  路线差分 `…as##/ba##/ra##` 紧随父文件。`extra_rec_*` 仅是 `call_chapter` 跳进正篇（本身 0 行）。
+- **主人公**：**コノエ（固定名，无改名机制 → 无名字宏）**，成品中出现 5,573 次。人名全部与 **vndb v432** 一致（标准 cp932，无字体替换槽）。
+- **复用资产**：`scripts/npa_nrbf.py`（MS-NRBF / .NET BinaryFormatter 读取器，解析 GARbro `GameData/Formats.dat` 取方案）
+  + `scripts/npa_schemes.json`（Nitroplus NPA 全部 **25 套** 预置方案 `{TitleId,NameKey,Order}`）→ 后续任何 NPA 作品可直接换方案复用。

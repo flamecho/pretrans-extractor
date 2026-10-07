@@ -4,23 +4,39 @@
 `ZRIF` / `PSVDEC`），见 `SKILL.md` §5。多数脚本用法：`python <script>.py <输入> <输出目录>`，
 具体 argv 见各文件头部 docstring。
 
-> 说明：许多 `*_extract.py` 是针对**某一款具体游戏**定稿的提取器，但其中的**容器解析 + 操作码语义 +
-> 字符层处理**可直接移植到同引擎的其他作品。移植时优先复用"容器读取"与"消息指令定位"两段。
+> `*_extract.py` 多为**针对某一款具体游戏**定稿的提取器，但其中的**容器解析 + 操作码语义 +
+> 字符层处理**可直接移植到同引擎的其它作品。移植时优先复用「容器读取」与「消息指令定位」两段。
 
-## 一、通用容器 / 封包
+## 一、交付品检（通用）
+
+| 脚本 | 作用 |
+|---|---|
+| `check_text.py` | **交付前自检**：BOM/LF/`U+FFFD`/`〓`/控制符、半角假名、PUA、引号配对、说话人残留、主角名出现性、空行/超长行/重复行。`--name` 指定主角名。退出码 0 = 通过。见 `references/04-verify-and-report.md` |
+
+## 二、通用容器 / 封包
 
 | 脚本 | 引擎 / 格式 | 说明 |
 |---|---|---|
-| `cpk.py` | CRI CPK | 表长 `(m>>8)&0xFF` 变体；判据 `@UTF` |
-| `cpk_v1.py` | CRI CPK v1 | 表长 `m&0xFF` 变体 |
-| `psarc_extract.py` | PSARC (zlib) | PSV/PS3/PS4 通用 PSARC 解包 |
+| `cpk.py` / `cpk_v1.py` | CRI CPK | 表长 `>>8` / `&0xFF` 两种变体；判据 `@UTF` |
+| `psarc_extract.py` | PSARC (zlib) | PSV/PS3/PS4 通用 |
 | `cdar.py` / `cdar_extract.py` | Koei CDAR v2/v4 | 文本记录 `04 <u16> <cp932> 00`；框边界 BOUND/M91/C7 |
 | `nsac.py` | NIS NSAC v2 | 逢魔が刻 等 |
 | `qpk.py` | QPK | ハートのアリス 等 |
+| `xp3.py` | KiriKiri XP3 | 索引枚举 + 文件抽取（含带标签索引变体） |
+| `npa_nrbf.py` | Nitroplus NPA | 归档读取（`NPA\x01`，entry 自 41 起） |
 | `ps2_extract.py` / `ps2_game.py` / `ps2_scene.py` / `ps2_vm.py` | PS2 剧本 VM | PS2 平台脚本解析 |
 | `lztest.py` | 压缩算法 | LZ 系算法试验/验证 |
 
-## 二、Takuyo gss（LSDARC + SCR 2.00）
+## 三、解密 / 化け修复
+
+| 脚本 | 引擎 / 格式 | 说明 |
+|---|---|---|
+| `chou_decrypt.py` | KiriKiri XP3（区间 XOR 键） | 解密 + 键推定（字符似然模型） |
+| `chou_fix.py` | KiriKiri XP3 | **定值复元表**：`REKEY` / `OVERRIDES` / `TEXT_PATCH` + `apply_fix()`；每条注依据 |
+| `chou_extract.py` | KiriKiri KAG3 | XP3 内 KAG3 脚本 → 显示文本 |
+| `malie_extract.py` | Malie System（GreenWood） | Camellia LIBP + α-ROM 内嵌剧本；OmegaVampire / 断罪のマリア 实证 |
+
+## 四、Takuyo gss（LSDARC + SCR 2.00）
 
 | 脚本 | 作用 |
 |---|---|
@@ -28,11 +44,10 @@
 | `himehibi_disasm.py` | `SCR 2.00` 反汇编（`u16 op + u8 size` 自定界） |
 | `himehibi_crawl.py` | 调用图爬取（含 `0x10c` 动态脚本展开） |
 | `himehibi_scan.py` | 脚本扫描 |
-| `himehibi_extract.py` | ひめひび -Princess Days-（1 学期）提取 |
-| `himehibi2_extract.py` | ひめひび 続！二学期 提取 |
+| `himehibi_extract.py` / `himehibi2_extract.py` | ひめひび 1 学期 / 続！二学期 提取 |
 | `himehibi2_eboot.py` | eboot 解析（默认主角名 / 人名槽定位） |
 
-## 三、各引擎 / 作品提取器
+## 五、各引擎 / 作品提取器
 
 | 脚本 | 引擎 | 作品示例 |
 |---|---|---|
@@ -57,9 +72,11 @@
 | `ouma_extract.py` / `ouma_story.py` / `ouma_build_text.py` | NIS-NML | 逢魔が刻 |
 | `stride_extract.py` | CRIWARE + 自研数值 VM | プリンス・オブ・ストライド |
 | `tsundere_extract.py` | Madoka GScript `CRPT` | ツンデレ★Ｓ乙女 |
-| `vn_zerodiv_extract.py` | ZeroDiv 系 | — |
-| `possession_extract.py` | （PSV） | Possession Magenta |
-| `rear_extract.py` | （PSV） | リアフェレス |
+| `lamento_extract.py` | Nitroplus NPA + NSS | Lamento -BEYOND THE VOID- |
+| `hanayoi_afs.py` / `hanayoi_extract.py` / `hanayoi_run.py` | CRI AFS + 自研索引码 | 花宵ロマネスク（PS2） |
+| `shinoda_botan_extract.py` | （PC-JP） | 篠田新宿探偵事務所 唐獅子牡丹 |
+| `vn_memdump.py` | 运行时内存转储 | 加壳引擎（α-ROM 等）取明文 |
+| `vn_zerodiv_extract.py` / `possession_extract.py` / `rear_extract.py` | 其它 PSV 系 | ZeroDiv / Possession Magenta / リアフェレス |
 | `extract_alice.py` / `extract_text.py` / `run_alice.py` | QPK/CPK | ハートのアリス |
 | `corda_*_extract.py` | Koei CDAR | 金色のコルダ 系列（1 / 2ff / 2fenc / 3FS / 3AS / オクターヴ / PSP） |
 | `haruka_extract.py` / `haruka4_extract.py` / `haruka6_extract.py` / `haruka2_eem_extract.py` | Koei CDAR / EEM | 遥か 系列 |
@@ -67,20 +84,20 @@
 | `corda_2ff_g1t.py` | G1T 字形 | 从 G1T 图集渲染字形（核对替换槽） |
 | `haruka2_appmatrix.py` / `haruka2_eemlib.py` / `haruka6_dict.py` / `haruka6_dedup.py` | 遥か 辅助 | 变量表 / 词典 / 去重 |
 
-## 四、探查 / 字符 / 字体助手
+## 六、探查 / 字符 / 字体助手
 
 | 脚本 | 作用 |
 |---|---|
 | `scanjp.py` / `scan_jp.py` / `sjis_scan.py` | 统计字节流中的日文覆盖率（定位文本层） |
 | `scan_nested.py` | 嵌套容器逐层扫描 |
 | `fullscan.py` | 全盘 / 全镜像扫描日文 |
-| `unity_scan.py` / `unity_scan2.py` | Unity 资源（TextAsset / AssetBundle）文本探查 |
+| `unity_scan.py` / `unity_scan2.py` | Unity 资源（TextAsset / AssetBundle）探查 |
 | `renderfont.py` | 从字形图集渲染指定码位（**核对字体替换槽**） |
 | `marc_font.py` | MARC 字体库解析 |
 | `pe_dis.py` | PE 反汇编（eboot / 加壳分析） |
 | `period55.py` | 5pb 周期脚本 |
 
-## 五、参考实现（非 Python）
+## 七、参考实现（非 Python）
 
 | 文件 | 说明 |
 |---|---|
