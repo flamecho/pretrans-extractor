@@ -21,11 +21,10 @@
 - **zRIF / work.bin**：
   - 从你自己的 NoNpDrm dump 的 `sce_sys/package/work.bin`（假许可，512B）用 `rif2zrif.py` 现场生成 zRIF；
     或使用 psvdec 自带的 `games.json`。
-  - ★ 经验铁律：**zRIF 与 dump 自带 `work.bin` 一致 ≠ 可用**。`psvpfsparser` 以
+  - ★ **`zRIF` 与 dump 自带 `work.bin` 一致 ≠ 可用**。`psvpfsparser` 以
     `header signature is valid` 为准；失败时改 `-k <work.bin[0x50:0x60] 的 hex>`（klicensee 常在 0x50）。
-  - `psvpfsparser` 成功标志：`keystone: matched retail hmac`。
-  - 注意：`psvpfsparser` 需要联网访问 F00D 服务 `cma.henkaku.xyz`（派生 drv_key）；网络被拦会报
-    `Error: <unspecified file>(1): expected value`——**这不是 zRIF 错误**，是网络问题。
+  - 成功标志：`keystone: matched retail hmac`。工具需联网访问 F00D 服务 `cma.henkaku.xyz`（派生 drv_key）；
+    网络被拦会报 `Error: <unspecified file>(1): expected value`——**这不是 zRIF 错误**。
 
 ## 3. Switch
 
@@ -35,25 +34,31 @@
     → hactool 直接报错，需先过滤成合规 keys 文件。
 - **titlekey**：`hactool --titlekey=` 收的是 ticket `.tik[0x180:0x190]` 里那段**加密** titlekey；
   真正生效值 = `AES_ECB_dec(titlekek_N, tik[0x180:0x190])`，其中 `N = max(hdr[0x206], hdr[0x220]) - 1`。
-- 参考实现：**Kuriimu2** <https://github.com/FanTranslatorsInternational/Kuriimu2>。
 
-## 4. 其他 / 通用
+## 4. 引擎专项参考实现
 
-- **innoextract**：<https://github.com/dscharrer/innoextract>（Inno Setup 安装包解包，免安装/无密码）。
+- **Kuriimu2**：<https://github.com/FanTranslatorsInternational/Kuriimu2>
+  （Koei CDAR 等容器解析；本仓库 `scripts/koei/*.cs` 即其插件节选）。
 - **GARbro**：<https://github.com/morkt/GARbro>（多格式封包可视化查看，逆向时对照）。
 - **CriPakTools**：`esperknight/CriPakTools`（CRI CPK 参考实现）。
+- **innoextract**：<https://github.com/dscharrer/innoextract>（Inno Setup 安装包解包，免安装/无密码）。
 - **KiriKiri**：`KrKrExtract` / `GARbro` 的 XP3 支持。
 - **SiglusEngine 静态 key**：`xmoezzz/siglus_static_key_tool`（Rust；从明文头 + LZSS 文法恢复资源 key）。
-- **Ethornell / BGI**：`Jair4x/ethornell-tools`、`KlparetlR/Bgi_asdis`、`lifegpc/msg-tool`（`scripts/bgi`）。
-- **反编译（.NET）**：无 .NET SDK 时可从 NuGet 直下 `ilspycmd` nupkg 解包后用 `dotnet ilspycmd.dll`。
+- **Ethornell / BGI**：`Jair4x/ethornell-tools`、`KlparetlR/Bgi_asdis`、`lifegpc/msg-tool`。
+- **HuneX（HESL / HLZS）**：`YuriSizuku/GalgameReverse`（`project/hunex/src/hunex_hlzs.py`，HLZS 解压参考）；
+  `wlt233/hunex_script`（HESE 反汇编，**但为另一变体**：其 `0xA0<op>` 框架 + 外部 hdlg 文本表，与本族「文本内联」不同，只能借鉴指令语义）。
+- **Nitroplus NPA**：本仓库 `scripts/npa_nrbf.py` + `scripts/npa_schemes.json`（25 套预置方案）。
+- **反编译（.NET）**：无 .NET SDK 时可从 NuGet 直下 `ilspycmd` nupkg，解压后
+  `dotnet <解压目录>/tools/net8.0/any/ilspycmd.dll <dll> -o <outdir>`。
   ```
   https://api.nuget.org/v3-flatcontainer/ilspycmd/<ver>/ilspycmd.<ver>.nupkg
   ```
 
 ## 5. 外部核对来源
 
-- **vndb**：<https://vndb.org/>（角色权威汉字 + 罗马字 + CV；`vndb.org/v<id>/chars`）。
-- 官方站 / 攻略 wiki / まとめブログ（歌名、品牌、术语）。
+- **vndb**：<https://vndb.org/>（角色权威汉字 + 罗马字 + CV；`vndb.org/v<id>/chars`；
+  API `POST api.vndb.org/kana/character`）。
+- 官方站 / 攻略 wiki / まとめブログ / ymgal（歌名、品牌、术语）。
 
 ---
 

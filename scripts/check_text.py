@@ -37,7 +37,9 @@ FFFD = '\ufffd'
 GETA = '\u3013'          # 〓（历史遗留占位符）
 NAME_PLATE = re.compile(r'^[!！]?【[^】]{1,20}】$')          # 独立名字札行
 NAME_PREFIX_BRACKET = re.compile(r'^[!！]?【[^】]{1,20}】')   # 行首【名】＋正文
-NAME_PREFIX_COLON = re.compile(r'^[^\s「（(【]{1,8}[：:]')       # 行首 名前：
+# 行首 名前：/名前「。前缀里出现句读符号（。、！？…）说明不是「名字札」而是正文
+# （Norn9 的「人名。ジョブ：…」人物卡曾被此规则误报 → 2026-10-10 收紧）
+NAME_PREFIX_COLON = re.compile(r'^[^\s。「、！？…‥（(【]{1,8}[：:]')
 # 允许的常见「非假名/汉字」符号（日文正文里的正当字符）
 ALLOWED_SYM = set('　、。・…‥—―‐−─～〜「」『』（）()［］[]｛｝{}〈〉《》【】〔〕'
                   '！？!?，,．.：:；;／/＼＊*＃#＠@＆&％%＋+＝=＜＞'
@@ -100,9 +102,10 @@ def check(path: str, names, maxlen: float, quiet: bool):
         ca, cb = text.count(a), text.count(b)
         if ca != cb:
             err.append('引号不配对 %s=%d / %s=%d' % (a, ca, b, cb))
-    openq = [l for l in lines if l.startswith('「') and not l.rstrip().endswith('」')]
+    # 行首「」但引号在行中已闭合（如「…」と、…）は正常。真に不均衡な行のみ報じる。
+    openq = [l for l in lines if l.startswith('「') and l.count('「') > l.count('」')]
     if openq:
-        err.append('行首「未以」收尾 ×%d（行被吞/断行）: %s'
+        err.append('行首「未闭合 ×%d（行被吞/断行）: %s'
                    % (len(openq), ' | '.join(l[:30] for l in openq[:3])))
 
     # ---- 说话人残留 ----

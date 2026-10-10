@@ -389,25 +389,36 @@ def detect_key(head):
     return None
 
 def read_libp(data, key):
+    """解 LIBP。**块大小不固定**：PC 版 Malie 多为 1024B，PSV 版 MalieVita 为 2048B
+    （exdieslib 注释也承认「Maybe this was always a bug」）。这里以「最大偏移最贴近
+    文件尾」为判据自动选择 1024 / 2048（可选 4096）。"""
     hdr = read_decrypt(data, key, 0, 16)
     sig, e1, e2, _ = struct.unpack_from("<4sIII", hdr, 0)
-    base = 16
-    r1 = read_decrypt(data, key, base, e1*32); base += e1*32
-    r2 = read_decrypt(data, key, base, e2*4);  base += e2*4
-    base = (base + 1023) & ~1023
+    jbase = 16
+    r1 = read_decrypt(data, key, jbase, e1*32); jbase += e1*32
+    r2 = read_decrypt(data, key, jbase, e2*4);  jbase += e2*4
+    E2 = list(struct.unpack_from("<%dI"%e2, r2, 0))
+    mx = max(E2) if E2 else 0
+    base, unit = None, None
+    best = None
+    for u in (1024, 2048, 4096):
+        b = (jbase + u - 1) & ~(u - 1)
+        d = abs(b + mx*u - len(data))
+        if best is None or d < best[0]:
+            best = (d, b, u)
+    _, base, unit = best
     E1 = []
     for i in range(e1):
         nm = r1[i*32:i*32+20].split(b"\x00")[0].decode("cp932","replace")
         fl, oi, ln = struct.unpack_from("<III", r1, i*32+20)
         E1.append((nm, fl, oi, ln))
-    E2 = list(struct.unpack_from("<%dI"%e2, r2, 0))
     out = []
     def walk(p, st, cnt):
         for i in range(cnt):
             nm, fl, oi, ln = E1[st+i]
             full = (p + "/" + nm) if p else nm
             if fl & 0x10000:
-                out.append((full, base + E2[oi]*1024, ln))
+                out.append((full, base + E2[oi]*unit, ln))
             else:
                 walk(full, oi, ln)
     walk("", 0, 1)

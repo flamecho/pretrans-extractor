@@ -2,7 +2,7 @@
 
 从日文 VN / AVG 游戏的封包资源中取出剧本文本，整理为纯文本，供制作 LunaTranslator 预翻译文件使用。
 
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB) ![Version](https://img.shields.io/badge/version-1.1.0-blue)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB) ![Version](https://img.shields.io/badge/version-1.2.0-blue)
 
 ## 简介
 
@@ -117,18 +117,26 @@ pretrans-extractor/
 ├── CHANGELOG.md
 ├── LICENSE                        # MIT
 ├── .gitignore
-├── docs/release-v1.1.0.md         # v1.1.0 版本说明
+├── docs/release-v1.2.0.md         # v1.2.0 版本说明
 ├── references/
 │   ├── 01-decrypt-decode.md       # 解密 / 解压 / 化け修复 / 官方补丁
 │   ├── 02-script-reverse.md       # 脚本结构、消息格式、宏、分支回填、点击语义
-│   ├── 03-pitfalls.md             # 全量坑 + 真实返工案例（开工前必读）
+│   ├── 03a-decode-basics.md       # 解码 · 通用（字符宽度 / 替换槽 / 化け / PFS）
+│   ├── 03b-decode-archive.md      # 解码 · 容器 / 归档 / 定长表 案例
+│   ├── 03c-decode-wsc-ops.md      # 解码 · WSC / 前缀区块 / 块单位 / opcode 平移
+│   ├── 03d-extract-lines.md       # 提取成行 · 行粒度
+│   ├── 03e-deliver-flow.md        # 交付 / 流程阶段
 │   ├── 04-verify-and-report.md    # 自检 / 外部核对 / 验收 / 报告
-│   ├── 05-workspace-and-tools.md  # 工作区、脚本形态、流程约定
-│   ├── engines.md                 # 30+ 引擎逐条复用要点
+│   ├── 05-workspace-and-tools.md  # 工作区、脚本形态、上下文卫生、决策纪律
+│   ├── engines.md                 # 引擎**路由表**（一句话索引 + 详见列）
+│   ├── engines/                   # 单引擎全量分册（一引擎一文件，≤10 KB）
 │   └── third-party.md             # 第三方工具与依赖（自备）
 └── scripts/
     ├── INDEX.md                   # 脚本 → 引擎 映射
+    ├── identify.py                # S0 识别：一次调用给出「引擎 + 建议命令 + 该读哪份 engines/*.md」
     ├── check_text.py              # 交付前通用品检
+    ├── probe.py                   # 限量探查（≤80 行），替代 xxd 整文件 dump
+    ├── memcheck.py                # 体积体检（>10 KB 提醒拆文件）
     ├── *_extract.py               # 各引擎提取器
     ├── cpk.py / psarc_extract.py / cdar.py / xp3.py / nsac.py …   # 通用容器工具
     ├── scan*.py / renderfont.py …                                  # 探查与字体助手
@@ -154,10 +162,14 @@ pretrans-extractor/
 | 规范与流程骨架 | [`SKILL.md`](SKILL.md) |
 | 解密 / 化け修复 | [`references/01-decrypt-decode.md`](references/01-decrypt-decode.md) |
 | 脚本结构逆向 | [`references/02-script-reverse.md`](references/02-script-reverse.md) |
-| 全量坑与案例 | [`references/03-pitfalls.md`](references/03-pitfalls.md) |
+| 解码 · 通用 | [`references/03a-decode-basics.md`](references/03a-decode-basics.md) |
+| 解码 · 容器/归档案例 | [`references/03b-decode-archive.md`](references/03b-decode-archive.md) |
+| 解码 · WSC/opcode 平移 | [`references/03c-decode-wsc-ops.md`](references/03c-decode-wsc-ops.md) |
+| 提取成行 | [`references/03d-extract-lines.md`](references/03d-extract-lines.md) |
+| 交付 / 流程 | [`references/03e-deliver-flow.md`](references/03e-deliver-flow.md) |
 | 自检 / 核对 / 报告 | [`references/04-verify-and-report.md`](references/04-verify-and-report.md) |
 | 工作区与工具约定 | [`references/05-workspace-and-tools.md`](references/05-workspace-and-tools.md) |
-| 各引擎做法 | [`references/engines.md`](references/engines.md) |
+| 各引擎做法 | [`references/engines.md`](references/engines.md)（路由表）→ `references/engines/*.md` |
 | 第三方工具 | [`references/third-party.md`](references/third-party.md) |
 | 脚本索引 | [`scripts/INDEX.md`](scripts/INDEX.md) |
 | 更新日志 | [`CHANGELOG.md`](CHANGELOG.md) |

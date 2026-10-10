@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """あさき、ゆめみし～ひととせ～ (PC / 澪 / System-NNN「NNNLib」引擎) 全文本提取 · 定稿
 
-源：<游戏原始 dump 目录>/[PC-JP]あさき、ゆめみし～ひととせ～.rar
+源：<原始 dump 目录>/[PC-JP]あさき、ゆめみし～ひととせ～.rar
     RAR5 加密（密码 otoame）→ asaki_hitotose/{asaki_hitotose.exe, spt/*.spt, spt/*.xtx, dwq/*.gpk}
     · .spt = 剧本（二进制字节码）—— 文本在此
     · .xtx = 配置（纯 cp932 文本）
