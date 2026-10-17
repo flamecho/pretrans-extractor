@@ -42,8 +42,13 @@ def scan(root, pats, label, limit, out):
         elif is_log:
             if s > 30 * 1024:
                 flag = '  [i] 历史日志 > 30 KB（按需 Grep 即可；要归档就挪进 works/<slug>.md）'
-        elif s > lim:
-            flag = '  [W] 超 %d KB ⇒ 按主题拆' % (lim // 1024)
+        elif s > lim and name.endswith('.md'):
+            # 体积上限是**文档**的约定（docstring: 「其它 .md / engines/*.md」）；
+            # scripts/*.py 只列大小不报警 —— 脚本须单文件自包含（check_text.py 与 scripts/ 同版），
+            # 按体积拆脚本是错的（2026-10-15 修正）。
+            flag = '  [W] 超 %d KB ⇒ 按主题拆（`split_md.py %s --dry-run` 先看切点）' % (lim // 1024, name)
+        elif s > lim * 0.96 and name.endswith('.md') and name != 'SKILL.md':
+            flag = '  [i] 已达 96%% 上限（%d B，余 %d B）⇒ 下次新增前先拆' % (s, lim - s)
         out.append('  %7.1f KB  %s%s' % (kb(s), name, flag))
 
 

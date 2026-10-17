@@ -1,6 +1,6 @@
 # CRI（CPK / AFS / 自研索引码）
 
-> 路由 / 一句话索引见 `../engines.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
 
 - **CRI CPK**：`cpk.py`((m>>8)&0xFF) / `cpk_v1.py`(m&0xFF)；判据 `@UTF`。
 
@@ -18,3 +18,28 @@
 - **消息结构（一条记录 = 一个文本框 = 一次点击）**：`FFF0`（记录起点）→ 首个 `FFFF` 之前的字符段 = **说话人名**（附 1 个槽位噪声字符，输出时略去）→ `FFFF` = 正文起点 → 正文中 **`FFFE` = 框内换行（合并）** → **`FFFE` 后继 `FFFB`/`FFFD` = 记录终止**（全量 32,108 条记录 **0 例外**；框内 ≤3 行 = 3 行文本框）。其余 ≥0xF000 跳过。
 - **★ 主人公名插入宏**：`0xFFE6` = **苗字**、`0xFFE7` = **名前**（可分开用：`<ffe6>先生`=「桐原先生」、`<ffe7>ちゃん`=「珠美ちゃん」、`<ffe6><ffe7>`=「桐原珠美」）。默认名出处：**eboot 默认名表 @0x152810**（`桐原 ⟨sep⟩ 珠美`），与 vndb v7749 主人公 Kirihara Tamami 一致。**绝不可当空控制码丢弃**。
 - **产物**：`提取结果/花宵ロマネスク_全文本.txt`（32,108 行）。工具 `scripts/hanayoi_extract.py`（解码表 + `parse_boxes`）/`hanayoi_run.py`/`hanayoi_afs.py`。
+
+## CRI CPK「块流」变体 + CRILAYLA 变长 count —— いざ、出陣！恋戦（PSP, ULJM05876）
+
+> 2026-10-18。**这是本库第一例「CPK 数据区＝串接流按 2048 切块」**，按条目解包必错，务必先判此型。
+
+- **判据（3 秒）**：`data.cpk` 内 `CRILAYLA` 出现次数 ≈ `16+csize+0x100` 的块数，且 **TOC 的
+  `FileSize == 16+csize+0x100`**、`ExtractSize == usize+0x100`（本作 1,122/1,122 命中）。
+  命中即说明「一条目 = 一块 = 一个文件」，否则走流还原。
+- **TOC 偏移错位一行**：行 i 的文件块起点 = `rows[i+1].FileOffset`（`rows[i]` 指向上一块）。
+  只按行内偏移解包会得到「上一文件的正文」，是本作最初 42% 失败的表层原因。
+- **流还原**：从 `ContentOffset`（280,576）顺序走块，CRILAYLA 块按 `16+csize+0x100`
+  向上对齐到下一个 2048，原样块取 2048；拼接即得逻辑流（本作 125 MB / 4,399 块）。
+  文件边界靠每文件首行注释 `; <name>.ks` 切（本作 2,527 段，正则需允许前导 `\r\n\x00`）。
+- **CRILAYLA 变体 ①**：头 `u32@8` = **不含 0x100 原样前缀**的明文长度 ⇒ 总长 `usize+0x100`。
+- **CRILAYLA 变体 ②（★关键）**：count **变长** —— `2 bit`；==3 再 `3 bit`；==7 再 `5 bit`；
+  ==31 则循环 `8 bit`（0xFF 续）。**按固定 8 bit 读会在中途耗尽码流**（表现为
+  `dp+off >= len(out)` 或比特位耗尽，且已解出的尾部文本完全正确 —— 极易误判成"块截断"）。
+  参考实现 `scripts/kuriimu2_src/src/lib/Kompression/Decoder/CrilaylaDecoder.cs`。
+- **脚本层**：自定义 KAG（`.ks`，cp932、CRLF）。正文 = `[message …]…[/message]` 块（一次点击一行），
+  块内 `[br]` 合并、`[f]`/`[se*]` 剥离；选项 = `[selectb word="…" file="…"]`；
+  人名宏 **`[familyname]`/`[firstname]`**（默认 御柳／華）。
+- **顺序**：`[next file]` 链碎片化（1,361 段无入边），**不能**用链 DFS；按族前缀
+  （`op2_01`→`op2_02`→`op2_04_*`→`love_*`→`omake_*`→`bangai_*`→`end_*`）再按文件名排。
+- **产物**：`提取结果/[PSP-JP]いざ、出陣！恋戦_全文本.txt`（29,516 行）。
+  工具 `scripts/izasen_stream.py`（块流+CRILAYLA）/`izasen_extract2.py`（分段/成行）/`izasen_cpk.py`（名 cp932）。

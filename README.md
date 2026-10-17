@@ -2,22 +2,22 @@
 
 从日文 VN / AVG 游戏的封包资源中取出剧本文本，整理为纯文本，供制作 LunaTranslator 预翻译文件使用。
 
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB) ![Version](https://img.shields.io/badge/version-1.2.0-blue)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB) ![Version](https://img.shields.io/badge/version-1.3.0-blue)
 
 ## 简介
 
-日文游戏的剧本通常存放在加密封包里，由自定义字节码承载。本项目做三件事：解包、解密、把各引擎的文本按同一套规则整理出来。整理规则中有一条是固定的：**一个文本框（一次点击）= 一行**。
+日文游戏的剧本通常存放在加密封包里，由自定义字节码承载。这个工具做三件事：解包、解密、把各引擎的文本按同一套规则整理出来。整理规则中有一条是固定的：**一个文本框（一次点击）= 一行**。
 
 仓库包含两部分：
 
-- `scripts/` —— 可直接运行的 Python 脚本（容器解包工具 + 各引擎提取器 + 探查助手 + 交付前品检）；
+- `scripts/` —— 可直接运行的 Python 脚本（容器解包工具 + 各引擎提取器 + 探查助手 + 交付前品检 + 收尾工具）；
 - `SKILL.md` + `references/` —— 一份 Agent Skill，采用**渐进式披露**：主文件只放必守规则与流程骨架，细节按需读分册。
 
 ## 用途与边界
 
 输出用于**制作 LunaTranslator 的预翻译文件**，即提供待翻译的日文原文。
 
-本项目只负责提取原文：
+本工具只负责提取原文：
 
 - 不制作汉化补丁（不涉及把译文写回游戏、不生成补丁包）；
 - 不做译文回填（不处理翻译结果的注入或对齐）。
@@ -26,7 +26,7 @@
 
 ## 支持范围
 
-已整理约 30 种引擎／容器的处理要点。以下为部分条目，完整清单见 [`references/engines.md`](references/engines.md)。
+已整理约 30 种引擎／容器的处理要点，单引擎细则见 [`references/engines/`](references/engines/)（一引擎一文件）。
 
 | 引擎 / 容器 | 要点 |
 |---|---|
@@ -68,14 +68,60 @@
 export VNTRANS_HOME=/path/to/work          # 工作根目录
 export VN_OUTDIR=/path/to/work/提取结果     # 输出目录
 
+python scripts/identify.py game_dir        # 判型：容器 / 引擎 / 下一步命令
 python scripts/cpk.py game.cpk out/        # 解 CPK
-python scripts/scan_nested.py game_dir     # 逐层扫描，定位含日文的层
+python scripts/probe.py jp extracted/      # 这条链路里到底有没有正文
 
 # 交付前自检（退出码 0 = 通过）
 python scripts/check_text.py "提取结果/XX_全文本.txt" --name 主角名
 ```
 
 各脚本用法见文件头 docstring 与 [`scripts/INDEX.md`](scripts/INDEX.md)。
+
+> `scripts/` 里的 `*_extract.py` 是**按具体作品写的**，默认输入路径来自编写时的解包目录
+> （如 `_work_<game>/…`），首次使用请改脚本顶部的 `SRC` / `OUTDIR`，或用命令行参数指定。
+> 通用工具（`identify` / `probe` / `check_text` / `wrapup` / `split_md` 等）可直接用，不依赖这些默认值。
+
+## 整理流程（一条命令）
+
+提取完成后的收尾是重复劳动，所以做成了工具链。**报告头部先写机器可读块**，指标就不用猜：
+
+```yaml
+---
+作品: 某某作品
+平台: PSP
+引擎: STCM2L
+主角: 姓 名
+行数: 31838
+日期: 2026-10-18
+---
+```
+
+然后一条命令跑完：
+
+```bash
+python scripts/wrapup.py --report "提取结果/解析报告/XX_解析报告.md" \
+                         --text  "提取结果/XX_全文本.txt" --name 主角名
+```
+
+| 步 | 工具 | 检查什么 |
+|---|---|---|
+| ① 成品品检 | `check_text.py` | BOM / CR / U+FFFD / 控制符 / 半角假名 / PUA / 引号配对 / 说话人残留 |
+| ①b 行数一致性 | 内置 | 报告声明的行数 vs 成品实际行数（差 >1% 报警） |
+| ② 体积体检 | `memcheck.py` | 手册各册是否超 10 KB（≥96% 提前预警） |
+| ③ 沉淀草案 | `distill.py` | 报告里的判据按「已覆盖 / 待沉淀 / 单作特例」三分，并给建议落位 |
+| ④ 落位片段 | `archive_work.py` | 生成作品索引 / 工具索引 / 日志小节；`--apply` 幂等追加 |
+
+拆分手册时只用 `split_md.py`：只按**语义边界**（标题、编号条目）下刀，带正文行守恒校验，
+并按「临时目录 → 校验 → 打印待删清单 → 断言与输出名不相交 → 才删旧」的顺序替换。
+
+平时（改过手册 / 收工前）还有两条：
+
+```bash
+python scripts/lint_docs.py       # 断链 / 引擎册未进路由表 / 孤儿册 / 空册 / 超限
+python scripts/pending.py         # 有成品无报告 / 有报告未进索引
+python scripts/memcheck.py --fix  # 超限时直接给切点（不落盘）
+```
 
 ## 兼容性
 
@@ -96,7 +142,7 @@ python scripts/check_text.py "提取结果/XX_全文本.txt" --name 主角名
 - 无法解析的码位保留原码并单独列出，不作猜测；
 - 只含正文与选项，不含系统 / UI 文本、说话人表等附属产物。
 
-细则见 [`SKILL.md`](SKILL.md) §0（输出规范）与 [`references/04-verify-and-report.md`](references/04-verify-and-report.md)。
+细则见 [`SKILL.md`](SKILL.md) §0 与 [`references/05-selfcheck.md`](references/05-selfcheck.md)。
 
 ## 环境变量
 
@@ -112,63 +158,70 @@ python scripts/check_text.py "提取结果/XX_全文本.txt" --name 主角名
 
 ```
 pretrans-extractor/
-├── SKILL.md                       # 主文件：必守规则 + 流程骨架 + 坑索引（先读这个）
+├── SKILL.md                       # 主文件：必守规则 + 流程骨架 + 导航（先读这个）
 ├── README.md
 ├── CHANGELOG.md
 ├── LICENSE                        # MIT
 ├── .gitignore
-├── docs/release-v1.2.0.md         # v1.2.0 版本说明
+├── docs/release-v1.3.0.md         # v1.3.0 版本说明
 ├── references/
-│   ├── 01-decrypt-decode.md       # 解密 / 解压 / 化け修复 / 官方补丁
-│   ├── 02-script-reverse.md       # 脚本结构、消息格式、宏、分支回填、点击语义
-│   ├── 03a-decode-basics.md       # 解码 · 通用（字符宽度 / 替换槽 / 化け / PFS）
-│   ├── 03b-decode-archive.md      # 解码 · 容器 / 归档 / 定长表 案例
-│   ├── 03c-decode-wsc-ops.md      # 解码 · WSC / 前缀区块 / 块单位 / opcode 平移
-│   ├── 03d-extract-lines.md       # 提取成行 · 行粒度
-│   ├── 03e-deliver-flow.md        # 交付 / 流程阶段
-│   ├── 04-verify-and-report.md    # 自检 / 外部核对 / 验收 / 报告
-│   ├── 05-workspace-and-tools.md  # 工作区、脚本形态、上下文卫生、决策纪律
+│   ├── 00-index.md                # 一页导航（阶段 → 文件）
+│   ├── 00-triage.md               # 判型：平台 → 容器 → 脚本 → 厂商 → 四步攻坚
+│   ├── 01-*.md                    # 取得 / 容器（PFS / EBOOT / NCA / CHD / 解密）
+│   ├── 02-*.md                    # 脚本层（结构 / 记录形状 P1–P8 / 24 条反例 / Unity）
+│   ├── 03-*.md                    # 解码（宽度 / 码表 / 归档 / 字体 / 名字宏）
+│   ├── 04-*.md                    # 成行（定框 / 名札 / 选项 / 回声 / 案例）
+│   ├── 05-*.md                    # 交付（自检 / 外部核对 / 完整性 / 收尾流程）
+│   ├── 06-*.md                    # 流程与环境（工作区 / 决策纪律）
+│   ├── pitfalls/                  # 坑索引 15 册（A 解码 / B 提取 / C 交付 / E 专册）
 │   ├── engines.md                 # 引擎**路由表**（一句话索引 + 详见列）
+│   ├── engines-2.md               # 路由续册：自研/小众/单作系
+│   ├── engines-3.md               # 路由续册：同族变体（STCM2L / UNI2 / HuneX / Takuyo）
+│   ├── engines-solo.md            # 路由续册：单作专用自研引擎
 │   ├── engines/                   # 单引擎全量分册（一引擎一文件，≤10 KB）
 │   └── third-party.md             # 第三方工具与依赖（自备）
 └── scripts/
-    ├── INDEX.md                   # 脚本 → 引擎 映射
-    ├── identify.py                # S0 识别：一次调用给出「引擎 + 建议命令 + 该读哪份 engines/*.md」
-    ├── check_text.py              # 交付前通用品检
-    ├── probe.py                   # 限量探查（≤80 行），替代 xxd 整文件 dump
-    ├── memcheck.py                # 体积体检（>10 KB 提醒拆文件）
-    ├── *_extract.py               # 各引擎提取器
+    ├── INDEX.md                   # 10 个通用工具：用法 + 何时跑
+    ├── identify.py                # S0 判型
+    ├── probe.py                   # 限量探查（≤80 行）
+    ├── check_text.py              # 交付前品检
+    ├── wrapup.py                  # 收尾编排（一条命令）
+    ├── distill.py                 # 沉淀草案
+    ├── archive_work.py            # 落位片段
+    ├── memcheck.py                # 体积体检
+    ├── split_md.py                # 按语义边界拆 md（带校验）
+    ├── lint_docs.py               # 手册对账（断链 / 孤儿册 / 路由缺失）
+    ├── pending.py                 # 未落位检测（有成品没进索引）
+    ├── *_extract.py …             # 按作品编写的提取器（239 个，改 SRC/OUTDIR 即可复用）
     ├── cpk.py / psarc_extract.py / cdar.py / xp3.py / nsac.py …   # 通用容器工具
-    ├── scan*.py / renderfont.py …                                  # 探查与字体助手
-    ├── koei/                      # Koei CDAR 相关 C# 参考实现
-    └── hunex/                     # HuneX MZX0 / mrgd00 解包器
+    └── scan*.py / renderfont.py …                                  # 探查与字体助手
 ```
 
 ## 隐私与安全
 
-仓库内容已做过清理，**不包含**：
+本包**不包含**：
 
 - 解密密钥文件（Switch `prod.keys` / `title.keys`、PSV zRIF 等）；
 - 个人识别信息（用户名、本机绝对路径、私有目录名）；
 - 第三方二进制或源码仓库（hactool / pkg2zip / psvdec / Kuriimu2 / GARbro / innoextract 等），改由 [`references/third-party.md`](references/third-party.md) 给出获取方式；
 - 游戏资产（字体库、图集）与已提取的成品文本。
 
-脚本中原先写死的路径均已改为环境变量取值。个别脚本会经 `subprocess` 调用 7-Zip，并清理自己创建的临时 / 输出目录；`haruka6_dict.py` 用 `exec` 加载同目录的 `haruka6_extract.py`。除此之外无网络访问、无外部写入。
+脚本中的路径均从环境变量取值，不写死绝对路径。个别脚本会经 `subprocess` 调用 7-Zip，并清理自己创建的临时 / 输出目录；`haruka6_dict.py` 用 `exec` 加载同目录的 `haruka6_extract.py`。除此之外无网络访问、无外部写入。
 
 ## 文档
 
 | 内容 | 位置 |
 |---|---|
 | 规范与流程骨架 | [`SKILL.md`](SKILL.md) |
-| 解密 / 化け修复 | [`references/01-decrypt-decode.md`](references/01-decrypt-decode.md) |
-| 脚本结构逆向 | [`references/02-script-reverse.md`](references/02-script-reverse.md) |
-| 解码 · 通用 | [`references/03a-decode-basics.md`](references/03a-decode-basics.md) |
-| 解码 · 容器/归档案例 | [`references/03b-decode-archive.md`](references/03b-decode-archive.md) |
-| 解码 · WSC/opcode 平移 | [`references/03c-decode-wsc-ops.md`](references/03c-decode-wsc-ops.md) |
-| 提取成行 | [`references/03d-extract-lines.md`](references/03d-extract-lines.md) |
-| 交付 / 流程 | [`references/03e-deliver-flow.md`](references/03e-deliver-flow.md) |
-| 自检 / 核对 / 报告 | [`references/04-verify-and-report.md`](references/04-verify-and-report.md) |
-| 工作区与工具约定 | [`references/05-workspace-and-tools.md`](references/05-workspace-and-tools.md) |
+| **开工第一册：判型** | [`references/00-triage.md`](references/00-triage.md) |
+| 一页导航 | [`references/00-index.md`](references/00-index.md) |
+| 解密 / 化け修复 | [`references/01-decrypt.md`](references/01-decrypt.md) |
+| 脚本结构 / 记录形状 / 反例 | [`references/02-structure.md`](references/02-structure.md) · [`02-record-patterns.md`](references/02-record-patterns.md) · [`02-false-signals.md`](references/02-false-signals.md) |
+| 解码 | [`references/03-basics.md`](references/03-basics.md) · [`03-codetable-elf.md`](references/03-codetable-elf.md) |
+| 成行 | [`references/04-lines.md`](references/04-lines.md) · [`04-typing.md`](references/04-typing.md) |
+| 自检 / 核对 / 完整性 | [`references/05-selfcheck.md`](references/05-selfcheck.md) · [`05-external-report.md`](references/05-external-report.md) · [`05-completeness.md`](references/05-completeness.md) |
+| **收尾（一条命令 + 拆分纪律）** | [`references/05-wrapup.md`](references/05-wrapup.md) |
+| 坑索引 15 册 | [`references/pitfalls/`](references/pitfalls/) |
 | 各引擎做法 | [`references/engines.md`](references/engines.md)（路由表）→ `references/engines/*.md` |
 | 第三方工具 | [`references/third-party.md`](references/third-party.md) |
 | 脚本索引 | [`scripts/INDEX.md`](scripts/INDEX.md) |
@@ -184,4 +237,4 @@ MIT，见 [`LICENSE`](LICENSE)。
 
 ## 免责声明
 
-本项目供技术研究，以及对合法拥有的游戏副本做文本提取、LunaTranslator 预翻译文件制作等翻译前置处理使用。不附带任何游戏资源、密钥或受版权保护的文本；提取所得文本的著作权归原作者所有。
+本工具供技术研究，以及对合法拥有的游戏副本做文本提取、LunaTranslator 预翻译文件制作等翻译前置处理使用。不附带任何游戏资源、密钥或受版权保护的文本；提取所得文本的著作权归原作者所有。

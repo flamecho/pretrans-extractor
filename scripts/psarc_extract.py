@@ -60,13 +60,23 @@ def main(path, outdir):
         off += tocEntrySize
     blockCount = (tocSize - off) // 2
     sizes = struct.unpack('>%dH' % blockCount, data[off:off + blockCount * 2])
-    boff = tocSize
-    blocks = []
-    for s in sizes:
-        sz = blockSize if s == 0 else s
-        blocks.append((boff, sz))
-        boff += sz
-    print(f"blocks={blockCount} dataEnd={boff} fileSize={len(data)}")
+
+    # 零块(size==0)语义自动判定：标准 PSARC 里 0 表示「未压缩整块(blockSize)」，
+    # 但存在把 0 当「真空块」的变体（cmp.psarc 实测）。判据＝使条目自带 offset 命中最多的解释。
+    best = None
+    for za in (blockSize, 0):
+        boff = tocSize
+        blocks = []
+        for s in sizes:
+            sz = blockSize if (s == 0 and za == blockSize) else s
+            blocks.append((boff, sz))
+            boff += sz
+        match = sum(1 for fb, us, uo in entries if blocks[fb][0] == uo)
+        if best is None or match > best[0]:
+            best = (match, za, blocks, boff)
+    match, zero_as, blocks, dataEnd = best
+    print(f"blocks={blockCount} dataEnd={dataEnd} fileSize={len(data)} "
+          f"zero-block->{zero_as} (offset match {match}/{tocEntryCount})")
 
     # entry0 = names table
     fb, us, uo = entries[0]
@@ -76,11 +86,16 @@ def main(path, outdir):
     if outdir:
         os.makedirs(outdir, exist_ok=True)
     total = 0
+    fails = []
     for i in range(1, tocEntryCount):
         fb, us, uo = entries[i]
-        blob = decompress_entry(data, blocks, fb, blockSize, us)
         nm = names[i - 1] if i - 1 < len(names) else f"{i:08d}.bin"
         nm = nm.replace('\\', '/').lstrip('/')
+        try:
+            blob = decompress_entry(data, blocks, fb, blockSize, us)
+        except Exception as e:                       # 少数块表异常：跳过并记录，不中断整包
+            fails.append((nm, str(e)[:40]))
+            continue
         dst = os.path.join(outdir, nm) if outdir else None
         if dst:
             d = os.path.dirname(dst)
@@ -91,7 +106,9 @@ def main(path, outdir):
         total += len(blob)
         if i <= 30 or i % 200 == 0:
             print(f"  [{i:4d}] {nm}  {len(blob)} B")
-    print(f"extracted {tocEntryCount-1} files, {total} bytes -> {outdir}")
+    print(f"extracted {tocEntryCount-1-len(fails)} files, {total} bytes -> {outdir}")
+    if fails:
+        print(f"skipped {len(fails)}: {fails[:10]}")
 
 if __name__ == '__main__':
     main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)

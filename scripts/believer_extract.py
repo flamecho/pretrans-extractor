@@ -3,7 +3,7 @@
 """
 BELIEVER! (PSV, PCSG00539)  HuneX / UNAS('HESL') script text extractor.
 
-Reverse-engineered formats (see 提取结果/BELIEVER!_解析报告.md):
+Reverse-engineered formats (see 提取结果/解析报告/BELIEVER!_解析报告.md):
 
   script.heslnk (HESL)
     header 0x30 : 'HESL', version, count, unk1, unk2, name_offset, data_offset

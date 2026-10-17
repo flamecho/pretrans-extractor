@@ -6,7 +6,7 @@
   python scripts/identify.py <file> --deep      # 额外做 熵 / 日文串抽样
 
 输出极短（≤20 行）：判定 + 依据 + 建议命令。**先跑这个，再决定读哪份引擎文档。**
-引擎细节：`.workbuddy/memory/ENGINES.md` → `engines/<slug>.md`
+引擎细节：`references/engines.md` → `engines/<slug>.md`
 """
 import os, sys, collections
 
@@ -109,7 +109,7 @@ def main():
         mg, off, what, slug, nxt = hit
         print('  ✓ 判定: %s   (magic %s @0x%x)' % (what, mg[:10], off))
         if slug:
-            print('  引擎文档: .workbuddy/memory/engines/%s.md' % slug)
+            print('  引擎文档: `references/engines/%s.md' % slug)
         print('  下一步: ' + nxt.format(f=p))
     else:
         e = ent(d[:1 << 16])

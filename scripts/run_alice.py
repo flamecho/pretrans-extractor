@@ -18,10 +18,10 @@ import subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from extract_alice import extract_qpk, extract_cpk
 
-Z = os.environ.get('SEVENZ', r"C:\Program Files\7-Zip\7z.exe")
+Z = r"C:\Program Files\7-Zip\7z.exe"
 ISO_DIR = VNTRANS_HOME
 OUT_DIR = VNTRANS_HOME
-TMP = os.path.join(VNTRANS_HOME, 'tmp_alice')
+TMP = r"D:\_Trans\tmp_alice"
 
 # (required_substrings, exclude_substring_or_None, output_base_name)
 GAMES = [

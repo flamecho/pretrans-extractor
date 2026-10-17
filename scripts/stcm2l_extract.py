@@ -3,7 +3,7 @@
 
 【格式实证结论（2026-09-30）】
 容器链路：
-  XCI (hactool + 你自己的 prod.keys) -> secure/*.nca -> RomFS -> STORY_01/02.CPK -> SCRIPT/*.DAT
+  XCI (hactool + prod.keys) -> secure/*.nca -> RomFS -> STORY_01/02.CPK -> SCRIPT/*.DAT
 脚本格式：STCM2L（Idea Factory 系字节码，Switch 版）
   * 头部 'STCM2L' + 日期串；文件内是「对象/指令字段」的序列化流
   * 每个字符串字段 = [u32 L][UTF-8 bytes][NUL][pad]

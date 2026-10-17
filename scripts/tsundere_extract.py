@@ -3,7 +3,7 @@
 """
 ツンデレ★Ｓ乙女 (PC / 美蕾「Madoka GScript」) 全文本提取器 —— 本项目定稿
 用法: python tsundere_extract.py <ツンデレ★Ｓ乙女.sce> <out.txt>
-说明见本作品解析报告
+说明见 提取结果/解析报告/ツンデレ★S乙女_解析报告.md
 """
 import sys, re, os
 import numpy as np

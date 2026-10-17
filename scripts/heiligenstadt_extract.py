@@ -7,7 +7,7 @@
 --------
   1) 解 PKG (PSN 原始包, 含 NoNpDrm 结构):
        scripts/pkg2zip.exe -x "<pkg>" "<zRIF>"
-       zRIF 需自备（见 references/third-party.md）
+       zRIF 需自备
      产物: app/PCSG01070/{eboot.bin, archive.psarc, Media/, sce_*}
   2) 解密 PFS (NoNpDrm):
        <psvdec>/bin/win64/psvpfsparser.exe \

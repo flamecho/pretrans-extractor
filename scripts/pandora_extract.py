@@ -34,10 +34,18 @@ SRC = os.path.join(os.path.dirname(HERE), '_work_pandora', 'UNION', 'SCRIPT.UNI'
 
 A4 = lambda n: (n + 3) & ~3
 
+# ── 口径开关 ─────────────────────────────────────────────────────────
+# True  = 严格「一次点击 = 一行」: 每个文本框各自成行 (跨框不合并; 原作把一句拆到两框时
+#         **保持拆开**, 因此允许单侧引号 —— 不补字、不改写)
+# False = 续写合并: 跨框把同一句/心声拼回一行, 并补足单侧引号 (旧口径)
+STRICT_CLICK = True
+
 # 换行/新框标记: 12 字节 payload 且首字段 a==0 (payload=[a][cmd][flag])
 RE_SYM = re.compile(r'^[A-Za-z0-9_./\\\-:]+$')
 RE_NUM = re.compile(r'^\d+$')
-RE_NAME_OK = re.compile(r'^[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff\uff10-\uff19\uff1f\uff01\u3005\uff0d\uff0e]+$')
+# ⚠ 名札里会出现「形近破折号被误用」的情况 (PANDORA 实证 `ロニ―` 用 U+2015 而非 ー U+30FC)
+#   ⇒ 把破折号/长音类码位一并纳入, 否则该名札判不出、与台词并成 `ロニ―「乾杯！」`
+RE_NAME_OK = re.compile(r'^[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff\uff10-\uff19\uff1f\uff01\u3005\uff0d\uff0e\u2010-\u2015\u2500]+$')
 HIRA = re.compile(r'[\u3040-\u309f]')
 RE_TEXTY = re.compile(r'[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff\u3000-\u303f\uff01-\uff60\u2010-\u2030\u2026\u2015]')
 RE_PLACEHOLDER = re.compile(r'^#Name\[(\d+)\]$')
@@ -99,60 +107,117 @@ def scan_strings(pay):
     return res
 
 
+PREF_TXT, PREF_SEP, PREF_NAME = 0xd2, 0xd3, 0xd4
+
+
+def _pref_chain(d, fstart, end):
+    """前缀区若是「场景脚本」, 记录框 = [u32 cmd][u32 arg][u32 size][payload]:
+
+        cmd 0xd2 = 正文/台词 (payload 与代码段文本记录同构)
+        cmd 0xd3 = 换箱分隔 (frame=0x10 空 payload) -> 一次点击的边界
+        cmd 0xd4 = 说话人名     -> 丢弃该记录, 并作为边界
+        其余     = 资源/控制 (bg/立绘/switch/evNNNN…)
+
+    要点: **连续的多个 0xd2 属于同一文本框** (框内软换行) -> 相邻片段直接相连合并;
+          0xd3 才是「新箱」。这样「一次点击 = 一行」才成立。
+    """
+    p0 = None
+    # ① 跨 fstart 的记录: 头在 fstart 之前(实测可达 -0x10), payload 落在区块内 -> 从它开始
+    for q in range(max(0, fstart - 0x400), fstart, 4):
+        cmd = struct.unpack_from('<I', d, q)[0]
+        if cmd not in (PREF_TXT, PREF_SEP, PREF_NAME):
+            continue
+        sz = struct.unpack_from('<I', d, q + 8)[0]
+        if sz < 0x10 or sz % 4 or q + sz > end or q + sz <= fstart:
+            continue
+        if cmd == PREF_SEP or scan_strings(d[q + 12:q + sz]):
+            p0 = q                       # 取最靠近 fstart 的那条
+    # ② 否则从 fstart 起找第一条合法记录
+    if p0 is None:
+        for q in range(fstart, end - 12, 4):
+            cmd = struct.unpack_from('<I', d, q)[0]
+            if cmd not in (PREF_TXT, PREF_SEP, PREF_NAME):
+                continue
+            sz = struct.unpack_from('<I', d, q + 8)[0]
+            if sz < 0x10 or sz % 4 or q + sz > end:
+                continue
+            if cmd == PREF_SEP or scan_strings(d[q + 12:q + sz]):
+                p0 = q
+                break
+    if p0 is None:
+        return None
+    toks = []
+    p = p0
+    while p + 12 <= end:
+        cmd, arg, sz = struct.unpack_from('<3I', d, p)
+        if sz < 0x10 or sz % 4 or p + sz > end:
+            break
+        pay = d[p + 12:p + sz]
+        if cmd == PREF_TXT:
+            for _, s in scan_strings(pay):
+                toks.append(('str', s))
+        elif cmd in (PREF_SEP, PREF_NAME):
+            toks.append(('brk', None))
+        p += sz
+    return toks
+
+
+def _flat_quiz(recs):
+    """平坦记录表 (问答库/豆知識): 以 ？ 结尾的问题 + 紧随 2 条回答。"""
+    q = set()
+    i = 0
+    while i + 2 < len(recs):
+        s = recs[i][1]
+        if (not s.startswith(('「', '『', '（', '('))
+                and s.replace('#n', '').rstrip().endswith('？')
+                and not recs[i + 1][1].startswith(('「', '『', '（', '('))):
+            q.update((i, i + 1, i + 2))
+            i += 3
+        else:
+            i += 1
+    return q
+
+
 def prefix_tokens(d, fstart):
     """UNI2 子文件起始 0x1800 区块 (独立于 +0x1800 处的 STCM2L)。
 
-    内含: 每章的小测(一问两答) / 结局用脚本 / 玩法说明 / 人名表。
-    记录框架与代码段不同, 用「字符串记录扫描 + 换行标记扫描」还原:
-      换行标记 = [u32 a=0][u32 cmd<0x2000][u32 flag in {0,1,2,3,4,5,6,8,9}][u32 size]
+    两种形态 (同作内混用, 逐文件判定):
+      A) **场景脚本** —— [cmd][arg][size] 记录框; 结局/尾声等整段剧情在这里;
+         连续 0xd2 归一框 (见 `_pref_chain`)。
+      B) **平坦记录表** —— `[0][n][1][L][text]` 逐条, 每条一行 (问答库/豆知識,
+         问题以 ？ 结尾 + 紧随 2 条回答 -> 并入文末)。
     """
     a = fstart
-    b = fstart + 0x1800
-    if b > len(d):
+    b = min(fstart + 0x1800, len(d))
+    if b - a < 0x20:
         return []
+    ch = _pref_chain(d, a, b)
+    if ch and sum(1 for k, _ in ch if k == 'str') >= 3:
+        return ch
     recs = scan_strings(d[a:b])
-    recset = {}
-    for off, s in recs:
-        recset[a + off] = s
-    # 小测: 以 ？ 结尾的问题 + 紧随 2 条选项 -> 各自成行
-    quiz = set()
-    bal = 0
-    i = 0
-    while i < len(recs):
-        q = recs[i][1]
-        opts = recs[i + 1:i + 3]
-        if (bal == 0 and len(opts) == 2
-                and '「' not in q and not q.startswith(('『', '（', '('))
-                and '「' not in opts[0][1]
-                and q.replace('#n', '').rstrip().endswith('？')):
-            for r in [recs[i]] + opts:
-                quiz.add(a + r[0])
-            i += 3
-        else:
-            bal += q.count('「') - q.count('」') + q.count('『') - q.count('』')
-            i += 1
-    ev = []
-    for off, s in recs:
-        ev.append((a + off, 'qopt' if (a + off) in quiz else 'str', s))
-    for i in range(a, b - 16, 4):
-        if i in recset:
-            continue
-        A, B, C, D = struct.unpack_from('<4I', d, i)
-        if A == 0 and B < 0x2000 and C in (0, 1, 2, 3, 4, 5, 6, 8, 9) \
-                and D % 4 == 0 and 0x10 <= D <= 0x10000:
-            ev.append((i, 'brk', None))
-    ev.sort(key=lambda x: x[0])
-    return [(k, s) for _, k, s in ev]
+    quiz = _flat_quiz(recs)
+    toks = []
+    for i, (_, s) in enumerate(recs):
+        # 平坦区只保留「小测问答」; 其余为本作实测的系统/资源串
+        # (b-ronn_b / thread_cnt / 処理開始 / STATUS 画面说明 / 人名表 …) -> 丢弃
+        if i in quiz:
+            toks.append(('qopt', s))
+            toks.append(('brk', None))
+    return toks
 
 
-def file_tokens(d, fstart, with_prefix=True):
+def file_tokens(d, fstart, with_prefix=True, fend=None):
+    """fend: 该子文件的绝对结束偏移。**必须给** —— 实测 `exports_offset` 常早于真正的
+    代码链终点 (118 文件 / 244 条文本记录被它截掉, 含真台词), 故走到 fend 再按
+    「opcode 链合法性」自停。"""
     r = code_range(d, fstart)
     if not r:
         return []
     cs, ce = r
+    limit = fend if fend else ce
     toks = []
     i = cs
-    while i < ce:
+    while i < limit:
         bs = struct.unpack_from('<I', d, i)[0]
         if bs == 0 or bs % 4 or i + bs > len(d):
             break
@@ -177,7 +242,8 @@ def file_tokens(d, fstart, with_prefix=True):
         for _, kind, s in ev:
             toks.append((kind, s))
         i += bs
-    return toks + (prefix_tokens(d, fstart) if with_prefix else [])
+    return toks + ([('brk', None)] + prefix_tokens(d, fstart)
+                   if with_prefix else [])
 
 
 RE_TAG = re.compile(r'^(?:#[A-Za-z]+\[[^\]]*\])+$')
@@ -221,7 +287,7 @@ def resolve_opts(toks):
             continue
         j = i + 1
         is_choice = False
-        while j < n and out[j][0] != 'brk':
+        while j < n and out[j][0] not in ('brk', 'hbrk'):
             s2 = out[j][1]
             if s2 and (s2 in CHOICE_MARK or s2.startswith('sure')):
                 is_choice = True
@@ -240,8 +306,9 @@ def collect_labels(all_toks, freq, lookahead=4):
             continue
         if not RE_TEXTY.search(s) or HIRA.search(s):
             continue
-        if freq[s] < 2:          # 说话人名会反复出现; 章节/结局标题只出现一次
-            continue
+        # ⚠ 旧版此处要求 freq[s] >= 2 (「说话人名会反复出现」)。实测**不可靠**:
+        #   本作大量「集合名+番号」名札 (救急隊員１/軍人４/通行人１…) 只出现在单一文件 ⇒ freq==1
+        #   → 判不出 → 与台词并成一行。改为「紧邻引号起头」即认定, 不再看频次。
         for j in range(k + 1, min(len(seq), k + 1 + lookahead)):
             nx = seq[j]
             if is_noise(nx) or (looks_like_name(nx) and nx in labels):
@@ -263,8 +330,19 @@ def clean(s):
 
 
 def repair_quotes(s):
-    """原作脚本个别行只写了单侧引号 (照原始字节核对属实), 按作者意图补足。
-    仅做引号补/删, 不改动任何文字。"""
+    """非严格模式下: 原作脚本个别行只写了单侧引号 (照原始字节核对属实), 按作者意图补足。
+    仅做引号补/删, 不改动任何文字。
+    严格「一次点击 = 一行」模式下**不补** (原作把一句拆到两框 => 单侧引号是常态, 补字会失真)。"""
+    if STRICT_CLICK:
+        # 严格模式: 跨框单侧引号是常态 (不补缺引号), 只修「无歧义的标点笔误」
+        o, c = s.count('「'), s.count('」')
+        if c - o == 1 and s.endswith('」」'):
+            return s[:-1]                       # 多打了一个 」
+        if '（' in s and '「' not in s and s.endswith('」'):
+            return s[:-1] + '）'                 # （…」 误用 》 收尾
+        if o - c == 1 and s.startswith('「') and s.endswith(']'):
+            return s[:-1] + '」'                 # 半角 ] 误作 」
+        return s
     o, c = s.count('「'), s.count('」')
     if o != c:
         if c > o:
@@ -276,12 +354,16 @@ def repair_quotes(s):
                 s = '「' * (c - o) + s          # 缺开引号
         else:
             s += '」' * (o - c)                 # 缺闭引号
-    o, c = s.count('（'), s.count('）')
-    if o != c:
-        s += '）' * (o - c) if o > c else '（' * (c - o)
-    o, c = s.count('('), s.count(')')
-    if o != c:
-        s += ')' * (o - c) if o > c else '(' * (c - o)
+    # 全/半角括号混用 (原作风格, 实测 5 处形如 `（…… )`) -> 与全角括号同现时归一为全角
+    if ('（' in s or '）' in s) and ('(' in s or ')' in s):
+        s = s.replace('(', '（').replace(')', '）')
+    op = s.count('（')
+    cl = s.count('）')
+    if op != cl:
+        if cl > op:
+            s = '（' * (cl - op) + s      # 缺开括号 -> 行首补 (原作只写了收尾 ))
+        else:
+            s += '）' * (op - cl)         # 缺闭括号 -> 行尾补
     return s
 
 
@@ -297,7 +379,10 @@ def build_lines(all_toks, labels):
             buf.clear()
 
     def open_quote(nxt=None):
-        """缓冲区里有未闭合的 「 且下一段不是新起的台词(不以「开头) -> 该句被拆到下一框, 不切。"""
+        """非严格模式: 缓冲区有未闭合引号且下一段非新起台词 -> 该句被拆到下一框, 不切。
+        严格「一次点击 = 一行」模式下恒 False (框边界一律切)。"""
+        if STRICT_CLICK:
+            return False
         t = ''.join(buf)
         if not t or len(t) >= 200:
             return False
@@ -309,25 +394,30 @@ def build_lines(all_toks, labels):
 
     def next_text(k):
         j = k + 1
-        while j < len(all_toks) and all_toks[j][0] == 'brk':
+        while j < len(all_toks) and all_toks[j][0] in ('brk', 'hbrk'):
             j += 1
         return all_toks[j][1] if j < len(all_toks) else None
 
     for idx, (kind, s) in enumerate(all_toks):
+        if kind == 'hbrk':
+            # 硬边界 (前缀区换箱 / 代码段↔前缀区接缝): 一律断行
+            flush()
+            continue
         if kind == 'brk':
             if open_quote(next_text(idx)):
                 continue
             flush()
             continue
-        if kind == 'opt':
-            # 选项(菜单项)/并排多条: 独立成行
+        if kind == 'qopt':
+            # 小测问答 (前缀平坦表) -> 各自成行, 不做人名过滤
             flush()
             if not is_noise(s):
                 lines.append(clean(s))
             continue
-        if kind in ('qopt', 'mopt'):
+        if kind in ('opt', 'mopt'):
+            # 选项/并排多条 —— 但若该串本身就是说话人名(opcode 内 name+正文), 丢弃
             flush()
-            if not is_noise(s):
+            if not is_noise(s) and not (looks_like_name(s) and s in labels):
                 lines.append(clean(s))
             continue
         # 资源/系统/符号串: 作为边界, 内容丢弃
@@ -380,12 +470,14 @@ def main():
     per = []
     pfx = []          # 各文件 0x1800 前缀里的「ミッション小测(豆知識)」-> 统一并入文末
     for e in ents:
+        fend = e[1] * 0x800 + e[3]
+        ct = file_tokens(d, e[1] * 0x800, with_prefix=False, fend=fend)
         pt = prefix_tokens(d, e[1] * 0x800)
-        per.append((e[0], file_tokens(d, e[1] * 0x800, with_prefix=False)
-                    + [t for t in pt if t[0] != 'qopt']))
+        body = [t for t in pt if t[0] != 'qopt']
+        per.append((e[0], ct + ([('brk', None)] + body if body else [])))
         pfx.extend(t for t in pt if t[0] == 'qopt')
     # 外层全局脚本 (fstart=0): 军用术语小测(豆知識)等, 置于全文末尾
-    outer = [t for t in file_tokens(d, 0)]
+    outer = [t for t in file_tokens(d, 0, fend=ents[0][1] * 0x800)]
     freq = collections.Counter()
     for _, t in per + [(0, outer)]:
         for s in set(x[1] for x in t if x[0] in ('str', 'opt', 'qopt', 'mopt')):
@@ -402,7 +494,9 @@ def main():
     labels = collect_labels(all_toks, freq)
     print("labels(%d):" % len(labels), sorted(labels), file=sys.stderr)
     lines = build_lines(all_toks, labels)
-    out = os.path.join(os.path.dirname(HERE), '提取结果', 'PANDORA_全文本.txt')
+    tag = '' if STRICT_CLICK else '_续写合并版'
+    out = os.path.join(os.path.dirname(HERE), '提取结果',
+                       'PANDORA ～君の名前を、僕は知る～%s.txt' % tag)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, 'w', encoding='utf-8-sig', newline='\n') as f:
         f.write('\n'.join(lines) + '\n')
@@ -410,4 +504,6 @@ def main():
 
 
 if __name__ == '__main__':
+    if '--merge' in sys.argv:
+        STRICT_CLICK = False          # 续写合并口径 (check_text 可 PASS)
     main()

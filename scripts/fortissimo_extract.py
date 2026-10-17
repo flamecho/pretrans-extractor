@@ -7,7 +7,7 @@
 --------
   1) 解 PKG (PSN 原始包, 含 NoNpDrm 结构):
        scripts/pkg2zip.exe -x <pkg> <zRIF>
-       zRIF 需自备（见 references/third-party.md）
+       zRIF 需自备
        ⚠ 日文路径会让 pkg2zip 失败 -> 用 8.3 短路径 (_PSV-J~2/JP0031~1.PKG)
   2) 解密 PFS:
        <psvdec>/bin/win64/psvpfsparser.exe \

@@ -1,6 +1,6 @@
 # KiriKiri XP3（标准 / DropWave OTag / 区间 1 字节 XOR）
 
-> 路由 / 一句话索引见 `../engines.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
 
 ## KiriKiri（吉里吉里）XP3 + DropWave「OriginalTag」— クリムゾン・ロワイヤル
 （QuinRose, PC 2009／前作 クリムゾン・エンパイア 的アペンドディスク）
@@ -61,6 +61,7 @@
   完整键规则未解（`plugin/poisonchain*.tpm` = RSA 公钥 + 加密 `.decc` 节，解析コスト过大）。
   完整性靠 **cp932 文字尤度モデルで区間鍵・境界を推定 + 逐位置定值复元表** 保证。
 - **两作差异（重要）**：
+
   | | 初回生産版（2011） | ～幻想夜話～（FD, 2012） |
   |---|---|---|
   | 压缩 | **有 zlib**（`78da` level9；`stored < original`） | **无 zlib**（`stored` = 磁盘长；索引 `original` 字段不可信） |

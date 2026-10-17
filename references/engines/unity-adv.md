@@ -1,12 +1,12 @@
 # Unity + 自研 ADV（PSARC / TKG / CSR1.00）
 
-> 路由 / 一句话索引见 `../engines.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
 
 - **Unity 系（ハイリゲンシュタット）**：PSARC→resources.assets(TextAsset, DBIN)。工具 `psarc_extract.py`+`heiligenstadt_extract.py`。
 - **Unity + 自研 ADV `CSR1.00`（悪役令嬢は隣国の王太子に溺愛される；OPERAHOUSE）**：Switch **NSP**（PFS0）→ NCA → RomFS = Unity 2020.3.47f1 + **IL2CPP**（`Data/Managed/Metadata/global-metadata.dat` 可搜类型/method 名）。文本在 `Data/StreamingAssets/`：`csr/adv{101..410}.CSR`（剧本）+ `localize.csv`（UI/章节/图鉴 Jp,En）+ `localize_name.csv`（说话人名表，ID 0=地の文 1=主人公…98=ナレーション 99=？？？）。**`.CSR` 格式**：`"CSR1.00\0"(8)+u32 header_size+(header_size-12)/8×{u32 label_id,u32 file_off}`；脚本流 `<u16 opcode> [operand]`：**`06 01`/`06 03` = 一个文本框**（后接 UTF-8 串 `\0`）、`04 10` = 提问横幅（后接串）、`04 11` = 选择支（后接 `u8 0` 再接串）；**正文内 `0x01` = 框内换行**（后常跟全角空格缩进，一并合并掉）；少数行前置非文本 token `1e XX XX XX 01`（记录内会再出现一个 text opcode）→ **取最后一个 opcode 之后的正文**即净。`prefab/*.jp`(UnityFS) 内文本只是编辑器占位（`アリア` 等旧 demo 残留），运行时走 localize，**勿收**。**无独立用語辞典档**。★★ **双文本框设计**（`advui.jp` 实测）：`MainText` 850×**150**px = 角色台词，**硬上限 3 行**（实测 2876/2238/1790 条分别为 1/2/3 行，≥4 行 0 条）；`NarrationText` 850×**620**px = 旁白/地の文（ナレーション id98 / 地の文 id0），全屏显示，可达 ~10 行。⇒ **长行 = 旁白单框，不是合并错误**。★★ **引号由 UI 自动加，脚本里没有**：全语料 9,7xx 条中 **「」出现 0 次**（旁白引用用 `『』`、独白内引用用 `“”` 代替）⇒ 「」是引擎补的。按前置 `06 00 <nameid>`（nameid 见 `localize_name.csv`）判定：**`06 01` 且有名字 = 角色台词 → `「…」`（4,876 条）；`06 03` = 内心独白 → `（…）`（2,028 条）；`06 01` 且 nameid∈{0 地の文,98 ナレーション} = 旁白 → 不加（2,553 条）**；`04 10`/`04 11`（提问/选择支）不加。脚本顶部 `BRACKET` 可切换，另出 `_全文本_无括号.txt` 变体。工具 `akuyaku_extract.py`。
 
 - **Unity + 自研 ADV `TKG`（薔薇に隠されしヴェリテ；Otomate/IF，PSV PCSG00708 定案）**：**Unity 5.3.5p5**。PSV 侧为 **NoNpDrm dump**（`app/PCSG00708/` 的 eboot/suprx/dll/psarc 全高熵；判据：`sce_sys/package/{head,body,work}.bin` 存在、`param.sfo` 明文而 `template.xml` 加密、`sce_pfs/pflist` 逐文件标 `sys/nenc/空`+SHA-256）。
-  **解密**：`<psvdec>/bin/win64/psvpfsparser.exe -i <titleid目录> -o <out> -z <zRIF> -f cma.henkaku.xyz` → 成功标志 **`keystone: matched retail hmac`**；★ **`-i` 传的是「目录」且目录名须 = title id**；`cma.henkaku.xyz` 站点已废但 **zRIF 本地足够，不需要联网**；zRIF 取自 `games.json`（本作 PCSG00708）。之后 `archive.psarc` 变明文 `PSAR`（v1.4/zlib）→ `scripts/psarc_extract.py` → `Media/resources.assets`(+1.28G resS)。
+  **解密**：`<psvdec>/bin/win64/psvpfsparser.exe -i <titleid目录> -o <out> -z <zRIF> -f cma.henkaku.xyz` → 成功标志 **`keystone: matched retail hmac`**；★ **`-i` 传的是「目录」且目录名须 = title id**；`cma.henkaku.xyz` 站点已废但 **zRIF 本地足够，不需要联网**；zRIF 需自备
   **★ 文件布局**：`resources.assets` = 全部 TextAsset（剧本），**无 TypeTree**（UnityPy 读不了它的 MonoBehaviour，只能原始字节扫）；**ScriptableObject / 场景 / UI 全在 `Media/StreamingAssets/` 的 AssetBundle**（`scene@2d` 165M / `scene@map` / `mch` / `ui` / `minimap`，**带 TypeTree，`obj.read()` 可直接读**）；`globalgamemanagers` 里 BuildSettings 只注册 1 个内置场景 `SceneBoot`，其余 `SceneManager.LoadSceneAsync("SceneXxx")` 全走 AssetBundle。AssetBundle 头为 `UnityWeb`。
   **TKG 指令流**（`Resources.Load<TextAsset>("EVT/TKG/"+id)` → `TkgData`）：记录 = `int16 cmd; int16 size(整条长度,含4B头); prm[]`；参数在 `cmd_off+4+prm`，`next()` ⇒ `cmd_off += size`。`TKGCMD`：0 EXIT / 1 LABEL / **0x10 MSG_PARAM** / 0x11 MSG_PARAM_RWD / 0x12 MSGWIN_CLR / 0x20–21 FADE / 0x30–32 WAIT 系 / 0x40–42 EFFECT / 0x60–63 JUMP 系 / **0x61 CHOICE_JUMP** / 0x70–75 FLG / 0x80–82 TC / 0x90–94 BG,CG / 0xA0 BGM / 0xA1 SE / 0xA2 NONE。
   **★ MSG_PARAM = 一次点击 = 一个文本框**：`i32×6(msgid,charid,dispType,stop,?,voiceFlag)` + 3×`[u16 len][UTF-8]`（voiceId / **話者名** / **正文**），每段后 `align2`（`prm += (cmd+prm)%2`）。正文替换：`%`→`リーゼ`、`&`→`フォルスター`（= `GMDEF.NAME[0..1]`）、**`$ @ #` 是着色标记须删**（`TalkWindow.setMessage` 里 `Regex.Replace("[\\$\\@\\#]","")`，粉/蓝/紫）、**`0x5C`(\`) 是框内软换行须合并**。
@@ -16,3 +16,16 @@
   **★ 字体替换槽（务必渲染核实）**：字体 = `FNT00SP`（BMFont 图集 4096²，`m_chars` 6954 项；在 AssetBundle 里，`m_textures[0]` = 图集 Texture2D）。`m_chars[i]{m_id,m_description,m_x,m_y,m_width,m_height,m_page,m_xAdvance}`，**`m_x/m_y` 为左上原点 → 直接 `img.crop((x,y,x+w,y+h))`**。本作 **U+333B「㌻」的格子被画成粉色花蕾/心形装饰符**（45×65px 实心，只出现在 レオナール 台词，59 处）→ 按 `♥` 输出。★ 注意 `m_description` 写的是**原字符名**（'Char: [㌻]; Code: [13115]'），**不能据此判定字形**，必须渲染。
   **排除**：`EVXXX_XXX`（排版被打乱的模板，二进制混入正文）、`DRESS_TST_01`（测试档，与 `MAP_DRESS_00` 重复）——判据 = 在 `Assembly-CSharp` 中 grep 引用数 = 0。工具 `verite_extract.py`。
   **★ 反编译链路（本机无 .NET SDK 时）**：`dotnet --list-runtimes` 只有 runtime 8.x（无 SDK，`dotnet tool install` 不可用）→ 从 **NuGet 直下 `ilspycmd` nupkg**（`https://api.nuget.org/v3-flatcontainer/ilspycmd/<ver>/ilspycmd.<ver>.nupkg`，会被重定向到 `nuget.azure.cn`，可下），解压后 `dotnet scripts/net8.0/any/ilspycmd.dll <dll> -o <outdir>`。
+
+- **Unity IL2CPP + 自研 `SceneMasterVO`（千銃士Rhodoknight for NS；Marvelous/G-MODE，2026-06-25）**：
+  NSP(PFS0/Titkey crypto)→**自研压缩 NCA(LZ4 桶树,92,228 条)解包**→`Data/StreamingAssets/Master/*MasterVO.bin`(172 张)。
+  ★★ **字段编码（最大陷阱）**：`[i32 描述符][u32 字符数][UTF-8 字节]`，**描述符 = -(字节数 + 1)** ——
+  **「tag」不含字段语义**，只是字节长的冗余编码（`マークス`12B→-13；`シャスポー`15B→-16；31B 场景 ID→-32；245B 台词→-246）。
+  ⚠ tag 值域恰 255 个、部分序列呈步长 3，极易误当「字段号」（曾据此把场景 ID 与正文混为一类）⇒
+  **先用「描述符 vs 载荷长度」自证，再谈分类**。数值字段 = `[i32 >=0]`（自身即值，无载荷）。
+  文件头 `u32 总记录数=125520`；记录头 8B sentinel `29 00 ca 9a 3b 00 00 00`(31,562 处)+13B。
+  ★ **记录语法（位置决定语义）**：`[code_<类别>_stories_<章>_<话>_<节>][flag][bg][bgm][名札][正文][unit_*]…[flag][chara_*/voice_*]`；
+  **名札 = 日文串 且 下一个字段也是日文串**；**正文 = 日文串 且 下一个字段不是日文串 且 不在名札词表内**。
+  一次点击（1 文本框、各带 1 voice）= 1 行；框内 `\n` 合并；行尾 `/1 /2`（选项序号）拆行去号。
+  宏：`<player>`(可改名主角名，与「マスター」同句共现、全作无默认名)／`<fpp>`(第一人称 私/僕/俺/自分)／`<birthday>`。
+  8 类故事 advice/main/style/event/char/login/deformed/present。工具 `scripts/senjyushi_extract_text.py`（配套 `senjyushi_extract.py`、`switch_nca.py`）。

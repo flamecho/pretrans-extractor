@@ -9,6 +9,9 @@ import struct, zlib, sys
 import os
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 
+HOME = os.environ.get('VNTRANS_HOME', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 PATH = os.path.join(VNTRANS_HOME, 'tmp_c2ff/dec/DATA.BIN')
 
 
@@ -140,6 +143,6 @@ if __name__ == '__main__':
     fmt, W, H, data, swz = texs[idx]
     print(f'{name}: magic={magic} texCount={cnt} tex[{idx}] fmt={hex(fmt)} {W}x{H} swz={swz} datalen={len(data)}')
     rgba = decode_dxt(data, W, H, bc3=(fmt in (0x08, 0x12)))
-    out = os.path.join(VNTRANS_HOME, f'tmp_c2ff/font_{name.replace("#","_")}_{idx}.png')
+    out = os.path.join(HOME, 'tmp_c2ff', f'font_{name.replace("#","_")}_{idx}.png')
     write_png(out, W, H, rgba, scale=4)
     print('->', out)

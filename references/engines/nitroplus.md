@@ -1,9 +1,9 @@
 # Nitroplus NPA / NSS
 
-> 路由 / 一句话索引见 `../engines.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
 
 ## Nitroplus NPA / NSS —— Lamento -BEYOND THE VOID- (W10, PC；NITRO CHiRAL 2006)
-> 来源：`<原始 dump 目录>/[PC-JP]Lamento -BEYOND THE VOID- Windows 10 Support Edition/L_W10.rar`
+> 来源：`<游戏 dump 目录>/[PC-JP]Lamento -BEYOND THE VOID- Windows 10 Support Edition/L_W10.rar`
 > (RAR5 **头部加密**，密码 `Bought_by_XD92_Only_For_Anime-Sharing_2025` ← 同目录 42B `新建文本文档.txt`)
 > 成品 `提取结果/Lamento -BEYOND THE VOID-_全文本.txt`（37,310 行）。工具 `scripts/lamento_extract.py`。
 > ⚠️ **规范（用户 2026-10-07 定）：只取「显示用」文本 ⇒ `SetBacklog` 不取**（日志专用；含 6 行唯一文本被有意舍弃，见下）。

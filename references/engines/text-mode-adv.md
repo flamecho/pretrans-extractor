@@ -1,6 +1,6 @@
 # 自研「テキスト方式 ADV」（クランク・イン）
 
-> 路由 / 一句话索引见 `../engines.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
 
 ## 自研「テキスト方式 ADV」（プチレーヴ × Future Tech Lab）— クランク・イン
 - 容器：PSV NoNpDrm **`.pkg`**（非 zip）→ `scripts/pkg2zip.exe <pkg> <zRIF>`（v1.8，产出 `… [TITLEID] [JPN].zip`，内含 `app/<TITLEID>/`）
@@ -28,3 +28,21 @@
   （`キャラクター/キーワード/組織/スポット/秘密道具/能力`，主角 `城あやか`、`ＡＲＫ` vs `ｕｎｋｎｏｗｎ`）——**与宿主作品无关**，提取时须核对（术语在本作剧本命中 0 即可判定）。ELF 另有本作**キャスト/スタッフ クレジット**（真数据）。
 
 ---
+
+## 同族第 2 作：爽海バッカニアーズ!（PSV / PCSG00296 / 2014）
+- **源**：NoNpDrm `.zip`（`Soukai Buccaneers NoNpDrm/PCSG00296/`）。⚠️ **`zip` 仍是 PFS 加密**（`eboot/psarc` 熵≈7.997；`param.sfo` 明文但 `pic0.png` 无 PNG 魔数）。
+  → `psvpfsparser.exe -i <PCSG00296> -o dec -z <zRIF> -f cma.henkaku.xyz`（zRIF 见 `<psvdec>/games.json`）。
+  **输入目录必须含完整文件树**（缺 `movie/` 会 `Directory ... does not exist` 中止）→ 先解 movie；路径须 ASCII。
+- **容器**：文本**只在 `cmp.psarc`**（标准 PSARC v1.4，zlib 分块）；`a〜k/z/se/bgm/system` 全为 `.at9` 音频。
+  ⚠️ **PSARC 块表零块语义**：本作 `size==0` = **真空块(0 字节)**，非 Kuriimu2 默认的 `blockSize`。判据＝使条目自带 offset 命中最多的解释（`za=0` 时 4500/4500）。`scripts/psarc_extract.py` 已自动判定。
+- **脚本**：`script/<name>.txt`（UTF-16LE，1 行 1 步，共 1062）＝正本；`.bin` = 编译字节码（**无文本**）；`_l.txt` = 标签表 `<步号>:<LABEL>`（如 `504:SELECT_A`）。顺序取 `system/scrlst.csv`（1061）。
+- **行语义**：① 指令＝`system/{image,bgm,se,effect,chara}.csv` 的标签 ＋ 全大写命令（`ALL/START/SEL_START/RE_SELECT/SELECT_A〜C/CHECK_COUNT/LOVER/NORMAL2/BG/PG/RETURN_POINT` 等）＋ 脚本名模式 `NN_xx_NNN(_N)` ＋ 裸数字；
+  ② 话者名＝短行且**下一非表现类行以 `「/『/（` 开头**（或下一行已是话者名 → 覆盖「内部 ID＋显示名」双行，如 `ドレイク`＋`リアンの父`）→ 丢弃；
+  ③ 其余＝上屏文本。**探测话者名时不可跨过分支持令**，否则地点选择项（`教会/大通り/裏通り`）会被误链。
+- **标记**：`\`＝框内软换行(合并，后随 `　` 保留)；`<dicNNN>…</dic>`＝辞典链接(剥标签留词)；`『』`／`　`(U+3000) 保留。无 `Name[n]`/`%s`/`[…]` 占位符 → **主角固定名 リアン**。
+- **选项**：chart（`system/chart_set.csv` 357 节点）＋ 脚本内联分支。选项文本＝紧邻分支脚本名之前的文本行（`支持する`→`00_kg_004_2/_1`）；`SEL_START` 是 flag 自动路由非玩家选择；chart 节点标题属 UI 未收。
+- **用語辞典**：`system/dic.csv` 51 条，f6＝詳細解説（采此），f5 为「分类＋读音」式短注（按「不带读音」不取）→ `【見出し語】解説`。
+- **杂项排除**：`縦揺れ/横揺れ/縦横`(震动)、`移動モード`、`ビンタ1`、`フレデリック自信21`、`洞窟内での足音1`。
+- **半角中点**：`02_cr_042.txt` 原文 `･･･`(U+FF65×6，全作唯一) → 定值改全角 `・`。
+- 成品 32,678 行【PASS】；工具 `scripts/baccan_extract.py`。
+- **`\` 语义已实证**（说明书实拍＋统计）：**框内换行**，非翻页。判据＝段数上限 **3**、去 `<dic>` 后段长上限 **28 字** ⇒ **文本框固定 3 行 ×28 字，1 步 = 1 框 = 1 次点击**。`\　` 的 `　` 为次行缩进（保留）。

@@ -6,11 +6,12 @@
 ## 1. 基础
 
 - **Python 3.10+**。按需安装：
-  ```
+
+```
   pip install pycryptodome Pillow capstone
   # Unity 系另需：pip install UnityPy
   # 部分脚本用到：pip install lz4 zstandard
-  ```
+```
 - **7-Zip**：<https://www.7-zip.org/>（多数 `RAR5 SFX` / `ISO` 解包依赖；脚本用 `SEVENZ` 指定路径）。
 
 ## 2. PSV（PS Vita）
@@ -50,9 +51,10 @@
 - **Nitroplus NPA**：本仓库 `scripts/npa_nrbf.py` + `scripts/npa_schemes.json`（25 套预置方案）。
 - **反编译（.NET）**：无 .NET SDK 时可从 NuGet 直下 `ilspycmd` nupkg，解压后
   `dotnet <解压目录>/tools/net8.0/any/ilspycmd.dll <dll> -o <outdir>`。
-  ```
+
+```
   https://api.nuget.org/v3-flatcontainer/ilspycmd/<ver>/ilspycmd.<ver>.nupkg
-  ```
+```
 
 ## 5. 外部核对来源
 
@@ -67,3 +69,5 @@
 请**仅对你合法拥有的游戏副本**使用上述工具与方法，提取结果仅供个人学习 / 研究，
 并用于制作 LunaTranslator 预翻译文件等翻译前置处理。
 不要分发含密钥的中间产物，也不要把提取文本当作自己的作品二次发布。
+- **HuneX MZX0 / mrgd00 解包**：`ExtractData`（`Mzx.cpp`）及其 Python 移植（作者 hintay）。
+  本仓库**不附带**其源码（原项目标注 *FOR INTERNAL USE ONLY*），请自行获取。

@@ -1,6 +1,6 @@
 # Malie System（Camellia LIBP / MalieVita / AlphaROM）
 
-> 路由 / 一句话索引见 `../engines.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
 
 ## Malie System —— GreenWood（OmegaVampire repack 实证；Camellia 系）
 
@@ -22,6 +22,7 @@
   解密首 16B 得 `LIBP`/`LIBU` 即命中。
   - **OmegaVampire repack 命中 index 11**（该槽在 exdieslib 中以《オメルタ～沈黙の掟～》命名；表 20 组覆盖 OmegaVampire/Omerta/Dies irae/神咒神威神楽 等 Camellia-Malie 家族）。
 - **剧本 = `system/exec.dat`（明文，非归档）** —— 编译后的 Malie VM 脚本：
+
   ```
   u32 全局变量数 → N×{ u32 名长(hi bit=flag) | UTF-16 名 | 递归类型链(u32 flag;≠0→跳4再递归) | 4×u32 }
   u32 跳过1 | u32 函数数 → N×{ u32 名长 | UTF-16 名 | u32 id | u32 res | u32 codeOffset }
