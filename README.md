@@ -2,7 +2,7 @@
 
 从日文 VN / AVG 游戏的封包资源中取出剧本文本，整理为纯文本，供制作 LunaTranslator 预翻译文件使用。
 
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB) ![Version](https://img.shields.io/badge/version-1.3.0-blue)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB) ![Version](https://img.shields.io/badge/version-1.3.1-blue)
 
 ## 简介
 
@@ -76,7 +76,8 @@ python scripts/probe.py jp extracted/      # 这条链路里到底有没有正�
 python scripts/check_text.py "提取结果/XX_全文本.txt" --name 主角名
 ```
 
-各脚本用法见文件头 docstring 与 [`scripts/INDEX.md`](scripts/INDEX.md)。
+各脚本用法见文件头 docstring、[`scripts/INDEX.md`](scripts/INDEX.md)（通用工具）与
+[`scripts/INDEX-BY-ENGINE.md`](scripts/INDEX-BY-ENGINE.md)（**按引擎找可改的提取器**）。
 
 > `scripts/` 里的 `*_extract.py` 是**按具体作品写的**，默认输入路径来自编写时的解包目录
 > （如 `_work_<game>/…`），首次使用请改脚本顶部的 `SRC` / `OUTDIR`，或用命令行参数指定。
@@ -163,6 +164,7 @@ pretrans-extractor/
 ├── CHANGELOG.md
 ├── LICENSE                        # MIT
 ├── .gitignore
+├── docs/release-v1.3.1.md         # v1.3.1 版本说明（本版）
 ├── docs/release-v1.3.0.md         # v1.3.0 版本说明
 ├── references/
 │   ├── 00-index.md                # 一页导航（阶段 → 文件）
@@ -181,7 +183,8 @@ pretrans-extractor/
 │   ├── engines/                   # 单引擎全量分册（一引擎一文件，≤10 KB）
 │   └── third-party.md             # 第三方工具与依赖（自备）
 └── scripts/
-    ├── INDEX.md                   # 10 个通用工具：用法 + 何时跑
+    ├── INDEX.md                   # 11 个通用工具：用法 + 何时跑
+    ├── INDEX-BY-ENGINE.md         # 引擎 → 可改的提取器（构建时自动生成）
     ├── identify.py                # S0 判型
     ├── probe.py                   # 限量探查（≤80 行）
     ├── check_text.py              # 交付前品检

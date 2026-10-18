@@ -7,7 +7,7 @@
 
 | 情形 | 做法 | 目标 |
 |---|---|---|
-| **命中已知引擎** | 走 `00-triage.md` 的表 → 只读命中的 `engines/<slug>.md` → 复用 `../scripts/INDEX.md` 的脚本 | 同族续作快速出文本 |
+| **命中已知引擎** | 走 `00-triage.md` 的表 → 只读命中的 `engines/<slug>.md` → 复用 `../scripts/INDEX-BY-ENGINE.md` 里该引擎的脚本 | 同族续作快速出文本 |
 | **未命中** | `00-triage.md` §E 四步攻坚 → `02-record-patterns.md` 认形状 → `04-*` 成行 → `05-*` 自检 | 慢但可收敛、不踩坑 |
 
 ## 阶段 → 文件
@@ -54,7 +54,8 @@
 
 ## 脚本
 
-`../scripts/INDEX.md`（按引擎 / 容器分类）。
+`../scripts/INDEX.md`（11 个通用工具：判型 / 探查 / 品检 / 收尾 / 维护）。
+按引擎找**可改的按作品提取器**：发行版看 `../scripts/INDEX-BY-ENGINE.md`（自动生成，78 引擎 → 240+ 脚本），工作版看 `TOOLS-works-<引擎族>.md`。
 
 | 阶段 | 脚本 |
 |---|---|

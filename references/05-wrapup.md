@@ -61,3 +61,17 @@ python scripts/memcheck.py --fix  # 超限时直接看切点（不落盘，确�
 
 - `lint_docs.py` 的 **B 项（引擎册未进路由表）** 是「写了却没人知道去哪找」——新增引擎册后必跑一次。
 - `pending.py` 的判据是「报告名是否出现在任何 `WORKS-*.md` 里」；备忘录类（`*_メモ.md`）默认跳过。
+
+### 改了品检判据：先跑回归
+
+`check_text.py` 的每条判据都来自**被退回来过的真实问题**，但改它本身没有任何东西拦得住回退。
+`scripts/selftest.py` 把这些返工点固化成 21 个微型样本，断言「该报的报了、不该报的没报」：
+
+```bash
+python scripts/selftest.py            # 退出码 0 = 21/21
+python scripts/selftest.py -v         # 附带每个样本实际命中的 [E]/[W]
+python scripts/selftest.py 半角假名    # 只跑名字含该子串的用例
+```
+
+**正确顺序：先在 `CASES` 加一条样本，再改判据。** 反了就只验证了「新样本能过」，
+不知道有没有把老判据弄坏。想确认回归本身没失效：把某条判据临时改成恒 `0`，回归必须变红。

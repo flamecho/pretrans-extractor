@@ -6,6 +6,8 @@
 
 检查项:
   A 断链      md 里 `` `NN-xxx.md` `` / `engines/<slug>.md` / `pitfalls/X.md` 指向不存在的文件
+              （`engines/` `engines-N.md` 属**构建期注入**：工作版没有该目录 ⇒ 不计断链，
+                发行版有 `references/engines/` ⇒ 严格校验。见 INJECTED）
   B 路由       引擎册是否在 `ENGINES*.md`（路由表）里被提到 —— 查「册写了但没人知道去哪找」
   C 孤儿册     references/ 下除 00-index / 00-triage 外，**没有任何文件引用**的册
   D 空/极薄册  < 200 B（多为写坏的占位或残留）
@@ -27,6 +29,11 @@ import sys
 # 默认取「脚本所在目录的上一级」= 本包根目录（不依赖安装名，换机器也不会指错）
 SKILL_DEF = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXEMPT = {'00-index.md', '00-triage.md', 'third-party.md'}
+# ★ 构建期注入（2026-10-18）：`engines/` 与 `engines*.md` **只在发行版存在**
+#   —— build_dist.py 从工作区记忆 `MEM/engines/*.md` 注入，工作版根本没有这个目录。
+#   工作版里 00-triage 的同名指针属**预期缺失**，不该算断链：否则常驻 38 条噪声，
+#   真断链会被淹掉（人会习惯性无视整个 A 项）。发行版（有 references/engines/）仍严格校验。
+INJECTED = re.compile(r'^(?:engines/[A-Za-z0-9_.\-]+\.md|engines(?:-[0-9a-z]+)?\.md)$')
 
 
 def read(p):
@@ -70,6 +77,17 @@ def main():
     A, C, D, E, F = [], [], [], [], []
     used = {}
     eng_mention = set()
+    inj = []                    # 构建期注入项（工作版预期缺失）
+    # 是否发行版布局：references/engines/ 目录或 references/engines*.md 存在
+    is_dist = (os.path.isdir(os.path.join(a.skill, 'references', 'engines'))
+               or os.path.isfile(os.path.join(a.skill, 'references', 'engines.md')))
+
+    def miss(base, m):
+        """断链记账：命中构建期注入白名单且当前是工作版 ⇒ 记为预期缺失，不算断链。"""
+        if not is_dist and INJECTED.match(m):
+            inj.append((base, m))
+        else:
+            A.append((base, m))
 
     for p, t in files:
         base = os.path.basename(p)
@@ -77,15 +95,19 @@ def main():
             if re.match(r'\d{4}-\d{2}-\d{2}\.md$', m):      # 日报引用：按日期取，不在索引集合内
                 continue
             if m not in rel and m not in have:
-                A.append((base, m))
+                miss(base, m)
         for m in set(re.findall(r'`?(?:references/)?(pitfalls/[A-Za-z0-9\-]+\.md)`?', t)):
             if m not in rel and os.path.basename(m) not in have:
-                A.append((base, m))
+                miss(base, m)
             used[m] = used.get(m, 0) + 1
         for m in set(re.findall(r'engines/([A-Za-z0-9_.\-]+\.md)', t)):
             eng_mention.add(m)
             if m not in eng:
-                A.append((base, 'engines/' + m))
+                miss(base, 'engines/' + m)
+        # 路由续册（`engines-2.md` / `engines-solo.md`）同样只在发行版存在
+        for m in set(re.findall(r'`(engines(?:-[0-9a-z]+)?\.md)`', t)):
+            if m not in have and not os.path.isfile(os.path.join(skill_refs, m)):
+                miss(base, m)
         # 引用计数（粗粒度：出现过就算）
         for other in list(rel) + list(eng):
             if other != base and other in t:
@@ -162,6 +184,10 @@ def main():
                 print('  … 另有 %d 条' % (len(rows) - 20))
 
     show('A 断链', A)
+    if inj and not a.quiet:
+        print('\n== 构建期注入（%d）==' % len(inj))
+        print('  工作版无 references/engines/ —— 这类指针由 build_dist.py 从工作区记忆注入，'
+              '发行版才存在；已按预期缺失跳过，不算断链。')
     show('B 引擎册未进路由表', [(b,) for b in B], lambda r: '  ' + r[0])
     show('C 孤儿册（无人引用）', [(c,) for c in C], lambda r: '  ' + r[0])
     show('D 空/极薄册', D, lambda r: '  %s  %d B' % (r[0], r[1]))
@@ -169,8 +195,8 @@ def main():
     show('F 坑册编号重复', F, lambda r: '  %s  %s' % (r[0], r[1]))
     show('G 排版（渲染相关）', G, lambda r: '  %-30s %s' % (r[0], r[1]))
 
-    print('\n--- 文件 %d ｜ 断链 %d ｜ 路由缺 %d ｜ 孤儿 %d ｜ 空册 %d ｜ 超限 %d ｜ 排版 %d ---'
-          % (len(files), len(A), len(B), len(C), len(D), len(E), len(G)))
+    print('\n--- 文件 %d ｜ 断链 %d ｜ 路由缺 %d ｜ 孤儿 %d ｜ 空册 %d ｜ 超限 %d ｜ 排版 %d ｜ 注入跳过 %d ---'
+          % (len(files), len(A), len(B), len(C), len(D), len(E), len(G), len(inj)))
     bad = len(A) + len(C) + len(D) + len(G)
     return 1 if bad else 0
 
