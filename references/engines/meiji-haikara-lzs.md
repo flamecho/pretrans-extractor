@@ -5,7 +5,7 @@
 
 ## 1. 特徴（他引擎との区別）
 
-- exe 内に開発パス `<開発機>/... `CArcLoader`。
+- exe 内に開発パス `<開発機>/...`、クラス名 `CArcLoader`。
   **`NX32` = 32-bit ARM（AArch32）ビルド**（NSO 段は LZ4、`hactool --exefsdir` でそのまま解けた＝既解凍）。
   ⚠ ARM64 を前提にしない（`stp x29,x30` 0 件、A32 `stmdb sp!` あり）。
 - RomFS 構成：`Data/SCD/CHAP####.lzs`（脚本 588）／`Data/CORE.lzs`（アセット台帳＋選択肢）／

@@ -19,8 +19,7 @@ ISO9660
     └ text/TextData*.bin
 ```
 - 暁 另有 `chapterSelect.dat`（含主角姓「霧島」、兄「聡介」）；`voice.awb` 702 MB 在 CPK **之外**。
-- EBOOT 内脚本路径模板：`event/{ev/E%03d, call/C%03d, npc/N%02d, terminal/T%02d, station/S%04d,
-  report/R%02d, board/B%02d, gameover/G%02d, menu/M%03d}.evt`。**CPK 里没有 `.evt`**（都在 event.enc 内）。
+- EBOOT 内脚本路径模板：`event/{ev/E%03d, call/C%03d, npc/N%02d, terminal/T%02d, station/S%04d, report/R%02d, board/B%02d, gameover/G%02d, menu/M%03d}.evt`。**CPK 里没有 `.evt`**（都在 event.enc 内）。
 - 其它魔数（小端字符串）：`SAVE`(0x45564153)、`EVNT`(0x544e5645)、`CDVD`。
 
 ## 2. 解密：EBOOT.BIN = `~PSP`

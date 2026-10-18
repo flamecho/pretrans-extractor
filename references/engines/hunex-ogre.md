@@ -1,6 +1,6 @@
 # HuneX「Ogre」系（allscr / MZX0）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 > ★ **续作案例（円環のメモーリア / 赤い砂堕ちる月 / 罪喰い for V）见 `hunex-ogre-dramaticcreate.md`**。
 > 本册＝家族总则 ＋ カレイドイヴ ＋ マジきゅん。
 

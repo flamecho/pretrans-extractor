@@ -1,6 +1,6 @@
 # Otomate / Idea Factory 自研「DAT + PAK + SCD」（PSV）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 > 代表：**学園K -Wonderful School Days- V Edition**（PSV / PCSG00654）／ **ネオ アンジェリーク 天使の涙**（PSV / PCSG01068，变体见文末）。
 
 ## 容器链

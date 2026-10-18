@@ -1,6 +1,6 @@
 # MAGES. 自家引擎 —— MPK 容器 ＋ SC3 脚本（5pb 系）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 > 首个样本：**花咲くまにまに（PSV, PCSG00366）**。Steins;Gate / Chaos;Child / Robotics;Notes 等同厂商 SciADV 作品
 > 同用 SC3（.scx/.msb），但**码表/控制码可能不同**，换作必回查。
 

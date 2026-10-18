@@ -1,6 +1,6 @@
 # Koei Tecmo / Ruby Party 自研「pasc」节点流
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 - **平台**：PSV（本作 アンジェリーク ルトゥール / **PCSG00696** / 2015-12-17 / Koei Tecmo）。
   推定同族：Ruby Party 系（アンジェリーク等）Koei 自研 AVG 引擎（与 `koei-cdar` 的 CDAR v2/v4 **不同族**）。

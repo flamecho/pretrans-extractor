@@ -76,7 +76,7 @@ Otomate 系常见：`SYSTEM.cpk/DATABASE/dbDictionary.gbin`、`strGame.gstr` 等
 **D5. 环境**
 pip 走 `-i https://pypi.org/simple`；GitHub raw 被墙走 `api.github.com`；
 7-Zip `C:/Program Files/7-Zip/7z.exe`；managed python
-`<本地路径>
+`<本地路径>`。
 
 **D6. 派生 / 合并版本（如 `@n` 合并版）保留原文不删改**，原版另存。
 

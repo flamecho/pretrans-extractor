@@ -1,6 +1,6 @@
 # Koei CDAR v2/v4（コルダ・遥か・下天の華）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 - **Koei CDAR v2/v4（コルダ/遥か）**：文本记录 `04 <u16 len> <cp932> 00`；一次点击=框边界 BOUND/M91/C7。参考 `koei/Cdar.cs`。工具 `corda_*_extract.py`/`haruka*_extract.py`/`geten_extract.py`。
   - **CDAR v4 容器**：`CDAR`＋u32 ver=4＋u32 count；`16+count*4` 起为 count×12B `{off, decompressed_size, stored_size}`；首字节 0x78→zlib；子条目可为嵌套 CDAR。

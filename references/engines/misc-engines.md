@@ -1,6 +1,6 @@
 # 其它自研/小众引擎（Regista・Artemis・BGI・System-NNN・LTEngine・NScripter・MNP・NIS-NML）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 - **Regista advGame（Paradigm Paradox）**：资源 `.atd/.ktx/.spd/.zsn/.dbx/.awb/.cpk/scr.pack`。自研 PRNG 流密码（XOR）：密钥 **`"regista"`**→seed=0x2EF；乘数 `0x6C078965`；`s[i]=m*(s[i-1]^(s[i-1]>>30))+i`；每字节 `x13^=x13<<11; x13^=x13>>8; out x10&0xFF`。同法解 `scr.pack` 与 `DATABASE/flowChart.dbx`。剧本容器 `[u32 count][count×{u32 size,u32 aux}]`，数据自 0x800；`AB <u16> <UTF-8> 00`=一行；`47 0D 00 <UTF-8> 00`=说话人名；`5F/AC/6A/BE/4A/49`=跳转；`%R<读音>%R<字数><正文>`=注音(留正文)、`%h1`=主人公名(默认 **ユウキ**)、`%N`=高亮(剔)。工具 `paradigm_paradox_extract.py`。
 - **Artemis Engine（滄海天記）**：归档 **PFS「pf8」**：头 11B `"pf8"+u32 index_size+u32 file_count`；条目 `{u32 namelen,name,u32 sep=0,u32 offset,u32 size}`。**加密**：`key=SHA1(file[0x07:0x07+index_size])`(20B)，**整文件逐字节 XOR key 循环**（.mp4/.ogv 除外）★ 社区「只 XOR 前 20B」是错的。剧本 `script/*.ast`（`astver=2.0`，明文 Lua 风）；**一次点击 = 一个含 `text` 的 block = 一行**；正文=顺序拼 `ja[0]`；`rt2`=框内改行(合并)、`ruby`=注音(留正文)、`name`=说话人名(剔)；`select.ja` 每项一行；`game_dic.ast`=用語辞典；`scene*.ast`=回想包装(重复→剔)。工具 `artemis_pfs_extract.py`。

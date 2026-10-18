@@ -1,6 +1,6 @@
 # STCM2L（Idea Factory 系）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 - **STCM2L（Idea Factory 系；猛獣＝Switch/UTF-8，PANDORA＝PS2/CP932）**：
   - 脚本头：`generator 32B("STCM2L Jul 12 2010 …")` ＋ `exports_offset(u32)` ＋ `exports_count` ＋ … ＋ `"GLOBAL_DATA\0"` ＋ globals(u32 数组) ＋ `"CODE_START_\0" 12B`；

@@ -1,6 +1,6 @@
 # WillPlus / AdvHD（.wsc）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 - **WillPlus / AdvHD（`.wsc`）（Butterfly Lip ＋ Gloss ＋ Rouge 实证，2026-10-10）**：PC；exe manifest 残留 `will.willadv.exe`。
   - **同系列三作＝同一引擎、零改动复用**：Lip（`DKLDISC1.iso`/`DKLAPPEND.iso`，脚本 `BL_/OMAKE`，Vol.1）、

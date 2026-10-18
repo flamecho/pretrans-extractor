@@ -12,7 +12,7 @@
 
 用法:
   python scripts/distill.py --report "提取结果/解析报告/XX_解析报告.md"
-  python scripts/distill.py --report R.md --log `references/`2026-10-18.md --open
+  python scripts/distill.py --report R.md --log references/2026-10-18.md --open
   python scripts/distill.py --report R.md --skill <skill 目录> --mem <memory 目录> --out /tmp/d.md
 
 退出码: 0 = 无待沉淀; 1 = 有待沉淀（提示人工处理）

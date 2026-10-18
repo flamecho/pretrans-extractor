@@ -1,6 +1,6 @@
 # Nitroplus NPA / NSS
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 ## Nitroplus NPA / NSS —— Lamento -BEYOND THE VOID- (W10, PC；NITRO CHiRAL 2006)
 > 来源：`<游戏 dump 目录>/[PC-JP]Lamento -BEYOND THE VOID- Windows 10 Support Edition/L_W10.rar`

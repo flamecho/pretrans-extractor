@@ -1,6 +1,6 @@
 # Malie System（Camellia LIBP / MalieVita / AlphaROM）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 ## Malie System —— GreenWood（OmegaVampire repack 实证；Camellia 系）
 

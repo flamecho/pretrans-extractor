@@ -1,7 +1,7 @@
 # HuneX「Ogre」系 · dramatic create 移植三作（円環のメモーリア / 赤い砂堕ちる月 / 罪喰い for V）
 
 > > **家族总览（容器/MZX0/指令总则）＋ カレイドイヴ ＋ マジきゅん 见 `hunex-ogre.md`**；
-> 路由一句话见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由一句话见 `../engines.md`；主索引见 `../00-index.md`。
 
 ---
 

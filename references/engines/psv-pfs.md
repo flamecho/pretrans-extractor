@@ -1,6 +1,6 @@
 # PSV NoNpDrm / PFS
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 - **PSV NoNpDrm**：pkg2zip -x → `<psvdec>/…/psvpfsparser.exe -i app/<ID> -o dec -z <zRIF> -f cma.henkaku.xyz`（zRIF 见 `games.json`；放行 `cma.henkaku.xyz:80`，前台运行）。
 - **NoNpDrm `.zip` 直接解包（无 pkg）**：解压后 `-i` 指到含完整文件树的 `<PCSGxxxxx>/` 目录（须有 `eboot.bin`/`sce_pfs`）。

@@ -109,7 +109,7 @@ def main():
         mg, off, what, slug, nxt = hit
         print('  ✓ 判定: %s   (magic %s @0x%x)' % (what, mg[:10], off))
         if slug:
-            print('  引擎文档: `references/engines/%s.md' % slug)
+            print('  引擎文档: references/engines/%s.md' % slug)
         print('  下一步: ' + nxt.format(f=p))
     else:
         e = ent(d[:1 << 16])

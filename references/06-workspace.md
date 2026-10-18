@@ -15,7 +15,7 @@
 | **探查 / 识别 / 体检** | `scripts/probe.py`（限量探查）· `scripts/identify.py`（容器→引擎）· `scripts/memcheck.py`（体积体检） |
 | 用户自建汇总库 | `<成品汇总库>/AAAAA/`（用户自行拷贝，**非我写入**） |
 | 清理记录 | `清理记录/清理记录_YYYY-MM-DD.txt`（追加式：删/归档/保留/重跑步骤） |
-| **项目记忆** | `references/`（见 §5 的**两级结构**） |
+| **项目记忆**（工作区） | `references/` |
 | **收尾中间物**（可随时删） | `_distill/<game>.md`（沉淀草案）· `_archive/<game>/`（四处落位片段）· `_scratch/<game>/`（一次性脚本） |
 | 重构前原件备份 | `_archive_restructure_YYYY-MM-DD/` · `_bak_*_YYYYMMDD/`（用户确认后可整体删） |
 
@@ -59,37 +59,19 @@
 
 ## 4. 环境
 
-- managed python：`<本地路径>
+- managed python：`<本地路径>`
 - **venv python**（有 pycryptodome，跑 `self2elf.py` 等要用它）：
-  `<本地路径>
+  `<本地路径>`
 - 7-Zip：`C:/Program Files/7-Zip/7z.exe`（**日文路径必须走 PowerShell**，见 `05-deliver-pitfalls.md` D9）
 - pip：`-i https://pypi.org/simple`（GitHub raw 被墙走 `api.github.com`）
 
-## 5. 记忆维护（**两级结构：小主索引 + 按类子文件**）
+## 5. 收尾与约定
 
-```
-`references/`
-  MEMORY.md      ← 自动注入！只放 铁律 + 导航；>8 KB 就是该拆了（目录约定已下沉 CONVENTIONS.md）
-  CONVENTIONS.md ← 工作区布局 / 成品位置 / 源母本 / 分发包 / GitHub / 环境变量
-  WORKS.md       ← 作品索引（新作只追加一行）
-  ENGINES.md     ← 引擎路由表（一句话索引 + 「详见」列）
-  engines/*.md   ← 一引擎一文件，自包含（单个 ≤10 KB）
-  works/*.md     ← **可选层**：仅当某作结论 > 5 KB 才开（日志只留一行指针）
-  TOOLS.md       ← scripts/ 工具索引
-  YYYY-MM-DD.md  ← 当日流水（append-only）；**每作写一个 `## 作品名` 小节**，查历史先 Grep ⬅ 主力
-```
-
-- **规则**：`.md > 10 KB` ⇒ **按主题拆**（`SKILL.md` 例外：唯一必读文件，上限 **12 KB**）；
-  `MEMORY.md > 8 KB` ⇒ 必须拆。**主动做，不等用户提**（`memcheck.py` 兜底）。
 - **每作收尾**（S8）：**只跑一条** `python scripts/wrapup.py --report <报告> --text <成品> --name <主角>`
   ⇒ 品检 / 体积 / 沉淀草案 / 落位片段一次出齐，按它给的待办清单处理即可（细则 `05-wrapup.md`）。
   **一次性脚本一律写进 `_scratch/<game>/`**，别堆在工作区根。
 - **查历史**：先 `Grep <作品名|引擎名>` `references/`，**只读命中段**，不整读日志/报告。
 - **用户说「清理产物」时**：① 按约定清理；② **顺手检查本 skill 是否需要修订/补充**。
-- **任务标题＝作品名（2026-10-14 用户定；★AI 改不了，也别提）**：WorkBuddy 的任务标题由 App 自动生成，
-  **Agent 无接口可设/改**（`TaskCreate` 只是内部待办，不是任务标题 —— 曾误当改名手段被用户纠正）⇒
-  **AI 一律不碰、不宣称、也不主动提醒**（用户 2026-10-14 明示「不用宣称了 我自己会改」，改名由用户自行操作）。
-  别用 `_work_*`/缩写当代号（那只是工作目录名）。
 - **写 `.py` 别用 Python 文本模式**（2026-10-14）：`open(p,'w')` 在 Windows 会把 `\n` 变 `\r\n`（+1 B/行，
   体检体积瞬间超限，`check_text.py` 曾 10093→10292）⇒ 用 `open(...,'w',newline='')` 或二进制写，
   写完 `b.count(b'\r') == 0` 复核。

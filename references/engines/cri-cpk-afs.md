@@ -1,6 +1,6 @@
 # CRI（CPK / AFS / 自研索引码）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 - **CRI CPK**：`cpk.py`((m>>8)&0xFF) / `cpk_v1.py`(m&0xFF)；判据 `@UTF`。
 

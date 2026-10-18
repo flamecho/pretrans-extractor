@@ -1,6 +1,6 @@
 # 自研「テキスト方式 ADV」（クランク・イン）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 ## 自研「テキスト方式 ADV」（プチレーヴ × Future Tech Lab）— クランク・イン
 - 容器：PSV NoNpDrm **`.pkg`**（非 zip）→ `scripts/pkg2zip.exe <pkg> <zRIF>`（v1.8，产出 `… [TITLEID] [JPN].zip`，内含 `app/<TITLEID>/`）

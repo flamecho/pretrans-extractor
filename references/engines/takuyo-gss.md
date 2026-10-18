@@ -1,6 +1,6 @@
 # Takuyo gss（LSDARC V.100 + SCR 2.00）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 > ★ **平台分册**：PSP（étude prologue）＝`takuyo-gss-psp.md`；NS（神さまと恋ゴコロ/ソラユメ等）＝`takuyo-gss-switch.md`（SCR 3.00 打包）／`takuyo-gss-switch-scr2.md`（SCR 2.00 未打包）。本册＝PSV（ひめひび・Cafe Cuillere）。
 
 ## Takuyo gss 引擎 —— LSDARC V.100 + `SCR 2.00`（ひめひび -Princess Days-, PSV PCSG01092）
@@ -38,8 +38,8 @@
   | `0x5c` | **选项** | `(u32 个数, "显示文本,FLAG", "…,FLAG2", …)`；显示文本 = 最后一个 ASCII 逗号之前 |
   | `0xfd` | 槽位/UI 赋值 | `(6,slot),(3,str)`；`0x2402`=名牌文本、`0x04e4`=背景图、`0x0224`=名字部件；**提取时剔** |
   | `0x3c`/`0x3d` | SE `/` BGM 文件名 | 剔 |
-  | `0x3b`/`0x107` | 图片加载 `/ 串拼接 | 剔 |
-  | `0x1e`/`0x1d` | 调脚本(file,label) `/ 尾调用 | 用于遍历调用图 |
+  | `0x3b`/`0x107` | 图片加载 / 串拼接 | 剔 |
+  | `0x1e`/`0x1d` | 调脚本(file,label) / 尾调用 | 用于遍历调用图 |
   | `0x1a` | 标签定义 | |
   | `0x18` | 条件（flag）→ 紧跟 `0x1a label` 跳转 | 分支 |
   | `0x25`,`0x21`-`0x28`,`0x30`,`0x37`… | 变量/flag/算术/地图 | 非文本 |

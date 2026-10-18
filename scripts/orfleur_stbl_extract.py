@@ -4,7 +4,7 @@
 オルフレール ～幸福の花束～ (PSV / PCSG00919, dramatic create「Orfre」/ DCVM)
 文本提取器 —— 以 STBL（脚本发射序）为准 ⇒ 「一次点击 = 一行」
 
-关键格式（详见 `references/engines/orfre-dcvm.md）
+关键格式（详见 references/engines/orfre-dcvm.md）
   rom/script.rom : 1024B 页 -> 块头 12B[type] -> DCVM
   DCVM 段: DCVM > STOR > PTBL > PSTR > [VTBL] > FTBL > CODE > STR > STBL
   STR  = NUL 分隔字符串池（**分类排序存放**，池序 != 显示序）

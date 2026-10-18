@@ -1,6 +1,6 @@
 # HuneX「HESL / UNAS」系（HGTC / HPAC / HLZS / HFNT / HESL / HESE）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 > **与既有 HuneX「Ogre」系（mrg/hed/MZX0，见 `hunex-ogre.md`）不是一族**：本族是 2015 前后 PSV 新引擎，
 > 魔数一律 `H` 开头、可无文本资源、文本用**自建码表**。
 

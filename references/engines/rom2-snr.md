@@ -1,6 +1,6 @@
 # ROM2 / SNR（Kalmia8 · ACTGS）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 ## ROM2 / SNR（Kalmia8 · ACTGS 引擎）—— 鳥籠のマリアージュ ～初恋の翼～（PSV PCSG90230）
 
@@ -27,9 +27,7 @@ eboot 为 SCE SELF，`self2elf.py -k work.bin`（**需 pycryptodome，用 venv p
    count 个 NUL 结尾名字（位置 = 块起点 + (f0 & 0x7fffffff)）
 ```
 - 目录树按「块出现顺序 = 根 → 各子目录（进入队列）」展开；块 0 = 根（33 项）。
-- 本作 10 块 / 2936 文件 / 460.8 MB。顶层：`adv.txa codes.txt config.txa default.msk effects.txa logview.txa
-  main.snr matisse.fnt msgtex.txa name.txa rodin.fnt saveload.txa seura.fnt splash.txa sysmenu.txa sysse.bin
-  systex.txa title.txa trial.txa voice.txa` ＋目录 `bgm bastup mask movie picture se voice voicen`。
+- 本作 10 块 / 2936 文件 / 460.8 MB。顶层：`adv.txa codes.txt config.txa default.msk effects.txa logview.txa main.snr matisse.fnt msgtex.txa name.txa rodin.fnt saveload.txa seura.fnt splash.txa sysmenu.txa sysse.bin systex.txa title.txa trial.txa voice.txa` ＋目录 `bgm bastup mask movie picture se voice voicen`。
 - `*.txa`(magic `TXA4`) 内是带名的图像条目（adv/panel/quicksave/skip…）＝**纹理图集**；`*.bup`(magic `BUP4`)＝立绘
   （kana1_1/mako1l00… 前缀＝角色）;`*.msk`/`*.pic`＝图像；`codes.txt`＝字体用字符码表（单字+CRLF）；`*.fnt`＝字体；
   `*.at9`＝ATRAC9；`*.mp4`＝视频。**文本只在 `main.snr`。**
@@ -68,8 +66,7 @@ eboot 为 SCE SELF，`self2elf.py -k work.bin`（**需 pycryptodome，用 venv p
 ## 同族第 2 作：参千世界遊戯 ～Re Multi Universe Myself～（PSV PCSG01194 / Dramatic Create・girls★dynamics）
 
 链路：NoNpDrm `.zip`（`PCSG01194/data.rom` 1.23 GB，**无 pkg**）→ `psvpfsparser -z <zRIF>` → `rom2_extract.py`
-→ 文本只在 `main.snr`（3,087,248 B）；顶层另有 `adv/appendix/config/gallery/logview/replay/saveload/sysmenu/systex/
-title/trial/voice.txa`（TXA4 纹理）、`*.fnt`（**FNT4** 可变长轮廓字体，未解）、`default.msk`、`sysse.bin`。
+→ 文本只在 `main.snr`（3,087,248 B）；顶层另有 `adv/appendix/config/gallery/logview/replay/saveload/sysmenu/systex/title/trial/voice.txa`（TXA4 纹理）、`*.fnt`（**FNT4** 可变长轮廓字体，未解）、`default.msk`、`sysse.bin`。
 
 **★ 与 鳥籠 的两处变体（换作必回查）**：
 1. **记录头 = `87 <A:u16> <F:u8> <T:u8> <C:u16> <LEN:u16>`，`T ∈ {0x00,0x01}`**（鳥籠只有 0x01）。本作 47 条 `T=0x00`

@@ -1,6 +1,6 @@
 # Unity（IL2CPP）＋ Naninovel（Elringus）—— 剧本文本提取
 
-> > 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。本文件自包含：容器→解密→脚本→成行→排除→工具。
+> > 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。本文件自包含：容器→解密→脚本→成行→排除→工具。
 
 ## 0. 识别特征
 - RomFS = Unity `Data/`（`Managed/Metadata/global-metadata.dat` ⇒ **IL2CPP**；`StreamingAssets/aa/` ⇒ **Addressables**；

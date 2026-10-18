@@ -1,6 +1,6 @@
 # 3Daisy 自研（SCRVITA / .tbl+.pak / .psb）
 
-> 从 `engines.md` 拆出。路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 从 `engines.md` 拆出。路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 > 定案作：**ヴァルプルガの詩（PSV PCSG00768，3Daisy／发行 PROTOTYPE）**。工具 `scripts/valpurga_extract.py`。
 
 ## 容器
@@ -56,4 +56,4 @@
 ## 工具
 - `scripts/valpurga_extract.py <dec 目录> <out.txt>`。
 - 解密链（PSV）：`zzzrif.py`(work.bin→zRIF) → `pkg2zip -x`(容器层) → `psvpfsparser -i -o -z`(**PFS 层**)
-  → `self2elf.py -k work.bin`(eboot)。详见 `../MEMORY.md` 铁律 11 与 `engines/psv-pfs.md`。
+  → `self2elf.py -k work.bin`(eboot)。详见 `../00-index.md` 铁律 11 与 `engines/psv-pfs.md`。

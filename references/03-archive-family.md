@@ -71,7 +71,7 @@
   ④ 通読確認。**小ファイルだけで決めない。**
 - ⚠ 「距離 = off − 1」に見えたら **r0 を取り違えている**サイン（絶対索引 ↔ 距離の読み替え）。
   `dist`（`src = r − off`）実装は本変種では**誤り**。
-- ★ **同作は NX32 ＝ 32-bit ARM（AArch32）ビルド**（開発パス `<開発機>/...
+- ★ **同作は NX32 ＝ 32-bit ARM（AArch32）ビルド**（開発パス `<開発機>/...`）。
   **Switch を ARM64 と決め打たない**：判据＝`stp x29,x30`(`fd 7b bf a9`) が 0 件・A32 `stmdb sp!`(`…2d e9`) が存在。
   `hactool --exefsdir` の `main` は**そのまま解凍済み**（NSO 段 LZ4 は hactool 側で処理）。
 - ⚠ **`hactool -t nsp` が `Invalid NCA header! Are keys correct?` で落ちる場合** ⇒ `-t pfs0` で NCA を

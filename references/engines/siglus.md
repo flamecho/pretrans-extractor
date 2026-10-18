@@ -1,6 +1,6 @@
 # SiglusEngine（VisualArt's）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 
 - **SiglusEngine（VisualArt's；罪ナル螺旋ノ檻 定案，亦适用 Rewrite/AB!/SP 等）**：PC 发行常为 **单 exe = PE + RAR5 自解压**（RAR5 签名 `52 61 72 21 1A 07 01 00` 在 **0x48E00**，无密码）→ `7z x` → 内 **ISO9660** → `SetupData/GameData/`；或直接是文件夹版。关键文件：`Scene.pck`（剧本封包）、`Gameexe.dat`（配置）、`SiglusEngine.exe`（常 **AlphaROM 加壳**：节名混淆 `tvyziunz`/`hzgcbvdl`、无导入串 ⇒ **静态扫 key 不可行**）、`g00/`(图)、`koe/bgm/wav/mov/`。
   **加密模型**：`cipher[i] = plain[i] XOR FIXED_KEY[i%256] XOR EXE_KEY[i%16]`；Scene 用 `SCENE_KEY`(256B)，Gameexe 用另一张 `GAMEEXE_KEY`(256B)（两表在 `siglus_rs/crates/siglus_assets` 与 `hiroshil/SiglusEngine/Decryption.cpp` 中均可取）。

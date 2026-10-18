@@ -6,8 +6,7 @@
 
 ## 作品：for Symphony ポータブル（PSP `ULJM05258`，v1.01，2007，Takuyo／vndb v2628）
 
-- **源**：`[PSP-JP]For Symphony ~With All One's Heart~.zip` → 裸 ISO `For Symphony - With All One's Heart
-  Portable (Japan) (v1.01).iso`（1,072,136,192 B）。ISO9660，**未加密**，`7z x` 两层直解。
+- **源**：`[PSP-JP]For Symphony ~With All One's Heart~.zip` → 裸 ISO `For Symphony - With All One's Heart Portable (Japan) (v1.01).iso`（1,072,136,192 B）。ISO9660，**未加密**，`7z x` 两层直解。
 - **容器＝`LSDARC V.100`**：`USRDIR/{SCRDATA,SYSDATA,BMPDATA,SE,VOICE}.{BIN,ARC}`。
   `SCRDATA` **1,402 条全 `isPacked=0`**，偏移链校验通过（`end==len(BIN)`＝32,990）。
 - **脚本＝`SCR 1.10`**（与 Little Aid 同版本）：`u16 opcode｜u8 size｜u16 id｜operand*`。
@@ -40,8 +39,7 @@
    `\c`（62，删）；无 `@` 系。
 7. **选项串自带 `『…』`**（如 `『一緒に学校に行く』,R02`）⇒ 引擎按原串绘制，**保留引号、不剥**。
 8. **孤儿脚本＝カットシーン**：20 个有文本的脚本零引用（`0x1e/0x1d` 全为静态（script,label）串；
-   另做原始字节搜名亦 0 命中）——`P_AA00/P_AA32/P_AA33/P_BB06/P_BB34/P_CC42/P_GG01_1/P_GG35/
-   P_GG36/P_HH19/P_HH33/P_JJ17/S_EE11/S_II03_5/W_JJ07_2/W_JJ15`（合计 **268 行**）。
+   另做原始字节搜名亦 0 命中）——`P_AA00/P_AA32/P_AA33/P_BB06/P_BB34/P_CC42/P_GG01_1/P_GG35/P_GG36/P_HH19/P_HH33/P_JJ17/S_EE11/S_II03_5/W_JJ07_2/W_JJ15`（合计 **268 行**）。
    按「未上屏不收」剔除，报告单列（其中 P_AA00 是另一版开场闹钟独白）。
 
 ### 排除表（17 个系统脚本，逐条核实无正文／仅调试）

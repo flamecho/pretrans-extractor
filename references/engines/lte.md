@@ -1,6 +1,6 @@
 # LTE 引擎（自研・纯文本标签脚本）
 
-> 路由/一句话索引见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由/一句话索引见 `../engines.md`；主索引见 `../00-index.md`。
 > 首见作：**TOKYOヤマノテBOYS for V MAIN DISC（PSV / Rejet / 2017）**。
 > 宿主＝ **Unity 5.4.4p2（Mono）**；脚本引擎本体＝ `Media/Plugins/LteVitaNativePlugin.suprx` ＋
 > `Assembly-CSharp.dll`（类名 `ScenarioParser` / `*Command`）。

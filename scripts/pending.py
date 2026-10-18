@@ -10,7 +10,7 @@
   ③ 有报告且已落位，但报告头没有 front-matter → 下次索引字段只能猜（提示补头）
 
 用法:
-  python scripts/pending.py                       # 扫当前目录的 提取结果/ 与 `references/`
+  python scripts/pending.py                       # 扫当前目录的 提取结果/ 与 references/
   python scripts/pending.py --out <提取结果目录> --mem <memory 目录> --since 2026-10-01
 退出码: 0 = 无待办; 1 = 有待办
 """

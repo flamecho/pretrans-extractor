@@ -1,7 +1,7 @@
 # Takuyo gss —— Switch 变体（`SCR 3.00` + LSDARC 内层压缩）
 
 > 本家（PSV `SCR 2.00`）见 `../engines/takuyo-gss.md`；
-> 路由见 `../engines.md`；主索引见 `../MEMORY.md`。
+> 路由见 `../engines.md`；主索引见 `../00-index.md`。
 > ★ **脚本版本按文件头判，不可按平台推定**：同为 NS 版，`神さまと恋ゴコロ`＝`SCR 3.00`＋内层打包（**本册**），
 > **`カエル畑DEつかまえて☆彡`＝`SCR 2.00`＋未打包**（⇒ 见 **`takuyo-gss-switch-scr2.md`**）。
 
@@ -55,8 +55,7 @@ u16 opcode | u16 size（**总长，含 6B 头**）| u16 id | operand*<u8 type><d
 ### ④ 顺序 / 排除
 - 入口 `AUTOEXEC` → `Init.SCR/START` → `PRG_ROUTE.scr/START`；
   顺序＝按 `0x1e/0x1d/0x102` 调用图 **DFS 前序去重**（覆盖 326/343）。
-  结构：`00_PROLOGUE → 09_25～09_27 → 各角色 _01 → L_00_* 共通 → L_0x_* → 10_03～12_19
-  → ED_* ／ *_23_END… → EVENT01-06 → 各角色本篇 → Z_* → COM_*`。
+  结构：`00_PROLOGUE → 09_25～09_27 → 各角色 _01 → L_00_* 共通 → L_0x_* → 10_03～12_19 → ED_* ／ *_23_END… → EVENT01-06 → 各角色本篇 → Z_* → COM_*`。
 - 6 名攻略角色：IKUTO(如月征都)/KUON(高梨久遠)/KENGA(辻宮兼我)/SEIJI(笠原誠司)/SUBARU(東條昴)/SORA(日渡奏良)。
 - **排除**：系统/演出（`AUTOEXEC INIT RELOAD PRG_* YURASHI TIME_PASS`）、UI（`SELECT SELECT2`）、
   无文本（`CERO EVENT01-06`）、**测试**（`SUNDAY`＝`あいうえお…`＋`手巣テスト…`）、开发菜单 `DEBUG`、

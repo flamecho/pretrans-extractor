@@ -1,6 +1,6 @@
 # Matatabi 自研「纯文本 @命令 ADV」（Unity IL2CPP 宿主）
 
-> 单作专用自研引擎，路由见 `engines-solo.md`；主索引 `../MEMORY.md`。
+> 单作专用自研引擎，路由见 `engines-solo.md`；主索引 `../00-index.md`。
 > 代表：**神凪ノ杜 五月雨綴り（NS-JP, `TID 0100B5801D7CE000`）**（2026-10-16）
 
 ## 容器（NS）

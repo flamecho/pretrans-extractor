@@ -17,13 +17,13 @@
 2. **只读「当前这一步」需要的**：动手前只读 `SKILL.md`；进入某阶段才读那一份 `references/03?`；
    定位到引擎才读那一份 `engines/<slug>.md`。**不要为了"保险"预读**（坑索引已覆盖全部坑）。
 3. **长会话要「卸货」**：中途结论（字节布局、密钥、记录格式）立刻写进
-   `_work_<game>/NOTES.md` 或 `references/`works/<slug>.md`，**需要时再读回来**；
+   `_work_<game>/NOTES.md` 或 `references/works/<slug>.md`，**需要时再读回来**；
    不要靠「记在脑子里」硬扛 —— 上下文一长，早先的结论会被冲淡、开始自我重复。
 4. **同一事实只存一处**：写记忆前先 `Grep` 是否已有；重复=每次都被加载两遍。
    （主索引只放铁律+导航，细节一律下沉。）
 5. **大二进制不进上下文**：一律脚本摘要（`probe.py magic/entropy/tree`），要字节才 `hex` 小窗口。
 6. **不读成品/日志全文**：判定用 `check_text.py`，抽查用 `sed -n 'a,bp'`；查历史先 `Grep` 再只读命中段。
-7. **看见大文件就拆，不等用户提**：`.md > 10 KB` ⇒ 按主题拆（`SKILL.md` 上限 12 KB）；`MEMORY.md > 8 KB` ⇒ 必须拆。
+7. **看见大文件就拆，不等用户提**：`.md > 10 KB` ⇒ 按主题拆（`SKILL.md` 上限 12 KB）；`00-index.md > 8 KB` ⇒ 必须拆。
    兜底：每作收尾跑 `python scripts/memcheck.py`（退出码 1 = 有待处理）。
 
 **换算参考**：Read 一个 10 KB 的 md ≈ 往上下文写 ~4k token 的杂质；一次不限量的 print 可以写进 25k+。
