@@ -1,3 +1,4 @@
+"""在归档的嵌套条目里扫日文，报 magic / 大小 / 样例。"""
 import sys, re, os, glob
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cdar import CDAR

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""pandora_extract 的调试视图：按地址反查所属文件，并打印附近字符串。"""
 import struct, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pandora_extract import load, code_range, scan_strings, BREAK_CMDS, A4

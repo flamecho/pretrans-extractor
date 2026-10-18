@@ -1,3 +1,4 @@
+"""AFS0（AFS\0）归档索引解析：条目偏移/大小 → 取数据。"""
 import sys, os, struct
 
 def parse_afs(path):

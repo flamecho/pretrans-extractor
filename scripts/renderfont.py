@@ -1,3 +1,4 @@
+"""把字库图集渲染成 PNG（逐码位预览，供人工目视确认字形）。"""
 import struct, zlib, sys
 P = 'iso/PSP_GAME/USRDIR/KOEID0.BIN'
 f = open(P, 'rb')

@@ -1,3 +1,4 @@
+"""Malie（Vita）Libp 归档读取库：入口表 / 文件名 / 数据切片。"""
 import struct, sys, os
 
 class Libp:

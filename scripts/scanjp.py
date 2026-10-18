@@ -1,3 +1,4 @@
+"""单文件内定位连续假名 run（按偏移列出），用于确认哪一段是正文。"""
 import sys, re, collections
 p = sys.argv[1]
 d = open(p, 'rb').read()

@@ -1,3 +1,4 @@
+"""对 KOEID0.BIN 各条目试 zlib 与原始解压，按输出熵排序判断压缩方案（一次性实验）。"""
 import struct, zlib, math, collections, itertools
 
 P = 'iso/PSP_GAME/USRDIR/KOEID0.BIN'

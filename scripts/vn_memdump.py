@@ -1,3 +1,4 @@
+"""从运行中的进程按内存区段 dump（Windows，ReadProcessMemory）。"""
 import ctypes, ctypes.wintypes as wt, sys, os, struct, zlib, re
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 

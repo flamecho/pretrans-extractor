@@ -1,3 +1,4 @@
+"""リアフェレス（Unity）TextAsset 场景脚本提取 → リアフェレス.txt。"""
 import UnityPy, glob, os, sys, re
 D='tmp2/rear/PCSG00663/Media/'
 def load_scripts():

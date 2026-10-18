@@ -1,3 +1,4 @@
+"""Unity 资产文本扫描：UTF-8 / UTF-16LE / CP932 逐个试，报日文字数。"""
 import sys, re, os
 import UnityPy
 jp=re.compile(r'[\u3040-\u30ff\u4e00-\u9fff]')

@@ -1,3 +1,4 @@
+"""CDAR 容器读取库（被 cdar_extract.py import）：索引表 + 条目解压。"""
 import struct, zlib
 
 def find_table(d):

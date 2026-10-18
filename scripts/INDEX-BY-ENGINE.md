@@ -63,8 +63,10 @@
 | `orfre-dcvm.md` | 引擎：dramatic create 自研「Orfre」/ DCVM | `orfleur_extract.py` · `orfleur_stbl_extract.py` |
 | `orfre-dcvm-history.md` | orfre-dcvm 探查史—— 仅排障时读 | `orfleur_trace.py` · `orfleur_vm.py` · `pc_snr_order.py` |
 | `otomate-evb-marc.md` | 引擎：Otomate 自研 `.evb` ＋ MARC | `cfm_extract.py` · `iso_cut_cpk.py` · `musketeer_charset.py` |
+| `otomate-vm.md` | Otomate VM | —（无现成脚本：按本册的容器链路 / 记录形状自己写） |
 | `planpeace-pct.md` | Plan Peace / InterOne 自研「PCT」——`data.dat` ＋… | `solomon_extract.py` |
 | `prince-stride-d3p.md` | 引擎：D3P 系「CRI CPK ＋ 自建字符集/位图字体」· 他作 —— プリンス… | `prince_stride_lt.py` · `prince_stride_run.py` · `stormlover_charset.py` · `vamwolf_lt.py` · `vamwolf_run.py` |
+| `psv-pfs.md` | PSV NoNpDrm / PFS | —（无现成脚本：按本册的容器链路 / 记录形状自己写） |
 | `rom2-snr.md` | ROM2 / SNR | `rom2_extract.py` · `sanzen_extract.py` · `torimari_extract.py` |
 | `siglus.md` | SiglusEngine | `siglus_scene_extract.py` |
 | `stormlover-d3p.md` | 引擎：D3P 自研 ADV— STORM LOVER 系列 | `stormlover2_charset.py` · `stormlover2_run.py` · `stormlover_assets.py` · `stormlover_charset.py` · `stormlover_font.py` · `stormlover_run.py` |
@@ -85,6 +87,7 @@
 | `willplus-advhd.md` | WillPlus / AdvHD | `advhd.py` · `bgloss_extract.py` · `blip_extract.py` · `brouge_extract.py` |
 | `zerodiv-cpk-extra-files.md` | Zerodiv 自研 ADV —— CPK 内 `event.enc`… | `cpk.py` · `lzo1x.py` · `termdict_extract.py` · `urakata_extract.py` |
 | `zerodiv-lzo1x.md` | Zerodiv 自研 ADV—— 裏語 薄桜鬼 系 | `cpk.py` · `lzo1x.py` · `urakata_extract.py` |
+| `zerodiv-talks-variant.md` | Zerodiv 自研 ADV —— **台詞バリアント機構** | `vn_zerodiv_extract.py` |
 
 ## 二、按脚本（这个 py 是干什么的）
 
@@ -139,9 +142,9 @@
 | `gss_lsdarc.py` | LSDARC V.100 container (Takuyo gss). Index = "<NAME>.BIN"… | `takuyo-gss-psp-hoshiiro` · `takuyo-gss-psp-littleaid` · `takuyo-gss-psp-symphony` … |
 | `gss_scr3.py` | SCR 3.00 (Takuyo gss / Switch) disassembler. | `takuyo-gss-switch` |
 | `hakuoki_zuisouroku_extract.py` | 薄桜鬼 随想録 面影げ花 (PSV, PCSG00485, Idea Factory / Otomate) | `idea-factory-stcm2l-psv-g` |
-| `hanayoi_afs.py` | — | `cri-cpk-afs` |
+| `hanayoi_afs.py` | AFS0（AFS\0）归档索引解析：条目偏移/大小 → 取数据 | `cri-cpk-afs` |
 | `hanayoi_extract.py` | 返回 (lines, unknown) | `cri-cpk-afs` |
-| `hanayoi_run.py` | — | `cri-cpk-afs` |
+| `hanayoi_run.py` | 批量驱动 hanayoi_extract.py：多脚本合并成一份成品（一次点击 = 一行） | `cri-cpk-afs` |
 | `haruka5_extract.py` | 遙かなる時空の中で5 (PSP / ULJM-05821, Koei / Ruby Party) 全文本提取器 | `koei-cdar` |
 | `heiligenstadt_extract.py` | 《ハイリゲンシュタットの歌》 (PS Vita / PCSG01070 / eXtend / Unity… | `unity-adv` |
 | `himehibi_crawl.py` | ordered list of callee script names (0x1e / 0x1d). | `takuyo-gss` |
@@ -162,7 +165,7 @@
 | `l2ll_extract.py` | L2 Love×Loop (PS2 / Idea Factory / SLPM-55191) 剧本文本提取 | `idea-factory-stcm2l-ps2-uni2` |
 | `lamento_extract.py` | Lamento -BEYOND THE VOID- (Windows 10 Support Edition) —… | `nitroplus` |
 | `lastescort_extract.py` | ラストエスコート -Club Katze- (PSP) 全文本提取 —— 通用驱动 | `lastescort-paf` |
-| `libp_malievita.py` | — | `malie` |
+| `libp_malievita.py` | Malie（Vita）Libp 归档读取库：入口表 / 文件名 / 数据切片 | `malie` |
 | `littleaid_extract.py` | Little Aid Portable (PSP-JP, 2007 Takuyo, ULJM-05...)… | `takuyo-gss-psp-littleaid` |
 | `lovepeace_extract.py` | 恋戦隊LOVE＆PEACE THE P.S.P. (PSP / BROCCOLI 2012) MES.DAT text… | `lovepeace-adv` |
 | `loverevo_extract.py` | 乙女的恋革命★ラブレボ!! Portable (PSP) 全文本提取 | `hunex-ogre-loverevo` |
@@ -191,7 +194,7 @@
 | `neoangelique_extract.py` | ネオ アンジェリーク 天使の涙 (PSV-JP, PCSG01068, Otomate / Idea Factory)… | `gakuenk-dat-scr` |
 | `niladmirari_extract.py` | ニル・アドミラリの天秤 色ドリ撫子 (Switch) —— 全文本提取器 | `idea-factory-stcm2l-switch` |
 | `norn9_extract.py` | Norn9 ～Norn + Nonette～ Act Tune (PSV, PCSG00833) 剧本文本提取 | `idea-factory-stcm2l-psv` · `idea-factory-stcm2l` |
-| `npa_nrbf.py` | — | `nitroplus` |
+| `npa_nrbf.py` | Nitroplus NPA 内 NRBF（.NET BinaryFormatter）序列化数据的解析器 | `nitroplus` |
 | `nsac.py` | NSAC (v2) 容器解析/解包 —— eXtend 系 PSVita 作品《逢魔が刻… | `misc-engines` |
 | `nsp_split.py` | PFS0(NSP) 逐块直拷拆分器 —— 规避 hactool --pfs0dir 对 >1.7GB 成员写全零的问题 | `konami-unity-bytes-works` |
 | `oga_sts_extract.py` | O*G*A 鬼ごっこロワイアル ハンターは孤島で恋をする (PSP-JP / Idea Factory・Otomate) | `oni-psp-tob` |
@@ -204,7 +207,7 @@
 | `ouma_story.py` | 《逢魔が刻 ～かくりよの縁～》本編 ADV シナリオ抽出 (NML スクリプト) | `misc-engines` |
 | `ozmafia_extract.py` | OZMAFIA!! -vivace-（Nintendo Switch, 01002BE0118AE000… | `hunex-ogre-ozmafia` |
 | `ozmafia_nca.py` | NCA 头/key area 检视器（Switch）—— 用于旧 hactool 无法处理的 BKTR 增量补丁 NCA | `hunex-ogre-ozmafia` · `naninovel-unity` · `switch-nca` |
-| `pandora_dbg.py` | — | `idea-factory-stcm2l` |
+| `pandora_dbg.py` | pandora_extract 的调试视图：按地址反查所属文件，并打印附近字符串 | `idea-factory-stcm2l` |
 | `pandora_extract.py` | PANDORA ～君の名前を、僕は知る～ (PS2, Otomate / Idea Factory 2010)… | `idea-factory-stcm2l` |
 | `paradigm_paradox_extract.py` | Paradigm Paradox (Regista advGame engine) 全文本提取器 —— 定稿 | `misc-engines` |
 | `pc_snr_order.py` | 从 PC 汉化补丁的 .snr（UTF-16LE KiriKiri 脚本）提取「剧情序」标尺 | `orfre-dcvm-history` |
@@ -257,6 +260,7 @@
 | `vitaminb6_extract.py` | VitaminX DetectiveB6 (PSP, HuneX「IKA SEQ SYSTEM v4.1 HuneX 2010」) 全文本提取 | `hunex-ika-seq-b6` |
 | `vitaminxz_extract.py` | Vitamin X to Z (PSP, ULJS00347, HuneX「IKA SEQ SYSTEM v4.1」) 全文本提取 | `hunex-ika-seq-vitaminxz` |
 | `vitz_extract.py` | VitaminZ (PSP, ULJS00240, HuneX「IKA SEQ SYSTEM v3.4 HuneX 2009」) 全文本提取 | `hunex-ika-seq-vitaminz` |
+| `vn_zerodiv_extract.py` | 裏語 薄桜鬼 / ～暁の調べ～ (PSP ULJM06281 / ULJM06373) 剧本提取器 —— 定稿版 | `zerodiv-talks-variant` |
 | `vzgrad_extract.py` | VitaminZ Graduation (PSP, ULJS00xxx v1.01, HuneX「IKA SEQ SYSTEM v4.2」) 全文本提取 | `hunex-ika-seq-vzgrad` |
 | `willowisp_extract.py` | ウィル・オ・ウィスプ ポータブル (PSP, ULJM05447, Design Factory & Otomate… | `idea-factory-stcm2l-psp-uni2-willow` |
 | `xp3.py` | 蝶の毒 華の鎖 XP3 索引列挙 + ファイル抽出 (KiriKiri XP3) | `kirikiri-xp3` |
@@ -267,14 +271,14 @@
 
 ## 三、没有任何引擎册引用（薄壳 / 一次性脚本 / 漏记）
 
-共 65 个。**不要凭文件名猜**——先看「用途」列，再 `head` 确认。
+共 64 个。**不要凭文件名猜**——先看「用途」列，再 `head` 确认。
 
 | 脚本 | 用途 |
 |---|---|
-| `cdar.py` | — |
-| `cdar_extract.py` | — |
+| `cdar.py` | CDAR 容器读取库（被 cdar_extract.py import）：索引表 + 条目解压 |
+| `cdar_extract.py` | 递归解包 CDAR 容器（可下钻嵌套），逐条目落成原始字节 |
 | `corda_2fa_extract.py` | 金色のコルダ2f アンコール (PSP) 全文本提取器 v3. |
-| `corda_2fa_get.py` | 按路径取出 CDAR v4 里某个叶子文件: corda2f_get.py <DATA.BIN> <base>… |
+| `corda_2fa_get.py` | 按路径取出 CDAR v4 里某个叶子文件: corda_2fa_get.py <DATA.BIN> <base>… |
 | `corda_2fa_scan.py` | 金色のコルダ2f アンコール (PSP) - 递归解包 + 分类导出. |
 | `corda_2fa_unpack.py` | 金色のコルダ2f アンコール (PSP) CDAR v4 解包器. |
 | `corda_2ff_extract.py` | 金色のコルダ2 ff (PSVita, PCSG01124) 全文本提取器 |
@@ -289,7 +293,7 @@
 | `extract_alice.py` | Extract scenario text from the Alice-series PSP games… |
 | `extract_text.py` | PSP アラビアンズ・シリーズ 脚本テキスト抽出 |
 | `fortissimo_extract.py` | 《フォルティッシモ》 (PS Vita / PCSG01131 / KADOKAWA x Otomate… |
-| `fullscan.py` | — |
+| `fullscan.py` | 逐个归档条目试解压，按「含日文字数」排序 —— 先定位正文在哪一层容器 |
 | `haruka2_appmatrix.py` | 从 BOOT.BIN 读取 16x16「呼び名」称呼矩阵 |
 | `haruka2_eem_extract.py` | 遙かなる時空の中で２ (PSP) 全文本提取 — 最终版 |
 | `haruka2_eemlib.py` | Return (headerFields, sectionA, sectionB) for KOEID0 entry… |
@@ -300,18 +304,18 @@
 | `haruka_extract.py` | Extractor for Koei / Ruby Party "Harukanaru Toki no Naka… |
 | `himehibi2_eboot.py` | ひめひび 続！二学期 —— 第 2 段：eboot 串表抽取 + 成品组装 |
 | `himehibi2_extract.py` | Extract all displayed text from ひめひび ─New Princess Days!!─… |
-| `himehibi_scan.py` | — |
+| `himehibi_scan.py` | 把 LSDARC 解出的脚本扫一遍，确认哪些脚本含正文（探路用） |
 | `izasen_cpk2.py` | いざ、出陣！恋戦 data.cpk 解包（v2：CRILAYLA 修正 + FileOffset 绝对偏移） |
 | `izasen_cpk3.py` | いざ、出陣！恋戦 data.cpk → .ks 解包（v3） |
 | `izasen_extract.py` | いざ、出陣！恋戦（PSP）全文本提取：逻辑流 → KAG 脚本 → 正文/选项 |
 | `izasen_ks.py` | いざ、出陣！恋戦 data.cpk → scenario/*.ks（内容锚定版） |
 | `izasen_ks2.py` | いざ、出陣！恋戦 data.cpk → scenario/*.ks（终版） |
 | `kaleido_extract.py` | カレイドイヴ (PSV / PCSG00520 / estciel & HuneX) 全文本提取器 |
-| `lztest.py` | — |
+| `lztest.py` | 对 KOEID0.BIN 各条目试 zlib 与原始解压，按输出熵排序判断压缩方案（一次性实验） |
 | `musketeer_render_atlas.py` | 5pb PSP MARC font-atlas renderer (ar999_0000.bin). |
 | `opcode_audit.py` | 通用「有没有漏文本」审计（自定义 bytecode ADV 通用） |
-| `pe_dis.py` | — |
-| `period55.py` | — |
+| `pe_dis.py` | PE 反汇编辅助（capstone）：按 RVA/VA 定位并打印附近指令 |
+| `period55.py` | 55 字节周期 XOR 键的爆破与验证（用于 .het 辞书） |
 | `possession_extract.py` | Extractor for Possession Magenta (ポゼッション マゼンタ, PSV… |
 | `ps2_extract.py` | PS2 .HD/.BIN extractor for the *Hakarena Heart*-type engine. |
 | `ps2_game.py` | VM-level extraction: one line per message box (one click). |
@@ -319,20 +323,19 @@
 | `ps2_vm.py` | VM-level .cnut (Squirrel 'SQIR'/PART container) dialogue… |
 | `psp_prx_type9_decrypt.py` | PSP ~PSP (EncryptType 9) EBOOT.BIN decrypter. |
 | `qpk.py` | QuinRose / Qoo-framework QPK/QPI archive reader (PSP). |
-| `rear_extract.py` | — |
-| `renderfont.py` | — |
+| `rear_extract.py` | リアフェレス（Unity）TextAsset 场景脚本提取 → リアフェレス.txt |
+| `renderfont.py` | 把字库图集渲染成 PNG（逐码位预览，供人工目视确认字形） |
 | `run_alice.py` | Batch extract scenario text from the 6 Alice-series PSP… |
-| `scan_jp.py` | — |
-| `scan_nested.py` | — |
-| `scanjp.py` | — |
+| `scan_jp.py` | 目录级扫描：找「连续假名 run 多」的文件并排序 —— 先圈候选，再细看 |
+| `scan_nested.py` | 在归档的嵌套条目里扫日文，报 magic / 大小 / 样例 |
+| `scanjp.py` | 单文件内定位连续假名 run（按偏移列出），用于确认哪一段是正文 |
 | `sgs_kai_ddp.py` | 三国恋戦記 魁 (Daisy2 / sgs_*.dat, DDP2/DDP3) 解包 + 解密 + 解压 |
 | `sgs_kai_extract.py` | 三国恋戦記 魁 —— 全文本提取（对话/选项/结局/教程） |
 | `shinoda_botan_extract.py` | 篠田新宿探偵事務所 唐獅子牡丹 (HolicWorks Disc Blue / 2018-10-26 / PC-JP) |
-| `sjis_scan.py` | — |
+| `sjis_scan.py` | 单文件 SJIS 双字节串提取，并按「段」分类计数（区分正常串与化け） |
 | `stormlover_extract.py` | STORM LOVER V (PSV PCSG00735) sc.cpk 正文提取（2026-10-11） |
 | `stride_extract.py` | 《[PSV-JP]プリンス・オブ・ストライド》 (PCSG00491) 资源解密 / 解包 / 文本探查工具 |
 | `tsundere_extract.py` | ツンデレ★Ｓ乙女 (PC / 美蕾「Madoka GScript」) 全文本提取器 —— 本项目定稿 |
-| `unity_scan.py` | — |
-| `unity_scan2.py` | — |
-| `vn_memdump.py` | — |
-| `vn_zerodiv_extract.py` | 裏語 薄桜鬼 / ～暁の調べ～ (PSP ULJM06281 / ULJM06373) 剧本提取器 —— 定稿版 |
+| `unity_scan.py` | Unity 资产文本扫描：UTF-8 / UTF-16LE / CP932 逐个试，报日文字数 |
+| `unity_scan2.py` | Unity 资产文本扫描（按 UTF-8 字节模式直接匹配，不做解码） |
+| `vn_memdump.py` | 从运行中的进程按内存区段 dump（Windows，ReadProcessMemory） |

@@ -1,3 +1,4 @@
+"""目录级扫描：找「连续假名 run 多」的文件并排序 —— 先圈候选，再细看。"""
 import sys, os, glob, re
 SJIS=re.compile(rb'(?:[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc])+')
 HIRA=re.compile(r'[\u3041-\u309f]')

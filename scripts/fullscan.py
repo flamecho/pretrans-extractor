@@ -1,3 +1,4 @@
+"""逐个归档条目试解压，按「含日文字数」排序 —— 先定位正文在哪一层容器。"""
 import struct, zlib, pickle, re, sys
 
 def find_table(d):

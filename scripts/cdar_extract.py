@@ -1,3 +1,4 @@
+"""递归解包 CDAR 容器（可下钻嵌套），逐条目落成原始字节。"""
 import sys, os
 sys.path.insert(0,'tools')
 from cdar import CDAR

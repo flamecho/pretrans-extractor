@@ -1,3 +1,4 @@
+"""Unity 资产文本扫描（按 UTF-8 字节模式直接匹配，不做解码）。"""
 import sys, re, os
 import UnityPy
 JP=re.compile(rb'(?:[\xe3\xe4\xe5\xe6\xe7\xe8\xe9][\x80-\xbf]{2}|[\xef][\xbc-\xbd][\x80-\xbf]){4,}')

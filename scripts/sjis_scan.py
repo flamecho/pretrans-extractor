@@ -1,3 +1,4 @@
+"""单文件 SJIS 双字节串提取，并按「段」分类计数（区分正常串与化け）。"""
 import sys, re, os
 # SJIS double-byte run (kana/kanji): lead 0x81-0x9F/0xE0-0xEF, trail 0x40-0x7E/0x80-0xFC
 SJIS=re.compile(rb'(?:[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc]){4,}')

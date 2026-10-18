@@ -2,7 +2,7 @@
 
 从日文 VN / AVG 游戏的封包资源中取出剧本文本，整理为纯文本，供制作 LunaTranslator 预翻译文件使用。
 
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB) ![Version](https://img.shields.io/badge/version-1.3.2-blue)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB) ![Version](https://img.shields.io/badge/version-1.3.3-blue)
 
 ## 简介
 
@@ -164,7 +164,8 @@ pretrans-extractor/
 ├── CHANGELOG.md
 ├── LICENSE                        # MIT
 ├── .gitignore
-├── docs/release-v1.3.2.md         # v1.3.2 版本说明（本版）
+├── docs/release-v1.3.3.md         # v1.3.3 版本说明（本版）
+├── docs/release-v1.3.2.md         # v1.3.2 版本说明
 ├── docs/release-v1.3.1.md         # v1.3.1 版本说明
 ├── docs/release-v1.3.0.md         # v1.3.0 版本说明
 ├── references/

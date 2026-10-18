@@ -1,3 +1,4 @@
+"""PE 反汇编辅助（capstone）：按 RVA/VA 定位并打印附近指令。"""
 import struct, sys
 import os
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())

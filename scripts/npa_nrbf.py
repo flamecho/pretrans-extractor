@@ -1,3 +1,4 @@
+"""Nitroplus NPA 内 NRBF（.NET BinaryFormatter）序列化数据的解析器。"""
 import struct
 
 PRIM_SIZE = {1:1, 2:1, 3:2, 5:16, 6:8, 7:2, 8:4, 9:8, 10:1, 11:4, 12:8, 13:8, 14:2, 15:4, 16:8}

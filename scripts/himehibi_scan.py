@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""把 LSDARC 解出的脚本扫一遍，确认哪些脚本含正文（探路用）。"""
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 from himehibi_lsdarc import read_index

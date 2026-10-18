@@ -1,3 +1,4 @@
+"""批量驱动 hanayoi_extract.py：多脚本合并成一份成品（一次点击 = 一行）。"""
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hanayoi_extract as H

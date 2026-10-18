@@ -1,3 +1,4 @@
+"""55 字节周期 XOR 键的爆破与验证（用于 .het 辞书）。"""
 import struct, zlib, collections, sys
 
 P = 'iso/PSP_GAME/USRDIR/KOEID0.BIN'

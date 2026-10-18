@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""按路径取出 CDAR v4 里某个叶子文件: corda2f_get.py <DATA.BIN> <base> <path> <out>
+"""按路径取出 CDAR v4 里某个叶子文件: corda_2fa_get.py <DATA.BIN> <base> <path> <out>
 path 形如 11694/25 ; 数字为各级容器内的 entry 索引。
 """
 import sys, struct, zlib
