@@ -10,8 +10,14 @@
 
 仓库包含两部分：
 
-- `scripts/` —— 可直接运行的 Python 脚本（容器解包工具 + 各引擎提取器 + 探查助手 + 交付前品检 + 收尾工具）；
-- `SKILL.md` + `references/` —— 一份 Agent Skill，采用**渐进式披露**：主文件只放必守规则与流程骨架，细节按需读分册。
+- `scripts/` —— 可直接运行的 Python 脚本：容器解包、**239 个按作品写的提取器**、探查助手、
+  交付前品检与收尾工具，以及一张 **`INDEX-BY-ENGINE.md`**（按引擎找可改的脚本）；
+- `SKILL.md` + `references/` —— 一份 Agent Skill，采用**渐进式披露**：主文件只放必守规则与流程骨架，
+  细节按需读分册。
+
+遇到已经做过的引擎，最快的路径是三步：`references/00-triage.md` 判型 →
+`references/engines/<slug>.md` 看容器链路与记录形状 → `scripts/INDEX-BY-ENGINE.md` 里挑**最近似**的脚本，
+只改路径 / 键 / 参数。
 
 ## 用途与边界
 
@@ -26,7 +32,7 @@
 
 ## 支持范围
 
-已整理约 30 种引擎／容器的处理要点，单引擎细则见 [`references/engines/`](references/engines/)（一引擎一文件）。
+已整理 **78 本单引擎分册**（约 30 个引擎族），一引擎一文件，见 [`references/engines/`](references/engines/)；入口是路由表 [`references/engines.md`](references/engines.md)。
 
 | 引擎 / 容器 | 要点 |
 |---|---|
@@ -229,7 +235,8 @@ pretrans-extractor/
 | 坑索引 15 册 | [`references/pitfalls/`](references/pitfalls/) |
 | 各引擎做法 | [`references/engines.md`](references/engines.md)（路由表）→ `references/engines/*.md` |
 | 第三方工具 | [`references/third-party.md`](references/third-party.md) |
-| 脚本索引 | [`scripts/INDEX.md`](scripts/INDEX.md) |
+| 脚本索引（通用工具 11 个） | [`scripts/INDEX.md`](scripts/INDEX.md) |
+| **按引擎找可改的脚本** | [`scripts/INDEX-BY-ENGINE.md`](scripts/INDEX-BY-ENGINE.md)（由引擎册自动汇总，78 册 / 175 脚本） |
 | 更新日志 | [`CHANGELOG.md`](CHANGELOG.md) |
 
 ## 依赖
