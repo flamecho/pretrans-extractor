@@ -85,5 +85,6 @@ dec/ange.psarc / ui/ / menu.gxt / debug.gxt      图像与 UI
 
 ## 8. 工具
 
-`scripts/angelique_extract.py`。重跑步骤见
-`提取结果/解析报告/[PSV-JP]アンジェリーク ルトゥール_解析报告.md` §10。
+`scripts/angelique_extract.py`。重跑步骤：先 `pkg2zip` 解 PKG → `psvpfsparser` 解 PFS，
+取 `USRDIR` 下的 `PASC` 归档 → 按册内 §2 的条目表切 → 成行（该作另有逐步骤记录在成品目录的
+`解析报告/` 里，不随本包）。

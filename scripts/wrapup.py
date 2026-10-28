@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""wrapup.py —— **一条命令跑完收尾（S8）**：品检 → 体积 → 沉淀草案 → 落位片段。
+"""wrapup.py —— **一条命令跑完收尾（S8）**：品检 → 手册对账 → 沉淀草案 → 落位片段。
 
 为什么有它：收尾慢在「四件事分别跑、结果分散、还得自己记着谁没做」。
 本工具把它们串起来，最后只输出**一张待办清单**（机器能判的都判完）。
 
 用法:
-  python scripts/wrapup.py --report "提取结果/解析报告/XX_解析报告.md" \
+  python scripts/wrapup.py --report "解析报告/XX_解析报告.md" \
                            --text "提取结果/[PSV-JP]XX_全文本.txt" --name 主角名
   # 只跑部分
   python scripts/wrapup.py --report R.md                 # 不跑品检
@@ -97,15 +97,34 @@ def main():
         except Exception as e:
             print('[1b] 行数一致性  跳过（%s）' % type(e).__name__)
 
-    # ② 体积体检
-    rc, out = run('memcheck.py', [])
-    bad = out.count('[E]') + out.count('[W]')
-    print('[2/4] 体积体检  %s' % ('达标' if rc == 0 else '%d 处待拆' % bad))
-    for l in tail(out, 10):
-        if '[E]' in l or '[W]' in l:
-            print('      ', l.strip()[:160])
+    # ①c 切行判据三行（S6-lines-proof §7）：缺了就提示补报告 —— 别让「猜的行粒度」静默过关
+    if a.report and os.path.isfile(a.report):
+        try:
+            r = open(a.report, encoding='utf-8-sig', errors='replace').read()
+            has_key = bool(re.search(r'断框判据|框界|换框|点击边界', r))
+            has_proof = bool(re.search(r'L0|L1|覆盖率|串起点|必现|反例|未证|交叉验证|行数演算|直方图|全库|\d{2,}\s*(?:次|条|处)', r))
+            l2 = bool(re.search(r'L2|未证|文本形态', r))
+            if has_key and has_proof:
+                print('[1c] 切行判据  OK%s' % ('（L2/未证已标注 ⇒ 需补代码级证据）' if l2 else ''))
+            else:
+                print('[1c] 切行判据  [W] 报告缺「断框判据 / 自证」三行')
+                todo.append('补报告切行判据三行（`断框判据`/`自证`/`残余`）→ skill `S6-lines-proof.md` §7')
+        except Exception as e:
+            print('[1c] 切行判据  跳过（%s）' % type(e).__name__)
+
+    # ② 手册对账（体积不再判：2026-10-26 取消硬线，该拆与否只看主题）
+    rc, out = run('lint_docs.py', [])
+    m = re.search(r'断链 (\d+) ｜ 路由缺 (\d+) ｜ 孤儿 (\d+) ｜ 空册 (\d+)', out)
+    if m:
+        print('[2/4] 手册对账  断链 %s / 路由缺 %s / 孤儿 %s / 空册 %s' % m.groups())
+    else:
+        print('[2/4] 手册对账  %s' % ('OK' if rc == 0 else '有问题'))
     if rc != 0:
-        todo.append('拆超限册：`python scripts/split_md.py <file> --dry-run` 先看切点，再 `--names` 落盘')
+        for l in tail(out, 12):
+            s = l.strip()
+            if s and not s.startswith('---'):
+                print('      ', s[:160])
+        todo.append('修手册对账：`python scripts/lint_docs.py`（断链 → 改指向；孤儿 → 进 00-index）')
 
     # ③ 沉淀草案
     if a.report and not a.no_distill:

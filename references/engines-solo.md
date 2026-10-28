@@ -1,7 +1,6 @@
 # 项目 _trans —— 引擎路由 · **分册：单作专用自研引擎**
 
-> 由 `engines.md` 拆出（2026-10-14，主表超 10 KB）。**多作共用／平台级引擎见 `engines.md`**。
-> 收录「本项目里只对应 1 作的自研引擎」；每条细节在其专属 `engines/*.md`。
+> 收录「只对应 1 作的自研引擎」；每条细节在其专属 `engines/*.md`。多作共用／平台级引擎见 `engines.md`。
 
 | 引擎 | 代表作 | 一句话要点 | 详见 |
 |---|---|---|---|
@@ -19,6 +18,7 @@
 | **Matatabi 自研「纯文本 @命令 ADV」（Unity IL2CPP 宿主）** | **神凪ノ杜 五月雨綴り（NS, `0100B5801D7CE000`）** | NSP→(titlekey crypto,`--tik`)→RomFS `Data/StreamingAssets/ab_switch/`：**`script` bundle 内 624 个 TextAsset＝全部剧本**（**UTF-8-BOM 纯文本**，非字节码）：`;注释` / `@命令` / `*标签\|`；**`@talk … @hitret` ＝ 一个文本框**（框内行直接拼接、一次点击＝一行）、**`@choice text=… file=…`＝选项**；★唯一宏 **`<pf>`＝主角名**（姓「木南」字面固定）⇒ ★★**默认名在 `data` bundle 的 `DataGlobalValue`：`ADV・主人公デフォルトネーム=瑞希`**（Unity 系找默认名先看此类表）；笔误须容忍（`@hitre`=闭合；`km_t12_05` 漏 `@hitret` ⇒ 框内见 `@` 即闭合）；`ov` 的 TextAsset 是立绘 XML（无文本） | `engines/matatabi-unity-textadv.md` |
 | **花梨エンターテイメント 自研 ADV（`.asb` 编译体 ＋ 同捆 SJIS `@命令` 源脚本 `.txt`）** | **新宿羅生門 ―Rashomon of Shinjuku―（NS, `01005a401d766000`）** | **RomFS 里 `.asb`＋`.txt` 成对出货** ⇒ ★★**先验源未过期：`.asb` 头第 3 个 `u32BE`（语句数）≈ `.txt` 语句数（±0.5%）**，吻合即以 `.txt` 为权威源、**不必逆 `.asb`**；命令文法 `@命令(...); // 注释 @if{}@goto`；**仅 2 条带日文串**：`@text(speaker,body)`＝一框一击（丢 speaker）、`@select_text(n,opt)`＝选项；串内 `\n` 合并、注音 `\|基底語\|よみ\|`→基底语；主角固定名（`System.json` `NAME_ENTRY`＝空）；★出货卡带**副线可能整块是「テストシナリオ」占位**（逐文件剔）；用語辞典＝`fixeddata/Word.json` | `engines/karin-adv-asb.md` |
 | **NK/PAF ＋ PSCB（GameStudio 自研）** | **ラストエスコート -Club Katze-（PSP, `ULJS00256`）** | 归档 `NK`+u16 count+`hdr=0x14`，条目 16B `[comp][unc][nameOff][dataOff]`（0x800 对齐，无压缩）；脚本 `PSCB`＝指令区＋**NUL 分隔字符串池（池序＝显示序）**：`$k`=一框（`$r` 软换行合并）、无 `$k`+`/`=选項組、无 `$k` 长句=叙述（仅 op `0x36`）；★★**`11 00 30 10` 计数 == `$k` 串数（37570:37570 逐脚本 1:1）＝池序自证**，不必逆 VM（EBOOT 明文 ELF 但无 `PSCB` 字面量）；★无 `$k` 长句**不能**一律当叙述（每脚本开头有「タイトル＋あらすじ」回想菜单数据，`/92` 带 `（グッドエンド）`）；名札**姓/名分存**；debug 脚本 `/545` 整脚本排除；文件名区逐位置定值加密未解 ⇒ **跨脚本顺序只能用归档索引** | `engines/lastescort-paf.md` |
+| **FPK ＋ VML（D3P / Vingt-et-un・GameStudio 系 PS2）** | **ラスト・エスコート 〜深夜の黒蝶物語〜（PS2, `SLPS_255.91`）** | 容器 `DATA/ADV.FPK` 无魔数：`u32 count`@0 / `u64 total`@8 / `u32 dataStart`@0x14，0x20 起 **32B 条目** `name[16]+size+off`（4KB 对齐），`0x20+count*32==dataStart` 可自校验；脚本 `*.VML`＝指令 `u16 id + 00 FF`：**`0x66`=枠開始 / `0x67`=フラグ(0=字幕) / `0x68`=正文行 `u8 len`+字节 / `0x69`=枠内改行 / `0x6A`=主人公姓 · `0x6B`=名（宏，无操作数）/ `0x6C`=強調スパン(arg 02/00,不产字) / `0x6D`·`0x6F`=枠終了 / `0x190`=消息 id(逐枠+1)**；★★**文字＝每字节 `\|0x80` 后按 EUC-JP 解**（7-bit 存放）；★别用 cp932 偏移验证（平假名会「看着对」，片假名跑成希腊字母）；★**一枠=一次点击=一行**（`0x66`≒`0x6F`+`0x6D`；枠内 ≤54 字＝18×3 行）；★**选项=`0x1F6`（u16 idx+u8 len+文本，`0x1F7` 收尾，本作 574 条/287 组）**，不在 `0x68` 流里（首轮漏过，勿在正文流找）；嵌套 `E*.FPK`=事件语音（高熵，勿解）；跨文件顺序无表，按族+编号 | `engines/lastescort-vml-ps2.md` |
 | **Idea Factory/Otomate 自研 PSP「oni」** | **O＊G＊A 鬼ごっこロワイアル（PSP `ULJM06299`）**・学園ヘタリア 等 | `PSPFS_V1`(32B 条目) ＋ `DSARC FL` ＋ **`STS.DAT`＝271 个 `tob` 脚本**；★正文在 tob 的**字符串表**里：4 字节对齐 NUL 串、**全字节 XOR 0xDA**、**假名是半角片假名**（须合并浊点）；`<switch_err>`＝选项组分岐标记；EBOOT 只给名字默认值等字面量 | `engines/oni-psp-tob.md` |
 
 | **Plan Peace／InterOne 自研「PCT」** | **Solomon's Ring ～地の章～（PSP）** | 单一容器 `data.dat`（无魔数扁平 `[off][size]`×14592）＋ **路径名表=entry#1**（名字按名排序，条目按存储序，**Δ=10** 用「`.at3`↔`RIFF`」一致率定）；正文＝`data/pct/e/pct_mess.dat`（`u32 n`＋`u32 off[n]`＋cp932 池，**一段=一框**，`0A`=框内换行）；`script_*.dat` 纯字节码不解析，**按池序即阅读序**；`script_000000` = 测试脚本，其文本块整块剔 | `engines/planpeace-pct.md` |

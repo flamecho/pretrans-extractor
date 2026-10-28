@@ -11,8 +11,8 @@
   `12. …`                   顶层有序列表
 
 用法:
-  python scripts/split_md.py references/04-lines-options.md --dry-run
-  python scripts/split_md.py references/04-lines-options.md \
+  python scripts/split_md.py references/S6-lines-options.md --dry-run
+  python scripts/split_md.py references/S6-lines-options.md \
          --names "04-lines-options-a.md,04-lines-options-b.md"    # 语义命名（推荐）
   python scripts/split_md.py references --all --limit 10240       # 批量：只处理超限者
 
@@ -197,6 +197,9 @@ def do_one(path, a):
         return 2
     if a.names:
         names = [x.strip() for x in a.names.split(',') if x.strip()]
+        # ⚠ --names 若漏写扩展名，会写出无扩展名的文件并把旧册删掉（2026-10-19 実例：
+        #   `--names "WORKS-misc-psp-2,WORKS-misc-psp-3"` → 两个无 .md 文件）⇒ 一律补回原扩展名
+        names = [nm if nm.endswith(ext) else nm + ext for nm in names]
         if len(names) != n:
             print('  [!!] --names 给了 %d 个，实际需要 %d 个；切点：' % (len(names), n))
             for i, v in enumerate(vols, 1):

@@ -38,7 +38,7 @@
   `0xf0` 只有 1 个字符串操作数、**无槽位可替换** ⇒ 作者在标题里改用**文本宏**。
   `COM013@0x10` `おはようございます、@GameLastです` → 菅野です（紧接正文本人报名 `「菅野です」`）；
   `MATO003@0x10` `@GameLast愛護週間で優先です` → 菅野愛護週間（全篇 5 处同义句）。
-  ⇒ **`@GameLast` ＝ 姓 slot `1802`**，驱动加 `NAME_MACROS={"@GameLast": 菅野}`。教训见 skill `pitfalls/B1-lines.md` ㉘。
+  ⇒ **`@GameLast` ＝ 姓 slot `1802`**，驱动加 `NAME_MACROS={"@GameLast": 菅野}`。教训见 skill `pitfalls/B-lines.md` ㉘。
 - **用語解説（妖怪図鑑）inline 9 条**：`PRG_NAME.SCR NAME_NON` 清名札后紧随 `0x5a`，体例 `【見出し語】：解説`
   （`COM001`【謎の小さいオッサン】/`COM001`+`COM045`【チョコレートマン】/`COM002`【ナナフシ】/
   `HINO007_HIR`【トリコロール】/`KUG007`【尋ね人：…】）。**`NOR020@0xdc7` 唯一漏 `【】`** ⇒ 整行定值修。

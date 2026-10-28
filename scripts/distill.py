@@ -11,7 +11,7 @@
   ④ 输出草案：待沉淀（勾选框 + 建议落位）/ 单作特例 / 已覆盖，写 `<out>`，skill 一字不动
 
 用法:
-  python scripts/distill.py --report "提取结果/解析报告/XX_解析报告.md"
+  python scripts/distill.py --report "解析报告/XX_解析报告.md"
   python scripts/distill.py --report R.md --log references/2026-10-18.md --open
   python scripts/distill.py --report R.md --skill <skill 目录> --mem <memory 目录> --out /tmp/d.md
 
@@ -34,47 +34,47 @@ STRIP = re.compile(r'^[\s>\-*•]+|^\d+[.)]\s*|\*\*')
 
 # 目标册：**只列 references/ 下真实存在的文件**（启动时会校验，缺的自动跳过）
 SLOT = [
-    (r'zRIF|psvpfsparser|header signature|PFS|pfs0dir', '01-psv-pfs.md'),
-    (r'EBOOT|~PSP|self2elf|MIPS|PRX|BOOT\.BIN|kirk', '01-psp-eboot.md'),
-    (r'hactool|titlekey|NCA|BKTR|prod\.keys|XCI|NSP', '01-switch-nca.md'),
-    (r'CHD|chdman|zstd|hunk', '01-image-chd.md'),
-    (r'主角名|主人公|一人称|称呼宏|人名宏|FFE6|FFE7|FF08|name\.|f\.family|改名', '03-names-macro.md'),
-    (r'XOR|CRILAYLA|zlib|LZSS|LZ4|解压|解密|密钥|码表基址|替换槽|PUA|cp932|CP932|字形|字体|gaiji', '03-basics.md'),
-    (r'ELF.*(码表|code)|code→Unicode|分区错位', '03-codetable-elf.md'),
-    (r'位图字体|自建字体|GXT|G1T|renderfont|字形图集', '03-selffont.md'),
-    (r'AFS|CPK|归档|块单位|定长表|索引表|偏移', '03-archive.md'),
-    (r'STCM2', '02-stcm2l.md'),
-    (r'opcode|指令|记录|标签|脚本结构|msgid|分支码', '02-structure.md'),
-    (r'Unity|IL2CPP|Naninovel|assetbundle|\.bytes', '02-unity.md'),
-    (r'名札|话者|说话人|续行|换框|成行|一次点击|选项|合并|折行|引号', '04-lines.md'),
-    (r'用語辞典|辞典|豆知識|glossary', '04-lines-options.md'),
-    (r'自检|品检|check_text|占位符|报告', '05-selfcheck.md'),
-    (r'vndb|外部核对|核对', '05-external-report.md'),
-    (r'串数|闭合|漏收|完整性', '05-completeness.md'),
-    (r'清理|工作区|记忆|上下文|agent|memo|日志', '06-workspace.md'),
+    (r'zRIF|psvpfsparser|header signature|PFS|pfs0dir', 'S2-psv-pfs.md'),
+    (r'EBOOT|~PSP|self2elf|MIPS|PRX|BOOT\.BIN|kirk', 'S2-psp-eboot.md'),
+    (r'hactool|titlekey|NCA|BKTR|prod\.keys|XCI|NSP', 'S2-switch-nca.md'),
+    (r'CHD|chdman|zstd|hunk', 'S1-image-chd.md'),
+    (r'主角名|主人公|一人称|称呼宏|人名宏|FFE6|FFE7|FF08|name\.|f\.family|改名', 'S5-names-macro.md'),
+    (r'XOR|CRILAYLA|zlib|LZSS|LZ4|解压|解密|密钥|码表基址|替换槽|PUA|cp932|CP932|字形|字体|gaiji', 'S5-basics.md'),
+    (r'ELF.*(码表|code)|code→Unicode|分区错位', 'S5-codetable-elf.md'),
+    (r'位图字体|自建字体|GXT|G1T|renderfont|字形图集', 'S5-selffont.md'),
+    (r'AFS|CPK|归档|块单位|定长表|索引表|偏移', 'S3-archive.md'),
+    (r'STCM2', 'S4-stcm2l.md'),
+    (r'opcode|指令|记录|标签|脚本结构|msgid|分支码', 'S4-structure.md'),
+    (r'Unity|IL2CPP|Naninovel|assetbundle|\.bytes', 'S4-unity.md'),
+    (r'名札|话者|说话人|续行|换框|成行|一次点击|选项|合并|折行|引号', 'S6-lines.md'),
+    (r'用語辞典|辞典|豆知識|glossary', 'S6-lines-options.md'),
+    (r'自检|品检|check_text|占位符|报告', 'S7-selfcheck.md'),
+    (r'vndb|外部核对|核对', 'S7-external-report.md'),
+    (r'串数|闭合|漏收|完整性', 'S7-completeness.md'),
+    (r'清理|工作区|记忆|上下文|agent|memo|日志', '00-workspace.md'),
 ]
 
 
 # 阶段册 → 坑册（同一条结论常常「阶段册讲怎么做、坑册讲别踩什么」）
 PIT = {
-    '01-psv-pfs.md': 'pitfalls/A1-decode-core.md',
-    '01-psp-eboot.md': 'pitfalls/A1-decode-core.md',
-    '01-switch-nca.md': 'pitfalls/A1-decode-core.md',
-    '01-image-chd.md': 'pitfalls/A1-decode-core.md',
-    '03-basics.md': 'pitfalls/A1-decode-core.md',
-    '03-names-macro.md': 'pitfalls/C1-deliver.md',
-    '03-codetable-elf.md': 'pitfalls/A2-decode-late.md',
-    '03-selffont.md': 'pitfalls/B1-lines.md',
-    '03-archive.md': 'pitfalls/A2-decode-late.md',
-    '02-stcm2l.md': 'pitfalls/B2-tags-resume.md',
-    '02-structure.md': 'pitfalls/A1-decode-core.md',
-    '02-unity.md': 'pitfalls/A1-decode-core.md',
-    '04-lines.md': 'pitfalls/B1-lines.md',
-    '04-lines-options.md': 'pitfalls/B9-late-6.md',
-    '05-selfcheck.md': 'pitfalls/C1-deliver.md',
-    '05-external-report.md': 'pitfalls/C1-deliver.md',
-    '05-completeness.md': 'pitfalls/C1-deliver.md',
-    '06-workspace.md': 'pitfalls/C2-deliver-2.md',
+    'S2-psv-pfs.md': 'pitfalls/A-decode.md',
+    'S2-psp-eboot.md': 'pitfalls/A-decode.md',
+    'S2-switch-nca.md': 'pitfalls/A-decode.md',
+    'S1-image-chd.md': 'pitfalls/A-decode.md',
+    'S5-basics.md': 'pitfalls/A-decode.md',
+    'S5-names-macro.md': 'pitfalls/C-deliver.md',
+    'S5-codetable-elf.md': 'pitfalls/A-decode.md',
+    'S5-selffont.md': 'pitfalls/B-lines.md',
+    'S3-archive.md': 'pitfalls/A-decode.md',
+    'S4-stcm2l.md': 'pitfalls/B-tags-resume.md',
+    'S4-structure.md': 'pitfalls/A-decode.md',
+    'S4-unity.md': 'pitfalls/A-decode.md',
+    'S6-lines.md': 'pitfalls/B-lines.md',
+    'S6-lines-options.md': 'pitfalls/B-encoding-lines.md',
+    'S7-selfcheck.md': 'pitfalls/C-deliver.md',
+    'S7-external-report.md': 'pitfalls/C-deliver.md',
+    'S7-completeness.md': 'pitfalls/C-deliver.md',
+    '00-workspace.md': 'pitfalls/C-deliver.md',
 }
 
 

@@ -113,4 +113,4 @@ vndb：`POST api.vndb.org/kana/vn {"filters":["search","=","<标题>"],"fields":
 - `scripts/ozmafia_nca.py info <nca>` —— 看 NCA 头 / 段表 / key area（判 titlekey crypto 与 BKTR 用）。
 
 > 通用技术/坑（IL2CPP typetree 生成、同捆更新/BKTR 解法、互斥去重判据）另见 skill
-> `references/03h-unity-and-naninovel.md`；本文只留本作实证数据。
+> `references/S4-unity.md`；本文只留本作实证数据。

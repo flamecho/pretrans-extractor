@@ -67,3 +67,5 @@
   - 成品 **15,069 行**（正文 13,186＋选项 389＋前缀区独有 384＋剧情性数据表 1,202）／`check_text.py --name 夕菜` PASS。
     工具：`scripts/arcobaleno_extract.py`（定稿）。报告：`提取结果/解析报告/アルコバレーノ! ポータブル_解析报告.md`。
 > ★ **第 5 样本（`ウィル・オ・ウィスプ ポータブル`）见 `idea-factory-stcm2l-psp-uni2-willow.md`** —— ★★同容器同平台但**判型整体换法**（正文一律 slots≤1／名札靠独立 op `0xd4` 标记／框末 op 多型），必读。
+> ★ **第 6 样本（`恋愛番長 命短し、恋せよ乙女！ Love is Power`）见 `idea-factory-stcm2l-psp-uni2-banchou.md`** —— 生成器串 `STCM2L Sep 17 2010`；**`0xd3`=框末／`0x1e2`=续行**（与 DCGS 相反）；★**字体替换槽 4 个：`0x8154`=？/`0x8155`=！/`0x8490`=10/`0x8446`=11**；无逐行名札（名表 op `0x1b1`）。
+> ★ **第 7 样本（`恋愛番長2 MidnightLesson!!!`）见 `idea-factory-stcm2l-psp-uni2-banchou2.md`** —— **容器换成 CPK v3**（`INSTALL.CPK/script/*` 234 个**裸 STCM2L**，无 UNI2 外层）；`0xd3`=框末／**`0x228`=续行**（前作是 `0x1e2`，★第三次翻新 ⇒ 同族 cmd 绝不可跨作推定）；★有 **16 个数字绘制槽**（西里尔块 `0x8443`〜`0x8484`）须解 `font/0` 的 `UF_` 字形才能定值。

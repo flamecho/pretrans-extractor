@@ -72,12 +72,12 @@
   置換後は (a) ASCII（B','7','p','b','y','C','\r'→'p' 等。文字種走査で検出可）
   か (b) 別の合法前導バイト（→ 誤った漢字。文字種では検出不可）。
   ⇒ **尾バイト＋前後文＋同作内の平行語**から一意に確定し、**逐位置定值复元表**（`FIXES`: バイト位置→正値）に固定。
-  **総当り・全探索はしない**（用户鉄律）。検出補助は bigram 意外度（`gensou_scan.py`）＋ASCII/`【`/`[` 混入走査。
+  **総当り・全探索はしない**（用户鉄律）。検出補助は bigram 意外度（頻度からの逸脱度を採点）＋ASCII/`【`/`[` 混入走査。
   実例：`激秒屋→呉服屋`(8CE0 959E) / `ﾏﾘ財→借財`(借=8ED8) / `b髏O→る唇`(82E9 904F) / `竡→月` / `ﾋendif→@endif`
   （※`@endif` を直さないと `@if/@else` 分支整合が崩れ、hideo_happy が 408→560 行に化ける）
 - **KAG3 記法**（両作共通）：`[名前置換]/[名字置換]/[愛称置換]`＝野宮/百合子/ユリ（＝主人公 野宮百合子）、
   `[漢字'よみ]` ルビ、`【X/Y】→【Y】`、`【名】` 独立行＝話者札（破棄）、選択肢 `[seladd text=…]`。
   `@if exp="f.sys_name==0"`＝既定名ルート。
 - **工具**：`scripts/xp3.py`｜初回版 `chou_decrypt.py`(区间XOR复号)+`chou_fix.py`(OVERRIDES/REKEY/`TEXT_PATCH`)+`chou_extract.py`｜
-  幻想夜話 `gensou_decode.py`(区間XOR+`FIXES`)+`gensou_extract.py`+`gensou_scan.py`。
+  幻想夜話 `gensou_decode.py`(区間XOR+`FIXES`)+`gensou_extract.py`（bigram 意外度の走査は同梱の probe で行った）。
 - **環境の坑**：**日本語パスを 7-Zip に bash から渡すと化ける** → PowerShell 経由で `7z x`（または ASCII 名 hard link）。

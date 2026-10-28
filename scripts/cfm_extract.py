@@ -80,7 +80,10 @@ def boxes_of(data):
             buf = []
             i += 2
             continue
-        if data[i] in (0x0A, 0x1F):      # 框内软换行 -> 合并
+        if data[i] == 0x1F:              # 换行伴随标记（不是页界）→ 与 0A 同样合并
+            i += 1
+            continue
+        if data[i] == 0x0A:              # 框内折行 -> 合并
             i += 1
             continue
         s = _skippable(data, i)
@@ -160,13 +163,30 @@ EXCLUDE = {
 }
 
 
-# 原文缺陷（源数据侧多打一个 `）`，非提取缺陷）——按 00b⑧ 用「整行定值表」修，不用正则泛修。
+# 原文缺陷（源数据侧括号写坏，非提取缺陷）——按 00b⑧ 用「整行定值表」修，不用正则泛修。
+# ① `…たまに徹夜で書いてるみたいだけど……）` + 页2 只有 `ママってタフ……）`：页2 缺开括号 ⇒ 行首补 `（`
+# ② `（広いシャワー室……大きめのベッドが二つ……））`：句尾多打一个 `）` ⇒ 删末位
 LINE_FIX = {
+    # 同一框内两段独白，第 2 行末多打一个 `）` ⇒ 删掉中间那个（保留句末 `）`）
     '（よくこんなんで仕事になってるな……たまに徹夜で書いてるみたいだけど……）ママってタフ……）':
-        '（よくこんなんで仕事になってるな……たまに徹夜で書いてるみたいだけど……）ママってタフ……',
+        '（よくこんなんで仕事になってるな……たまに徹夜で書いてるみたいだけど……ママってタフ……）',
     '（広いシャワー室……大きめのベッドが二つ……））':
         '（広いシャワー室……大きめのベッドが二つ……）',
 }
+
+
+def split_pages(toks):
+    """按 `0x1F`（改ページ＝一次点击）把一个原始文本框切成若干页。"""
+    cur = []
+    for kind, bs in toks:
+        if kind == 'n':
+            if cur:
+                yield cur
+            cur = []
+            continue
+        cur.append((kind, bs))
+    if cur:
+        yield cur
 
 
 def main():
@@ -179,31 +199,35 @@ def main():
     for f in files:
         last = None
         for toks in boxes_of(open(f, 'rb').read()):
-            text, unk = decode(toks, name)
-            text = text.strip()
-            if not text:
+            # 去重粒度＝**一个原始文本框**（不是切出来的页）：否则跨页独白的
+            # `（…` 与 `…）` 会被分别去重，造成全篇括号数不对称。
+            full, unk = decode([t for t in toks if t[0] != 'n'], name)
+            full = full.strip()
+            if not full:
                 dropped['empty'] += 1
                 continue
-            if unk and unk / max(1, len(text)) > 0.25:
+            if unk and unk / max(1, len(full)) > 0.25:
                 dropped['garbage'] += 1
                 continue
-            if len(text) <= 3 and not _kana(text):
+            if len(full) <= 3 and not _kana(full):
                 dropped['short-nokana'] += 1
                 continue
-            text = LINE_FIX.get(text, text)
-            if text in EXCLUDE:
+            if full in EXCLUDE:
                 dropped['system'] += 1
                 continue
-            # 跨档全同去重（各角色线/各分支把同一段剧本各存一份，实证 5 个 ev07x_00x0 同文）。
-            # 同档内「相邻重复」保留（`…………` 连发是每次点击各一框）。
-            if text != last:
-                if text in seen:
+            if full != last:
+                if full in seen:
                     dropped['dup'] += 1
                     continue
-                seen.add(text)
-            last = text
-            unresolved += unk
-            rows.append(text)
+                seen.add(full)
+            last = full
+            for page in split_pages(toks):
+                text, pu = decode(page, name)
+                text = text.strip()
+                if not text:
+                    continue
+                unresolved += pu
+                rows.append(LINE_FIX.get(text, text))
     with open(dst, 'w', encoding='utf-8-sig', newline='\n') as w:
         w.write('\n'.join(rows) + '\n')
     print('files', len(files), 'lines', len(rows), 'chars', sum(len(x) for x in rows),

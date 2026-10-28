@@ -24,7 +24,7 @@ dataOff 依次按 0x800 对齐累加；本作无压缩（comp == unc）
 - `script.paf`（77 MB）内容：**PSCB ×551**（文本）／`MIG.` ×141（动画）／`NC4` ×194・`NC2` ×2（二进制）／
   `NK` ×85（嵌套归档，内层只有 `AM` 动画＋`MIG`）。**文本只在 PSCB**。
 - 其他 .paf：`bgm`/`voice` = RIFF（41/14445 条）；`album/cal/club/com/help/inpt_nm/logo/prsnt/room/shushi/sys/title/wkly`
-  = `AM`＋`MIG`（+`MThd` MIDI/PNG）→ **无文本**。系统消息在 EBOOT 字符串表（按 §0 不收）。
+  = `AM`＋`MIG`（+`MThd` MIDI/PNG）→ **无文本**。系统消息在 EBOOT 字符串表（按 SKILL.md §0 不收）。
 
 ## 3. PSCB 脚本
 

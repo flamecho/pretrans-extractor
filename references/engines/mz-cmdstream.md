@@ -1,6 +1,6 @@
 # MZ 命令流（Marvelous 自研）
 
-> 从 `engines.md` 新建（2026-10-11）。路由/一句话索引见 `../engines.md`。
+> 路由与一句话索引见 `../engines.md`。
 
 - **代表**：**幕末Rock 超魂（PSV / PCSG00425）**（原创 PSP《幕末Rock》的 PSV 加料版）。
 - **容器链**：PSV NoNpDrm `.pkg` → `pkg2zip -x`（`work.bin` 同目录自动取授权）→ `psvpfsparser`（**用 `-k` klicensee**）

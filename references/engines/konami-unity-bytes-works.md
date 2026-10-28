@@ -52,7 +52,6 @@ Program NCA `3126fdcde787a8d8f3896c7dcd2b7e74.nca`；工具 `scripts/tokimemo_gs
 7. 其他全同 GS1/GS2：池 XOR 键式、`0x00→K` 还原、`0316…0317` 骨架、`∋≡？`/`∈≡！`、`\n`/`@@`/`▼`、
    `AddressBookAddress_0..7`＝主 cast 全名。
 
-
 ## 10. ★ 第 4 作（GS4 4th Heart，2026-10-15）实测差异
 
 TID `0100B0100E26C000`；源＝**XCI（gamecard）**而非 NSP；工具 `scripts/tokimemo_gs4_extract.py`

@@ -1,0 +1,10 @@
+# 一律 LF：包内 md/py 混着 CRLF 与 LF 会让读者看到「整个文件都改过」的假 diff，
+# 也让 Windows 用户的编辑与 Linux 用户的行尾来回互转（2026-10-27 实测 193/845 个文件是 CRLF）。
+* text=auto eol=lf
+
+# 二进制/不转换
+*.zip  binary
+*.png  binary
+*.jpg  binary
+*.ttf  binary
+*.bin  binary

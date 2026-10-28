@@ -69,3 +69,23 @@ u16 opcode | u16 size（**总长，含 6B 头**）| u16 id | operand*<u8 type><d
 `scripts/gss_codec.py`（H/D/R + decrypt N/B/W/S）｜`scripts/gss_lsdarc.py`（索引＋逐条解包）｜
 `scripts/gss_scr3.py`（SCR 3.00 反汇编）｜`scripts/kamikoi_extract.py`（驱动：DFS 排序＋成行＋`NAME_SLOTS`/`TEXT_PATCH`/`☆` 过滤/排除表）。
 成品 28,231 行【PASS】；报告 `提取结果/解析报告/[NS-JP]神さまと恋ゴコロ_解析报告.md`。
+
+## 第 4 作：SWEET CLOWN ~午前三時のオカシな道化師~（NS-JP, TAKUYO, `010028D0148E6000`）
+- **源**：`甜小丑.xci`（6.14 GB）＋ 同捆 `甜小丑 补丁.nsp`（v196608）。
+  ★ **XCI 为紧密打包、非 0x200 对齐**（secure 起于 0x17022，update/normal 各 17 B 空壳）⇒ `hactool -t xci` 报
+  `XCI partition is corrupt!`（hfs0 头 hash）≠ 布局坏：**按 hfs0 表手切**，数据起点 = `base+0x10+n*0x40+strtab`，offset 相对该起点。
+  本体 Standard crypto（keygen=2）hactool 直解；更新 Titlekey crypto（keygen=11）。
+- **更新**：旧 hactool 对 BKTR 报 `BKTR section seems to be corrupted` ⇒ 用 **`nstool 1.9.2 --basenca <本体nca> --tik <tik>`**
+  叠加（`-x /1/<file>` 可选择性取文件，免解 6 GB 全树）。卡带内 v65536 与 NSP v196608 的 `SCRDATA.ARC` **逐字节相同**
+  （md5 `334512d1…`），两版均全量替换本体脚本（`48c0234d…`）＋附带原样副本 `100SCRDATA.*`；22 个脚本 32 处**误字修正**。
+- **容器**：同 LSDARC V.100，但 **386 条全 `isPacked=0`**（本作未用 H/D/R 压缩，`gss_codec.py` 不必调用）。
+- **脚本 `SCR 3.00`** 同格式，386/386 零失步。文本 op：`0x5a` 43,068 / `0xfc` 619（槽仅 `1802`姓+`0c02`名）/ `0xf0` 369 / `0x5c` 205。
+- ★★ **换行 vs 换页（本族首个定案）**：串内只有两种控制码——`\n`＝**框内软换行（不点击，合并）** 1,102；
+  `\c`＝**清框换页（等点击，断行）** 457。**无 B 类（不清框的框内等待）⇒ 单版**，不要出「双版对照」。
+  铁证：`KOB_SWEET054` `でも毎日\c毎日\c私は\c…`＝逐词一屏；按同框续写会变 8–11 行，而全库单段最多 3 行。
+- ★ **`0x5a` 固定名 / `0xfc` `%s` 互斥成对 371 处**：同句两版由 `0x22/0x21/0x23` 分隔，槽位替换后**逐字相同**且
+  必为 `(0x5a,0xfc)` 相邻 ⇒ **按 op 型别去重**（禁用字符串相似度）；`(0x5a,0x5a)` 的 375 处重复是 `「…………」` 连续静默，**保留**。
+- 名札＝`0x1e PRG_NAME.SCR <label>` 独立名字窗（`PLAYER`/`NAME`/`NAME_NON`）⇒ 整行丢、不加前缀。
+- 文本内 **`@GameLast`＝玩家姓**（非 `%s` 槽，仅 `SIN011` 1 处）⇒ 替换默认姓；`≪…≫`＝强调引题号（原文用字）。
+- 主角默认名 **橿野 柘榴**（`sjistext.csv` [1]/[2]）。无 用語辞典（`用語/辞典/豆知識` 0 命中）。
+- **工具**：`scripts/sweetclown_extract.py`。成品 44,528 行【PASS】；报告 `解析报告/[NS-JP]SWEET CLOWN ~午前三時のオカシな道化師~_解析报告.md`。

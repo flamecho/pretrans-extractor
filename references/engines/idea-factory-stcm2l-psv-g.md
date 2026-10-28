@@ -1,6 +1,6 @@
 # STCM2L —— PSV 侧 · **变体 G**（薄桜鬼 随想録 面影げ花, PCSG00485, CP932）
 
-> 从 `idea-factory-stcm2l-psv-cp932.md` 再拆（2026-10-15；主册将超 10 KB）。路由见 `../engines.md`。
+> 本册是 `idea-factory-stcm2l-psv-cp932.md` 的续册。路由见 `../engines.md`。
 > **与 B/D/E 同族（CP932、opcode 恒定、CRI CPK）**，但**分段机制与 B 不同**（`0x4BC` 不是断点击）。
 
 ## 容器链路（PSV NoNpDrm）

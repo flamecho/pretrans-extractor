@@ -33,7 +33,7 @@
     - 另：外层 `SCRIPT.UNI` 自身也带一份 STCM2L（magic 同在 `0x1800`），含军用术语小测＋曲目表(丢)＋符号表(丢)。
   - 行内 `#n` ＝软换行标记（删除合并）；`#Name[n]` ＝主角名插入宏（PANDORA `#Name[1]`→**カンナ**，默认名取自子文件内「名字输入初始值表」`[2][1][8]"カンナ"`）。
   - **★ PSV 侧（两作布局互不相同：Norn9 Act Tune / RE:VICE[D]）⇒ 见 `idea-factory-stcm2l-psv.md`**。
-  - 工具：`stcm2l_extract.py`（猛獣 Switch）／`pandora_extract.py`＋`pandora_dbg.py`（PANDORA PS2）／`norn9_extract.py`・`revice_extract.py`（PSV）。
+  - 工具：`stcm2l_extract.py`（猛獣 Switch）／`pandora_extract.py`（PANDORA PS2；探路時は「アドレスから所属ファイルを逆引きして周辺文字列を出す」補助を使った）／`norn9_extract.py`・`revice_extract.py`（PSV）。
 - **★ PSP 侧（CRI CPK 两样本：`SNOW BOUND LAND`／`アーメン・ノワール ポータブル`）⇒ 见 `engines/idea-factory-stcm2l-psp-cpk.md`**（本册超 10 KB，2026-10-16 拆出）。
 - **★ Switch 侧（猛獣／BLACK WOLVES SAGA）⇒ 见 `engines/idea-factory-stcm2l-switch.md`**（本册超 10 KB，2026-10-12 拆出）。
 - **★ PS2「UNI2」第 2 样本（`L2 Love×Loop`）⇒ 见 `engines/idea-factory-stcm2l-ps2-uni2.md`**（本册超 10 KB，2026-10-16 拆出；★ 前缀区 0x2000／末条跨入下一文件前缀区）。

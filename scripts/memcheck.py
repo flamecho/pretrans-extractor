@@ -1,74 +1,72 @@
 #!/usr/bin/env python3
-"""memcheck.py —— 记忆 / skill 体积体检：**超限就报，别等用户来说拆**。
+# -*- coding: utf-8 -*-
+"""memcheck.py —— 目录体检：只报「真会出问题」的体积，其余仅列大小。
+
+**分册不再按体积判**（2026-10-26 用户取消 10 KB / 12 KB 硬线）。
+理由：分册该多大由**主题**决定，不由字节数决定。按字节硬切会把同一主题拆散
+——曾经的「late-1…late-6」就是这么切出来的，光看文件名读不出内容，
+查一个坑要连开六册。判断该不该拆的唯一标准是「**读者是否需要同时看这两段**」，不是 KB。
+
+保留的两条体积判断都有技术原因，与编辑偏好无关：
+  MEMORY.md   > 8 KB  → [E]  自动注入会话上下文，超了会被截断（信息真的会丢）
+  历史日志    > 30 KB → [i]  只提示；按需 `Grep` 命中段即可，不必整读
 
 用法:
-  python scripts/memcheck.py                # 默认查 本工作区 memory/ + skill
-  python scripts/memcheck.py --mem <dir> --skill <dir> --limit 10240
-
-阈值:
-  MEMORY.md(自动注入)          > 8 KB  → [E] 必须拆（否则每次会话被截断）
-  SKILL.md（唯一必读文件）      > 12 KB → [W] 该拆/该下沉（它替代了原先「SKILL.md+坑全量」的 33 KB 预读）
-  其它 .md / engines/*.md      > limit(默认 10 KB) → [W] 按主题拆
-  历史日志 YYYY-MM-DD.md        > 30 KB → [i] 仅提示（按需 Grep，不必整读）
-
-退出码: 0 = 无 [E]/[W]; 1 = 存在待处理
-★ 约定：**每作交付后固定跑一次**（见 SKILL.md §6 / MEMORY.md 收尾动作）。
+  python scripts/memcheck.py                    # 查本工作区 memory/ + 本 skill
+  python scripts/memcheck.py --mem DIR --skill DIR --top 40
+退出码: 0 = 无 [E]；1 = MEMORY.md 超 8 KB
 """
-import os, sys, glob
+import argparse
+import glob
+import os
+import sys
 
-DEFAULT_SKILL = os.path.expanduser('~/.workbuddy/skills/vn-custom-bytecode-text')
+DEFAULT_SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def kb(n):
     return n / 1024.0
 
 
-def scan(root, pats, label, limit, out):
-    files = []
-    for pat in pats:
-        files += glob.glob(os.path.join(root, pat))
-    files = [f for f in files if os.path.isfile(f)]
-    if not files:
-        return
-    out.append('\n== %s  (%s) ==' % (label, root))
-    for f in sorted(files, key=os.path.getsize, reverse=True)[:40]:
-        s = os.path.getsize(f)
-        name = os.path.relpath(f, root)
-        is_log = name[:4].isdigit() and name.endswith('.md')
-        lim = 12 * 1024 if name == 'SKILL.md' else limit
-        flag = ''
-        if name == 'MEMORY.md' and s > 8 * 1024:
-            flag = '  [E] 自动注入文件超 8 KB ⇒ 必须拆（细节挪到子文件）'
-        elif is_log:
-            if s > 30 * 1024:
-                flag = '  [i] 历史日志 > 30 KB（按需 Grep 即可；要归档就挪进 works/<slug>.md）'
-        elif s > lim and name.endswith('.md'):
-            # 体积上限是**文档**的约定（docstring: 「其它 .md / engines/*.md」）；
-            # scripts/*.py 只列大小不报警 —— 脚本须单文件自包含（check_text.py 与 scripts/ 同版），
-            # 按体积拆脚本是错的（2026-10-15 修正）。
-            flag = '  [W] 超 %d KB ⇒ 按主题拆（`split_md.py %s --dry-run` 先看切点）' % (lim // 1024, name)
-        elif s > lim * 0.96 and name.endswith('.md') and name != 'SKILL.md':
-            flag = '  [i] 已达 96%% 上限（%d B，余 %d B）⇒ 下次新增前先拆' % (s, lim - s)
-        out.append('  %7.1f KB  %s%s' % (kb(s), name, flag))
-
-
 def main():
-    a = sys.argv[1:]
-    kw = {}
-    for i, x in enumerate(a):
-        if x.startswith('--'):
-            kw[x[2:]] = a[i + 1] if i + 1 < len(a) and not a[i + 1].startswith('--') else True
-    mem = kw.get('mem') or os.path.join(os.getcwd(), '.workbuddy', 'memory')
-    skill = kw.get('skill') or DEFAULT_SKILL
-    limit = int(kw.get('limit', 10240))
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--mem', default=os.path.join(os.getcwd(), '.workbuddy', 'memory'))
+    ap.add_argument('--skill', default=DEFAULT_SKILL)
+    ap.add_argument('--top', type=int, default=40)
+    a = ap.parse_args()
+
+    err = 0
     out = []
-    scan(mem, ['*.md', 'engines/*.md', 'works/*.md', 'logs/*.md'], 'MEMORY', limit, out)
-    if os.path.isdir(skill):
-        scan(skill, ['SKILL.md', 'references/*.md', 'scripts/*.py'], 'SKILL', limit, out)
+    for root, label, pats in (
+            (a.mem, '工作区记忆', ['*.md', 'engines/*.md']),
+            (a.skill, 'skill', ['SKILL.md', 'references/*.md', 'references/*/*.md'])):
+        files = []
+        for pat in pats:
+            files += glob.glob(os.path.join(root, pat))
+        files = [f for f in files if os.path.isfile(f)]
+        if not files:
+            continue
+        out.append('\n== %s  (%s) ==' % (label, root))
+        rows = []
+        for f in files:
+            s = os.path.getsize(f)
+            name = os.path.relpath(f, root)
+            is_log = name[:4].isdigit() and name.endswith('.md')
+            flag = ''
+            if os.path.basename(f) == 'MEMORY.md' and s > 8 * 1024:
+                flag = '  [E] 自动注入文件超 8 KB ⇒ 细节必须挪到子文件'
+                err = 1
+            elif is_log and s > 30 * 1024:
+                flag = '  [i] 历史日志（按需 Grep，不必整读）'
+            rows.append((s, name, flag))
+        rows.sort(reverse=True)
+        for s, name, flag in rows[:a.top]:
+            out.append('  %7.1f KB  %s%s' % (kb(s), name, flag))
+        if len(rows) > a.top:
+            out.append('  … 另有 %d 个（--top 调整）' % (len(rows) - a.top))
+
     print('\n'.join(out))
-    bad = sum(1 for l in out if '[E]' in l or '[W]' in l)
-    print('\n--- %d 处待处理 ---' % bad if bad else '\n--- 全部达标 ---')
-    return 1 if bad else 0
+    return 1 if err else 0
 
 
 if __name__ == '__main__':

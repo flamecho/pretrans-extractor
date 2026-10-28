@@ -32,4 +32,4 @@
 - 工具 `scripts/ozmafia_extract.py`；成品 39,861 行【PASS】（正文 39,222＋选项 628＋章題 11）。
 - ⚠ 官方更新 `1.0.1`（NSP → NCA `b8b3…`＝**BKTR 增量段**）本机 `hactool`(2020) 落不了地
   （`cannot save BKTR section without base romfs` / `Failed to read RomFS directory cache!`）⇒ 成品基于本体 XCI。
-  自写 `scripts/ozmafia_nca.py` 已通 NCA 头 XTS＋段表（见 `switch-nca.md`）。
+  自写 `scripts/ozmafia_nca.py` 已通 NCA 头 XTS＋段表（见 `platform-switch-nca.md`）。

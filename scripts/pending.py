@@ -97,7 +97,7 @@ def main():
 
     show('① 有成品、无报告', no_report, '补 `scripts/archive_work.py --template --out ...`')
     show('② 有报告、未进索引', no_index, '跑 `archive_work.py --report <报告> --apply`')
-    show('③ 已落位但报告没 front-matter', no_head, '补 6 行头（见 05-external-report §4.1）')
+    show('③ 已落位但报告没 front-matter', no_head, '补 6 行头（见 S7-external-report §4.1）')
 
     print('\n--- 成品 %d ｜ 报告 %d ｜ 已落位 %d ｜ 待办 %d ---'
           % (len(txts), len(reps), ok, len(no_report) + len(no_index) + len(no_head)))

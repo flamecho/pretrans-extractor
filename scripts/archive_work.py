@@ -5,7 +5,7 @@
 本工具只做**机械部分**（字段抽取 + 格式对齐 + 归册），判据仍由人 / skill 负责。
 
 用法:
-  python scripts/archive_work.py --report "提取结果/解析报告/XX_解析报告.md"        # 只出片段
+  python scripts/archive_work.py --report "解析报告/XX_解析报告.md"        # 只出片段
   python scripts/archive_work.py --report R.md --apply                            # 追加到 WORKS/TOOLS
   python scripts/archive_work.py --report R.md --apply --apply-log                # 连日报也写
 

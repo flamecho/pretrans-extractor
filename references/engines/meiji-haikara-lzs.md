@@ -26,7 +26,7 @@
   ② 2.27MB `DEBUG.lzs` でも同条件成立 ③ 環起点 0 だと日本語文字数 39,107→69,251（起点 0xFEE が正）
   ④ 本文が完全通読可能。
 - ⚠ 見かけ上「距離＝off−1」に化けるのは **r0=0xFEE の絶対インデックス**だから（`dist` 実装は誤り）。
-- 共通 NSO/NCA 手順は `engines/switch-nca.md` 参照。`hactool -t nsp` は失敗 → **`-t pfs0` で展開**。
+- 共通 NSO/NCA 手順は `engines/platform-switch-nca.md` 参照。`hactool -t nsp` は失敗 → **`-t pfs0` で展開**。
 
 ## 3. SCD（脚本）構造
 

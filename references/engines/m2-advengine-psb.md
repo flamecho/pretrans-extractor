@@ -2,7 +2,7 @@
 
 > 首作：**[PSP-JP] Beyond The Future -Fix The Time Arrows-**（MAGES. × Rejet, 2011, `ULJM05988`）。
 > 同族＝任何 `*_info.psb.m` ＋ `*_body.bin` 成对的数据盘（M2 的 Kaleido/ADV Workshop 系）。
-> 工具：`scripts/btf_pgd.py`（PGD）・`btf_mdf.py`（MDF 壳）・`btf_carve.py`・`btf_extract.py`；PSB→JSON 用 `scripts/freemote/PsbDecompile.exe`。
+> 工具：`scripts/btf_pgd.py`（PGD）・`btf_mdf.py`（MDF 壳）・`btf_carve.py`・`btf_unpack.py`（carve/infos/members 三步）・`btf_extract.py`；PSB→JSON 用 `scripts/freemote/PsbDecompile.exe`。
 
 ## 1. 认引擎（3 个锚，命中任一即是）
 

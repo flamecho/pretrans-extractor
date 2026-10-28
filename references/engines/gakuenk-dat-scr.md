@@ -28,7 +28,7 @@
 统一记录：`<u16 len> <len bytes>`（**len 可能含尾 NUL，读后 rstrip('\0')** 即可两者兼容）。
 - **旁白**：`fe ff 00 XX 02 00 2d 31 02 00 25 26  <u16 len> <text>`
 - **会話**：`0f 00 00 00  <u16 len> char_id("ddd_ddd_ddd")  <u16 len> name  <u16 len> text`
-  → **char_id 之后紧跟的短串即名札**（按 §0 丢弃）。
+  → **char_id 之后紧跟的短串即名札**（按 SKILL.md §0 丢弃）。
 - **選択肢**：`61 00 14 00  <u32 scene_id> <u32 idx> <u32> <u32> <u32>`（20 B payload）→ 指向 `CHOICE.BIN` 的 `(scene_id, idx)` 块。
 
 行内记号：`\` = 框内软换行（**合并**）；`$…$` = **用語辞典词条标记**（去 `$` 留字）；

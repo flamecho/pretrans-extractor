@@ -35,26 +35,40 @@ import collections
 
 BS = chr(92)
 DEFAULT_NAME = 'ソフィア'          # 主角默认名（脚本内 `&` / 話者名 `&`）
+STRIP_PLUS = False                 # 名札の姓名区切`+`を本文から除去（勿ノ怪契リ型）
 INCLUDE_TITLE = True               # `扉文`(Setting/EV_TITLE.csv 第5列) 是否收（直接上屏的标题卡）
 
+DROPPED = []                       # 源侧截断、无法显示的语句
 TALK_RE = re.compile(r'^(@?)(SET_TALK|REWORD)\s*\(')
+CMD_RE = re.compile(r'^[A-Z][A-Z0-9_]*\s*\(')
+DQ_RE = re.compile(r'(?<!\\)"')          # 未转义的引号（`\"` 是数据错写的软换行）
+
+
+def qcount(s):
+    return len(DQ_RE.findall(s))
 CHOICE_RE = re.compile(r'^CHOICE_JUMP\s*\(')
 
 
 # ---------------------------------------------------------------- 文本变换
 def strip_ruby(s):
-    """`#基底#[よみ]` → `基底`；基底不含引号/空白/等号#（防误伤）"""
-    return re.sub(r'#([^#"\'=' + BS + r'\s]+)#\[[^\]]*\]', r'\1', s)
+    """`#基底#[よみ]` → `基底`；基底不含引号/空白/等号#（防误伤）
+
+    另有数据错写 `基底#[よみ]`（缺前导 `#`，如 `#"陽菜#[ひな]`）⇒ 第二遍补剥。
+    """
+    s = re.sub(r'#([^#"\'=' + BS + r'\s]+)#\[[^\]]*\]', r'\1', s)
+    return re.sub(r'([^#\s"\']+)#\[[^\]]*\]', r'\1', s)
 
 
-def transform(txt, name):
+def transform(txt, name, strip_plus=False):
     """正文规范化：去转义 / 合并软换行 / 去标记 / 代入主角名"""
-    txt = txt.replace(BS + '"', '"')                 # 个别脚本的错写
+    txt = txt.replace(BS + '"', '"' if not strip_plus else '')  # 个别脚本的错写
     txt = txt.replace(BS + '\u3000', '')             # 换行 + 全角空格缩进 → 一并合并
     txt = txt.replace(BS, '')                        # 软换行 → 合并
     txt = strip_ruby(txt)                            # ルビ → 基底字
     txt = txt.replace('$', '')                       # 用語强调标记
     txt = txt.replace('&', name)                     # 主角名
+    if strip_plus:
+        txt = txt.replace('+', '')                   # 名札の姓名区切`+`（本文では素の姓名）
     return txt.strip()
 
 
@@ -88,6 +102,8 @@ def unquote(a):
     多余引号自然丢弃。`\\"`（个别脚本的开头错写）仍保留给 transform 还原成 `"`。
     """
     a = a.strip()
+    if a.startswith('#' + '"'):                        # 数据错写：`#"本文"`（缺开头引号）
+        a = a[1:]
     if a.startswith(BS + '"'):
         a = a[1:]
     if not a.startswith('"'):
@@ -120,12 +136,22 @@ def load_lines(path):
         s = re.sub(r'\s*//.*$', '', s)       # 行尾注释
         if not s:
             continue
+        # 上一句字符串尚未闭合，却遇到新命令 ⇒ 上一句是源侧截断（引擎无法解析、不上屏）
+        if buf and CMD_RE.match(s):
+            if qcount(buf) % 2:
+                DROPPED.append(buf[:64])        # 字符串未闭合 ⇒ 不可解析、不上屏
+            else:
+                out.append(buf)                 # 仅缺 `)`，正文完整 ⇒ 收
+            buf = ''
         buf = (buf + ' ' + s) if buf else s
-        if buf.count('(') <= buf.count(')'):
+        if buf.count('(') <= buf.count(')') and qcount(buf) % 2 == 0:
             out.append(buf)
             buf = ''
     if buf:
-        out.append(buf)
+        if qcount(buf) % 2:
+            DROPPED.append(buf[:64])       # 文件末尾仍未闭合
+        else:
+            out.append(buf)
     return out
 
 
@@ -174,9 +200,9 @@ def load_dict(setting, name):
     for r in read_csv(os.path.join(setting, 'DICT.csv')):
         if len(r) < 3 or not r[1]:
             continue
-        head = r[1].strip()
+        head = r[1].strip().replace('+', '') if STRIP_PLUS else r[1].strip()
         desc = r[2].replace('\r\n', '').replace('\n', '')
-        desc = transform(desc, name)
+        desc = transform(desc, name, STRIP_PLUS)
         rows.append('【%s】%s' % (head, desc))
     return rows
 
@@ -190,7 +216,10 @@ def main():
     ap.add_argument('--out', default=None)
     ap.add_argument('--no-title', action='store_true', help='不收 扉文')
     ap.add_argument('--with-reword', action='store_true', help='收 @REWORD（改名差分）')
+    ap.add_argument('--strip-plus', action='store_true', help='去正文中的姓名区切 `+`（名札专用符）')
     a = ap.parse_args()
+    global STRIP_PLUS
+    STRIP_PLUS = a.strip_plus
 
     sa = os.path.join(a.romfs, 'Data', 'StreamingAssets')
     script_dir = os.path.join(sa, 'Script')
@@ -206,7 +235,7 @@ def main():
     missing = []
     for ev in order:
         if INCLUDE_TITLE and not a.no_title and ev in titles:
-            t = transform(titles[ev], a.name)
+            t = transform(titles[ev], a.name, STRIP_PLUS)
             if t:
                 lines.append(t)
                 stat['扉文'] += 1
@@ -220,7 +249,7 @@ def main():
                 if len(args) < 5:
                     stat['SET_TALK(异常行)'] += 1
                     continue
-                txt = transform(unquote(args[4]), a.name)
+                txt = transform(unquote(args[4]), a.name, STRIP_PLUS)
                 if txt:
                     lines.append(txt)
                     stat['SET_TALK/@REWORD'] += 1
@@ -238,7 +267,7 @@ def main():
                 if len(opts) != n:
                     missing.append('%s(opt %d vs jump %d)' % (key, len(opts), n))
                 for o in opts[:n if n else len(opts)]:
-                    txt = transform(o, a.name)
+                    txt = transform(o, a.name, STRIP_PLUS)
                     if txt:
                         lines.append(txt)
                         stat['选项'] += 1
@@ -261,6 +290,8 @@ def main():
         print('  %-18s %d' % (k, v))
     if missing:
         print('!! 选项 key 异常:', missing[:20])
+    if DROPPED:
+        print('!! 截断丢弃 %d 条（引号未闭合）:' % len(DROPPED), DROPPED[:3])
 
 
 if __name__ == '__main__':

@@ -16,6 +16,7 @@ import argparse
 import contextlib
 import io
 import os
+import shutil
 import sys
 import tempfile
 
@@ -26,11 +27,18 @@ BOM = b'\xef\xbb\xbf'
 CLEAN = 'きょうはいい天気ですね。\n「そうですね。」\n'
 
 
-def case(name, text, e=(), w=(), not_e=(), names=(), bom=True, nl='\n', note=''):
-    """构造一个样本：text 按 nl 连接行；e/w/not_e 是对 [E]/[W] 消息的子串断言。"""
+def case(name, text, e=(), w=(), not_e=(), names=(), bom=True, nl='\n', note='',
+         kw=None, charset=None, no_charset=False):
+    """构造一个样本：text 按 nl 连接行；e/w/not_e 是对 [E]/[W] 消息的子串断言。
+
+    kw        —— 透传给 check() 的额外参数（如 {'dual': True} / {'init_charset': True}）
+    charset   —— 字符台账内容；默认**自动按本样本的非日文字符生成**（基线干净）
+    no_charset—— 不造台账，专门测「台账缺失」
+    """
     body = text.replace('\n', nl)
     return dict(name=name, data=(BOM if bom else b'') + body.encode('utf-8'),
-                e=list(e), w=list(w), not_e=list(not_e), names=list(names), note=note)
+                e=list(e), w=list(w), not_e=list(not_e), names=list(names), note=note,
+                kw=dict(kw or {}), charset=charset, no_charset=no_charset)
 
 
 CASES = [
@@ -73,6 +81,31 @@ CASES = [
     case('插入宏残留', 'テスト@GameLastです。\n', e=['未解析插入宏']),
     case('主角名缺失', CLEAN, w=['主角名'], names=['アリス']),
     case('主角名命中', CLEAN + '由奈はここにいる。\n', not_e=[], w=[], names=['由奈']),
+
+    # ── 版式：双版对照（2026-10-27 新增，此前完全没测）─────────────
+    case('双版-声明且结构相符', "きょうはいい天気ですね。\nはい、そうですね。\nきょうはいい天気ですね。はい、そうですね。\nあしたも晴れるといいですね。\nええ、そう思いますよ。\nあしたも晴れるといいですね。ええ、そう思いますよ。\nそれはよかった。\nほんとうに。\nそれはよかった。ほんとうに。\n", kw={'dual': True},
+         not_e=['未检出足够的合并行', '未加 `--dual`'],
+         note='三条合并行＋--dual ⇒ 版式一致，不应报版式类 E'),
+    case('双版-声明但无合并行', CLEAN, e=['未检出足够的合并行'], kw={'dual': True},
+         note='单版硬声明 --dual ⇒ 必须报（合并行被删/被拆的典型）'),
+    case('双版-检出但未声明', "きょうはいい天気ですね。\nはい、そうですね。\nきょうはいい天気ですね。はい、そうですね。\nあしたも晴れるといいですね。\nええ、そう思いますよ。\nあしたも晴れるといいですね。ええ、そう思いますよ。\nそれはよかった。\nほんとうに。\nそれはよかった。ほんとうに。\n", e=['未加 `--dual`'],
+         note='有合并行却没 --dual ⇒ 引号类判据会误报，必须拦'),
+
+    # ── 字符台账（2026-10-27 新增）────────────────────────────────
+    # ★ 这四条补的是一个真实的网洞：此前所有用例都没有台账，
+    #   于是每条都暗含一条 [E] 台账缺失，而断言只做子串匹配 ⇒ 台账判据坏掉也全绿。
+    case('台账-缺失', CLEAN, e=['台账缺失'], no_charset=True,
+         note='未生成台账 ⇒ E（先人工核对再 --init-charset）'),
+    case('台账-已备案', 'この記号☆は原文どおりです。\n', charset='# t\n☆\t1\n',
+         not_e=['未备案的非日文字符'],
+         note='☆ 已在台账里 ⇒ 不应报未备案'),
+    case('台账-未备案', 'この記号☆と★が混在。\n', charset='# t\n☆\t1\n',
+         e=['未备案的非日文字符'],
+         note='★ 不在台账 ⇒ E（新出现的符号必须人工过一遍）'),
+    case('台账-init 生成', CLEAN, kw={'init_charset': True}, no_charset=True,
+         not_e=['台账缺失'],
+         note='--init-charset 应先生成再判，不应报缺失'),
+
 ]
 
 
@@ -82,18 +115,43 @@ def split_msgs(out):
     return e, w
 
 
+CJK = lambda ch: (0x3040 <= ord(ch) <= 0x30ff) or (0x3400 <= ord(ch) <= 0x4dbf) \
+    or (0x4e00 <= ord(ch) <= 0x9fff) or (0x3000 <= ord(ch) <= 0x303f) \
+    or (0xff01 <= ord(ch) <= 0xff60) or (0xffe0 <= ord(ch) <= 0xffee)
+
+
 def run(c, verbose):
-    fd, p = tempfile.mkstemp(suffix='.txt')
+    """在**临时目录**里跑一条样本。
+
+    ★ 为什么要有目录（2026-10-27）：字符台账的路径是 `<成品>/../解析报告/allow/<名>.charset`，
+    以前用例只写一个散装 txt ⇒ 每条用例都暗含一条 `[E] 台账缺失`，而断言只做子串匹配，
+    **判据彻底坏掉也看不出来**（21/21 照样全绿）。现在默认按样本自动生成台账，让基线干净。
+    """
+    d = tempfile.mkdtemp(prefix='selftest_')
+    outdir = os.path.join(d, 'out')
+    os.makedirs(outdir, exist_ok=True)
+    p = os.path.join(outdir, 'sample.txt')
     try:
-        with os.fdopen(fd, 'wb') as f:
+        with open(p, 'wb') as f:
             f.write(c['data'])
+        # 台账：显式给定优先；否则按样本非日文字符自动登记（基线干净）
+        if not c['no_charset']:
+            allow_dir = os.path.join(d, '解析报告', 'allow')
+            os.makedirs(allow_dir, exist_ok=True)
+            if c['charset'] is not None:
+                body = c['charset']
+            else:
+                chars = sorted({ch for ch in c['data'].decode('utf-8', 'replace')
+                                if ch not in '\n\r' and not CJK(ch) and ch != '\ufeff'})
+                body = '# 自动登记（selftest 基线）\n' + ''.join(ch + '\t1\n' for ch in chars)
+            io.open(os.path.join(allow_dir, 'sample.charset'), 'w',
+                    encoding='utf-8', newline='\n').write(body)
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            check(p, c['names'], 200.0, True)
+            check(p, c['names'], 200.0, True, **c['kw'])
         out = buf.getvalue()
     finally:
-        if os.path.exists(p):
-            os.remove(p)
+        shutil.rmtree(d, ignore_errors=True)
     E, W = split_msgs(out)
     bad = []
     for s in c['e']:

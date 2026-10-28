@@ -14,7 +14,9 @@ tob       = [u32 'tob\0'][u32 size][u32 ver=1][u32 n]
           .vag = 该文本框的语音（语音名排在其框文本之后）
           ./../tob/x.tob / x.sts = 脚本自身名与标签命名空间
 
-行粒度：一次点击 = 一行 —— 同一框内的折行合并；框界 = 语音 / 引号闭合。
+行粒度：一次点击 = 一行。⚠ 文本层只能近似：源串是**预折行**（单串 ≤25 字＝一行宽），
+        作者的分框只写在 .tob 字节码里，字符串表无分隔标记。故按「句末优先 + 窗口行数」近似：
+        上一串以 。！？!?」』 收尾（引号深度 0）／.vag 语音／已累积 maxlines 行 ⇒ 切框。
 人名：白雲 + '＠'(可变名) ⇒ 默认名 美咲（EBOOT InputName 区字面量）。
 """
 import re
@@ -23,16 +25,20 @@ import sys
 
 XOR = 0xDA
 
-# 半角片假名 -> 全角
+# ★本作：**半角片假名＝原文的平假名**（真片假名词汇一律写成全角）
+#   实证：世界ﾊ､突如現ﾚﾀ『新ﾀﾅﾙスポーツ』ﾆﾖﾘ
+#         → `ca`=ﾊ(半角) / `83 58 83 7c 81 5b 83 63`=スポーツ(全角)
+#   ⇒ 半角→**平假名**；全角片假名原样保留
 _kana = "ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ"
-_full = "ヲァィゥェォャュョッーアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワン"
-HALF = {a: b for a, b in zip(_kana, _full)}
+_hira = "をぁぃぅぇぉゃゅょっーあいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわん"
+HALF = {a: b for a, b in zip(_kana, _hira)}
 HALF.update({"｡": "。", "｢": "「", "｣": "」", "､": "、", "･": "・"})
-DAKU = {"カ": "ガ", "キ": "ギ", "ク": "グ", "ケ": "ゲ", "コ": "ゴ",
-        "サ": "ザ", "シ": "ジ", "ス": "ズ", "セ": "ゼ", "ソ": "ゾ",
-        "タ": "ダ", "チ": "ヂ", "ツ": "ヅ", "テ": "デ", "ト": "ド",
-        "ハ": "バ", "ヒ": "ビ", "フ": "ブ", "ヘ": "ベ", "ホ": "ボ", "ウ": "ヴ"}
-HANDAKU = {"ハ": "パ", "ヒ": "ピ", "フ": "プ", "ヘ": "ペ", "ホ": "ポ"}
+DAKU = {"か": "が", "き": "ぎ", "く": "ぐ", "け": "げ", "こ": "ご",
+        "さ": "ざ", "し": "じ", "す": "ず", "せ": "ぜ", "そ": "ぞ",
+        "た": "だ", "ち": "ぢ", "つ": "づ", "て": "で", "と": "ど",
+        "は": "ば", "ひ": "び", "ふ": "ぶ", "へ": "べ", "ほ": "ぼ",
+        "う": "ゔ", "わ": "ゎ"}
+HANDAKU = {"は": "ぱ", "ひ": "ぴ", "ふ": "ぷ", "へ": "ぺ", "ほ": "ぽ"}
 
 JP = re.compile(r"[\u3040-\u30ff\u3400-\u9fff\uff01-\uff9f\u3000-\u303f]")
 KANA = re.compile(r"[\u3040-\u30ff\uff66-\uff9f]")
@@ -126,7 +132,7 @@ def depth(s):
     return s.count("「") + s.count("『") - s.count("」") - s.count("』")
 
 
-def extract(d):
+def extract(d, maxlines=3):
     lines = []
     for p, hdr in iter_tobs(d):
         ss = strtab(d, p, hdr)
@@ -139,7 +145,7 @@ def extract(d):
             kind, body = classify(s)
             if kind == "voice":
                 # 语音名排在框文本之后；若引号尚未闭合，说明本框跨了多条语音
-                if cur and (depth("".join(cur)) <= 0 or len("".join(cur)) > 200):
+                if cur and (depth("".join(cur)) <= 0 or len(cur) >= 2 or len("".join(cur)) > 200):
                     lines.append(fix_name("".join(cur)))
                     cur = []
                 continue
@@ -155,12 +161,16 @@ def extract(d):
                         cur = []
                 continue
             txt = half_to_full(body)
-            if cur and len("".join(cur)) > 240:
+            # 「……」收束：作者常在此处手动分框（用户实证）
+            if cur and len(cur) >= 2 and depth("".join(cur)) <= 0 and cur[-1].endswith("……"):
+                lines.append(fix_name("".join(cur)))
+                cur = []
+            if cur and (len(cur) >= maxlines or len("".join(cur)) > 240):
                 lines.append(fix_name("".join(cur)))
                 cur = []
             if cur:
                 joined = "".join(cur)
-                if depth(joined) <= 0 and joined[-1:] in "」』":
+                if depth(joined) <= 0 and cur[-1][-1:] in "。！？!?」』":
                     lines.append(fix_name(joined))
                     cur = []
                 elif depth(joined) <= 0 and joined[-1:] in "。！？" and txt[:1] in "「『":
@@ -174,20 +184,7 @@ def extract(d):
 
 def rebalance(lines):
     """切框把「…」切成两行时，向前合并直到配对（源侧真正缺 」 的少数行会保留，另行定值表处理）"""
-    out = []
-    buf = ""
-    cnt = 0
-    for ln in lines:
-        buf = buf + ln if buf else ln
-        cnt = cnt + 1 if ln else cnt
-        if buf.count("「") + buf.count("『") <= buf.count("」") + buf.count("』"):
-            out.append(buf)
-            buf, cnt = "", 0
-        elif cnt >= 4 or len(buf) > 300:
-            out.append(buf)
-            buf, cnt = "", 0
-    if buf:
-        out.append(buf)
+    out = lines
     # 切框残留：左引号多于右引号 → 行尾补 」；右引号多于左引号 → 行首补 「
     fixed = []
     for ln in out:
@@ -201,8 +198,15 @@ def rebalance(lines):
 
 
 if __name__ == "__main__":
-    src, dst = sys.argv[1], sys.argv[2]
-    out = rebalance(extract(open(src, "rb").read()))
+    argv = [a for a in sys.argv[1:] if not a.startswith("--")]
+    ml = 3
+    for a in sys.argv[1:]:
+        if a.startswith("--maxlines"):
+            ml = int(a.split("=")[1]) if "=" in a else 3
+        elif a.isdigit():
+            ml = int(a)
+    src, dst = argv[0], argv[1]
+    out = rebalance(extract(open(src, "rb").read(), maxlines=ml))
     with open(dst, "w", encoding="utf-8-sig", newline="\n") as f:
         f.write("\n".join(out) + "\n")
     print("lines", len(out))

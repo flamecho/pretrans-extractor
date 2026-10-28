@@ -29,5 +29,5 @@
 - 工具：`scripts/stormlover_natsu_charset.py`（SPECIAL）· `stormlover_natsu_run.py`（提取器）·
   `stormlover_psp_font.py`（字形渲染/联系人图）· `stormlover_psp_cmp.py`（槽字形 vs 候选字比对图）。
   用法：`python scripts/stormlover_natsu_run.py <sc.cpk> <out.txt>`。
-- ★ **`FFF0` 名札 = 游戏自带 cast 表**（`[FFF0]〈样式符〉〈全名〉[FFFF]〈台词〉`；名札不入正文，§0）：整表导出（`lstrip` 样式符）即可与 vndb 逐字核对 ——
+- ★ **`FFF0` 名札 = 游戏自带 cast 表**（`[FFF0]〈样式符〉〈全名〉[FFFF]〈台词〉`；名札不入正文，SKILL.md §0）：整表导出（`lstrip` 样式符）即可与 vndb 逐字核对 ——
   本作 13 名名札 ＋ 主角(宏) ⇒ vndb 14 人 **100% 吻合**。**「ミミ」＝高未三咲**（对话用昵称，字面「三咲」只在名札）。

@@ -27,7 +27,7 @@ SET_CH / SET_BG / WAIT / SE_PLAY / FADE_* / NEXT_PAGE …    ← 演出, 无正�
 - **选项条数校验**：`CHOICE_JUMP` 实参个数（去 `NULL`）必须 == `CHOICE.csv` 同 key 的行数 ⇒ 本作 108/108 全中（可当自检）。
 - **`CHOICE.csv` 的 `問` 列别收**：它是选项前的提问，且**同文已作为 `SET_TALK` 在脚本里**（108/108 均能找到）⇒ 收 CSV 会重复。
 - **排序**：`Setting/STORYFLOW.csv` 的 `ファイル名` 列 = 游戏自身剧本流（**≠ 文件名字典序**；含无脚本的 `CHAP*` 跳过）。
-- **`Setting/EV_TITLE.csv`** 第 5 列 = 每剧本一句**扉文**（直接上屏标题；按 §0「直接上屏特效・扉文」收，可用 `--no-title` 关）。
+- **`Setting/EV_TITLE.csv`** 第 5 列 = 每剧本一句**扉文**（直接上屏标题；按 SKILL.md §0「直接上屏特效・扉文」收，可用 `--no-title` 关）。
 
 ## 3. ★ XCI 侧：`hactool -t xci` 报 `XCI partition is corrupt!` 的对策
 - 读 hactool `xci.c`：该报错**不是 HFS0 解析失败**，而是 `check_memory_hash_table_with_suffix()`

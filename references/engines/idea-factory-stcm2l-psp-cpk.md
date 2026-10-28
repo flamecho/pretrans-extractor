@@ -33,14 +33,14 @@
 
 ## ② アーメン・ノワール ポータブル ／ ③ ガーネット・クレイドル ポータブル
 
-> 2026-10-17 因本册超 10 KB 已下沉 → **`engines/idea-factory-stcm2l-psp-cpk-amen-garnet.md`**
+> 本引擎后续内容见 **`engines/idea-factory-stcm2l-psp-cpk-amen-garnet.md`**
 > （② ＝ 槽＋记录＋收尾三元组：`0xd4`正文/`0xdf`名札/`0xe7`选项；
 >   ③ ＝ `0xd4`框开始＋紧随 `0xd2`名札 1:1／`0xd3`框末／**2 槽** `0xe7`·`0xec` 才是选项；CRILAYLA 与空串占位坑同册）。
 
 ## ④ Jewelic Nightmare（2013 Otomate，`ULJM06326`，vndb v12436）
 
 - **容器链同 ①**：`INSDIR/INSTALL.DNS`（PGD）→ 内层 CPK → `script/*`（`STCM2L Apr 22 2013`）；`USRDIR/UMD.cpk` 仍只有 voice/movie。
-  ★ **`SYSDIR/BOOT.BIN` 本作是 3.9 MB 全零**（非明文 ELF）⇒ doc `01-psp-eboot.md §2c` 的捷径不成立，但也不必解 EBOOT（数据全在 PGD 里）。
+  ★ **`SYSDIR/BOOT.BIN` 本作是 3.9 MB 全零**（非明文 ELF）⇒ doc `S2-psp-eboot.md` §2 的捷径不成立，但也不必解 EBOOT（数据全在 PGD 里）。
 - **记录仍是「偏移 12 = 正文」**，但多了两形态（**同族不可推定**）：
     1. **「变体箱」**：整条 payload 无 k=12 记录，而是**指针表 ＋ 两组文本记录**
        （A＝手写名 / B＝`#Name[n]`）。判据＝**无 k=12 ＋ 末尾 16 B 内含 `0xd2/0xd3/0xd4/0x7a` ＋ ≥2 条日文串**。
@@ -77,3 +77,12 @@
   （`ｴ`/`ﾈ`，实为 180/200）⇒ 「全记录皆 FF61–9F 即丢」③ 私用区单字槽。
   另：每档开头都有 `土方/沖田/斎藤/…` **他作遗留符号表**（薄桜鬼系），落在偏移 164+，天然不收。
 - 工具：`scripts/minus8_extract.py`（吃 script 目录＋`--cpk=` 取选项表）；顺序 **900→907 共通 → 999 修学旅行 → 100〜870 八路线**。
+
+## ⑦ 二世の契り（2011 Otomate，vndb v3239）
+
+> 另一样本见 **`engines/idea-factory-stcm2l-psp-cpk-niseno.md`**
+> （容器链同 ⑥ 无 PGD；`0xd2`续行／`0xd3`·`0x01`框末；★**变体尾 `[0][1][cmd]`** 不认会并句；名札双型 18,214；A/B 变体 333 折一）
+
+## ⑥ 官能昔話 ポータブル（2012 Otomate×MAGES.，`ULJM06015`）
+
+> 详见 **`engines/idea-factory-stcm2l-psp-cpk-kannou.md`**：容器链无 PGD（`USRDIR/INSTALL.CPK`→`script/*`）、`0xd2`=续行／`0xd3`=框末（**与 ⑤ 相反**）、`0x34/0x35`=框末变体、`0xe7→e6`=选项、名札两型（`0x7a` + 文本流裸名 3,189）、`script/0-5` 与 `script/1201-1902`（恋愛番長遗留）整组排除、主角 姫子。

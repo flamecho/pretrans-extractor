@@ -28,8 +28,9 @@
   おみくじ   member1 blk87  `FORTUNEWORD__` / `WORD___nnn`  占い結果 1 串
 
 控制码：`@n`＝框内软换行 → 合并；`@k…@w`＝着色 → 去标记留字；`☆`＝地の文札残留 → 删。
+行首「名札 + 「…」」（地の文里写进去的说话人，本作 4 处）⇒ 去名保引号（`--keep-prefix` 可关闭）。
 
-用法：python scripts/vitz_extract.py <GAMEDT.AFS> <out.txt> [--no-quiz] [--no-omikuji] [--no-gloss]
+用法：python scripts/vitz_extract.py <GAMEDT.AFS> <out.txt> [--no-quiz] [--no-omikuji] [--no-gloss] [--keep-prefix]
 """
 import sys, os, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -130,8 +131,10 @@ def main():
 
     blocks = decode_hfu2(afs_member(data, SCRIPT_MEMBER))
     lines = []
-    stat = {'block': 0, 'plate': 0, 'text': 0, 'choice': 0, 'empty': 0, 'bad': 0}
+    stat = {'block': 0, 'plate': 0, 'text': 0, 'choice': 0, 'empty': 0, 'bad': 0,
+            'prefix': 0}
     bad = []
+    plates = set()
     for bi, blk in enumerate(blocks):
         if bi in SKIP_BLOCKS:
             continue
@@ -139,6 +142,9 @@ def main():
         for cmd, txt in iter_records(blk, bad):
             if cmd in NAME_CMDS:
                 stat['plate'] += 1
+                p = clean(txt)
+                if p:
+                    plates.add(p)
                 continue
             s = clean(txt)
             if not s:
@@ -150,6 +156,19 @@ def main():
                 stat['choice'] += 1
             lines.append(s)
     stat['bad'] = len(bad)
+
+    # 行首「名札 + 「…」」＝地の文里写进去的说话人 ⇒ 去名保引号（§0 不加说话人）
+    plates.discard(MACROS['＠'])
+    plate_list = sorted(plates, key=len, reverse=True)
+    if '--keep-prefix' not in flags:
+        for i, s in enumerate(lines):
+            if not s.endswith('」'):
+                continue
+            for nm in plate_list:
+                if len(s) > len(nm) and s.startswith(nm) and s[len(nm)] == '「':
+                    lines[i] = s[len(nm):]
+                    stat['prefix'] += 1
+                    break
 
     sysb = decode_hfu2(afs_member(data, SYS_MEMBER))
     n_gloss = n_quiz = n_omi = 0
@@ -187,7 +206,7 @@ def main():
     with open(out, 'w', encoding='utf-8-sig', newline='\n') as f:
         f.write('\n'.join(lines) + '\n')
     print('blocks', stat['block'], 'plates', stat['plate'], 'text', stat['text'],
-          'choice', stat['choice'], 'empty', stat['empty'], 'bad', stat['bad'],
+          'choice', stat['choice'], 'empty', stat['empty'], 'bad', stat['bad'], 'prefix', stat['prefix'],
           '| gloss', n_gloss, 'quiz', n_quiz, 'omikuji', n_omi, '| lines', len(lines))
 
 

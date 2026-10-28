@@ -44,9 +44,9 @@ SIG = [
     (b'allscr', 0, 'HuneX allscr 脚本（MZX0 压缩）', 'hunex-ogre', 'python scripts/kaleido_extract.py'),
     (b'CRPT', 0, 'Madoka GScript 容器', 'misc-engines', 'python scripts/tsundere_extract.py {f} <outdir>'),
     (b'SPTHEADER', 0, 'System-NNN .spt 脚本', 'misc-engines', 'python scripts/asakiyumemishi_extract.py {f} out.txt'),
-    (b'PFS0', 0, 'Switch NSP（PFS0）', 'switch-nca', 'hactool -t pfs0 --outdir=<o> {f}'),
-    (b'NCA3', 0, 'Switch NCA3', 'switch-nca', 'hactool --keyset=<你的 prod.keys> -t nca --romfsdir=<o> {f}'),
-    (b'HEAD', 0, 'Switch XCI', 'switch-nca', 'hactool --keyset=<你的 prod.keys> -t xci --securedir=<o> {f}'),
+    (b'PFS0', 0, 'Switch NSP（PFS0）', 'switch-nca', 'python scripts/ns_open.py {f} --romfs <o>'),
+    (b'NCA3', 0, 'Switch NCA3', 'switch-nca', 'python scripts/ns_open.py {f} --romfs <o>'),
+    (b'HEAD', 0, 'Switch XCI', 'switch-nca', 'python scripts/ns_open.py {f} --romfs <o>'),
     (b'SCE\0', 0, 'PSV/PSP SELF（eboot，需转 ELF）', 'psv-pfs',
      'python <psvdec>/util/self2elf.py -i {f} -o eboot.elf -k work.bin'),
     (b'Rar!\x1a\x07\x01', 0, 'RAR5（可能是 SFX 内嵌，PE 段后开始）', None, 'PowerShell 调 7z 解（日文路径必须走 PowerShell）'),
@@ -75,6 +75,9 @@ def ent(b):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] in ('-h', '--help'):
+        print(__doc__.strip())
+        return 0
     if len(sys.argv) < 2:
         print(__doc__); return
     p = sys.argv[1]
