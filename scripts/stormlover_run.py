@@ -18,7 +18,7 @@
 import os, sys, struct
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stormlover_charset import CHARSET, SPECIAL, LEVEL2_START
+from _lib.stormlover_charset import CHARSET, SPECIAL, LEVEL2_START
 from cpk import CPK
 
 C_NAME, C_BOX, C_BR, C_SEP = 0xFFF0, 0xFFFF, 0xFFFE, 0xFFFB

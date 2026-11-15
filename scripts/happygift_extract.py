@@ -1,6 +1,10 @@
+import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
+from pathlib import Path as _ScriptPath
+_SCRIPT_DIR = _ScriptPath(__file__).resolve().parent
 from pathlib import Path
 import json,re,collections,hashlib,sys,argparse,subprocess
-R=Path(__file__).resolve().parent.parent;W=R/'_work_happygift'
+R=Path(os.environ.get('VNTRANS_HOME', os.getcwd()));W=R/'_work_happygift'
 ap=argparse.ArgumentParser(description='Happy Gift: strict bytecode, reachability, default names and per-page layout.')
 ap.add_argument('--source',type=Path,default=Path(r'C:\AMEDEO\DRFD'))
 ap.add_argument('--work',type=Path,default=W)
@@ -11,8 +15,8 @@ ap.add_argument('--publish',action='store_true',help='Write the final UTF-8 BOM 
 args=ap.parse_args()
 W=args.work;W.mkdir(exist_ok=True)
 if args.prepare:
- for script,extra in [('happygift_inspect.py',['--source',str(args.source),'--work',str(W)]),('happygift_flow.py',['--work',str(W),'--start',str(args.start)])]:
-  subprocess.run([sys.executable,'-B','-X','utf8',str(R/'tools'/script),*extra],check=True)
+ for script,extra in [('happygift_inspect.py',['--source',str(args.source),'--work',str(W)]),('_lib/happygift_flow.py',['--work',str(W),'--start',str(args.start)])]:
+  subprocess.run([sys.executable,'-B','-X','utf8',str(_SCRIPT_DIR/script),*extra],check=True)
 TITLE=args.title
 E=json.loads((W/'elements.json').read_text('utf-8'))
 F=json.loads((W/'flow.json').read_text('utf-8'))

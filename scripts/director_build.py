@@ -12,7 +12,7 @@ King of Beast 成品构建器
 """
 import os, sys, re, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from director_text import extract_file
+from _lib.director_text import extract_file
 
 EXCLUDE_FILES = {"character.cxt"}
 SYSTEM_UI = {

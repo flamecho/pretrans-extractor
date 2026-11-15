@@ -13,7 +13,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from yuris_ystb import Script
+from _lib.yuris_ystb import Script
 
 # 用法：python yuris_allout_extract.py <ysbin 目录> [输出 txt]
 SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(VNTRANS_HOME, '_work_allout/unp/ysbin')

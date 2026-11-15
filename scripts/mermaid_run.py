@@ -12,8 +12,8 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import mermaid_scan as MS
-import mermaid_vml as V
+from _lib import mermaid_scan as MS
+from _lib import mermaid_vml as V
 
 NAME_SEI = '\u901f\u6c34'   # 速水
 NAME_MEI = '\u77b3'         # 瞳

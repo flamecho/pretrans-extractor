@@ -20,7 +20,7 @@ import sys, os, struct
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lz4.block
-from handsome_bktr import Upd
+from _lib.handsome_bktr import Upd
 import handsome_nca as W
 
 XCI = os.path.join(os.environ.get("VNTRANS_HOME", os.getcwd()), "src", "[NS-JP]ハンサムロンダリング -the mystic lover-", "[APP][010056B024B92000][1.0.0][JP][19.0.0].xci")

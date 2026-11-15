@@ -13,8 +13,8 @@ Takuyo gss / Switch 变体：
 import sys, os, re, io
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gss_scr3 as G
-import himehibi_lsdarc as L
+from _lib import gss_scr3 as G
+from _lib import himehibi_lsdarc as L
 
 ROMFS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      "_work_himehibi", "romfs_base")

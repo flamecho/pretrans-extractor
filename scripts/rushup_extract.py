@@ -10,6 +10,7 @@
 # [graph alt=...] alt 只写 historyLayer(履歴) 不上屏 ⇒ 丢; ruby text=读音 ⇒ 丢注留基底
 # 0*_scene.ks=回想专用复制(正文已在 chapter_5xxx/12xx 本篇内) ⇒ 不收; op.ks 0 文本
 import sys, os, re
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ks_kag_text import parse, read_ks, load_macros, macro_events, macro_texts, render
@@ -33,7 +34,7 @@ def main():
     lines, multi = render(allpages, allopts, 'dual')
     # 源码 3 处 `[button …]]` 双右括号笔误 ⇒ 多出的 `]` 被当文本记号, 剔除(脚本残留)
     lines = [l for l in lines if l.strip() != ']']
-    out = Path(__file__).resolve().parent.parent / '提取结果/[JP]RUSH×UP！.txt'
+    out = Path(os.environ.get('VNTRANS_HOME', os.getcwd())) / '提取结果/[JP]RUSH×UP！.txt'
     with open(out, 'w', encoding='utf-8-sig', newline='\n') as fh:
         fh.write('\n'.join(lines) + '\n')
     print('files', len(files), 'pages', len(allpages),

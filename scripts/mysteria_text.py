@@ -11,7 +11,7 @@
 规范化：原文误用的半角「･」「､」按作者一贯写法还原为全角「・」「、」（详见报告）。
 """
 import sys
-import mysteria_extract as ME
+from _lib import mysteria_extract as ME
 
 NAME_DEFAULT = "エミリー"
 

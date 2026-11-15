@@ -13,8 +13,8 @@ import json
 from pathlib import Path
 import re
 
-from kochouran_extract import write_json, sha256
-from kochouran_kag import lex
+from _lib.kochouran_extract import write_json, sha256
+from _lib.kochouran_kag import lex
 
 
 class Advances:
@@ -537,7 +537,7 @@ class Extractor:
                      names=sorted({self.atom_value(a)[1:-1] for p in pages for s in p['segments'] for a in s['atoms'] if a[4]=='name'}),
                      resolved_fonts=self.fonts.resolved,statistics=dict(self.stats),
                      input_sha256={str(p.relative_to(self.root)):sha256(p) for p in sorted(self.root.rglob('*')) if p.is_file() and p.suffix in ('.ks','.tjs')},
-                     extractor_sha256=sha256(__file__),lexer_sha256=sha256(Path(__file__).with_name('kochouran_kag.py')))
+                     extractor_sha256=sha256(__file__),lexer_sha256=sha256((Path(__file__).parent / '_lib' / 'kochouran_kag.py')))
         self.evidence.mkdir(parents=True,exist_ok=True)
         write_json(self.evidence/'coverage.json',summary)
         write_json(self.evidence/'source_rows.json',rows)

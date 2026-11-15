@@ -27,7 +27,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import himehibi_disasm as D
+from _lib import himehibi_disasm as D
 
 SCR_DIR = "_work_sorayume/scr"
 OMAKEDIR = "_work_sorayume/romfs/omake"

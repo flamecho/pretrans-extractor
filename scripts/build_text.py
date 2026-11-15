@@ -6,7 +6,7 @@
 """
 import sys, os, glob, hashlib, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import lastescort_vml as L
+from _lib import lastescort_vml as L
 
 UI = 'シャンパンコール中！□ボタンのスキップに注意して下さい。'
 

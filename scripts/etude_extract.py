@@ -25,8 +25,8 @@ import sys, os, re, io
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", "tools"))
-from himehibi_lsdarc import read_index
-from himehibi_disasm import disasm
+from _lib.himehibi_lsdarc import read_index
+from _lib.himehibi_disasm import disasm
 
 # extracted PSP_GAME tree (see the extract command in the report); default = ../_work_etude/iso
 GAMEDIR = os.environ.get("ETUDE_DIR", os.path.join(HERE, "..", "_work_etude", "iso", "PSP_GAME"))

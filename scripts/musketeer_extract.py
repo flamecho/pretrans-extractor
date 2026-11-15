@@ -19,7 +19,7 @@ import glob
 import collections
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import musketeer_charset as M
+from _lib import musketeer_charset as M
 
 # 'print text' opcodes (second byte of an `FE xx` pair that begins a box)
 TEXT_OPS = {

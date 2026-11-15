@@ -5,9 +5,13 @@ without displaying it. spause 205 keeps the current page; pause 17 clears all
 windows because R_COMMAND_MOD=0. par/br are layout breaks only. Window 102
 only changes the active window and is not itself a page delimiter.
 """
+import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
+from pathlib import Path as _ScriptPath
+_SCRIPT_DIR = _ScriptPath(__file__).resolve().parent
 from pathlib import Path
 import argparse, subprocess, sys, json, collections, re, struct, hashlib
-ROOT=Path(__file__).resolve().parent.parent
+ROOT=Path(os.environ.get('VNTRANS_HOME', os.getcwd()))
 TITLE='[PC-JP]神曲奏界ポリフォニカ Memories White～エンドレスアリア～'
 ap=argparse.ArgumentParser(description=__doc__)
 ap.add_argument('--variant',choices=('ea','fe'),default='ea')
@@ -22,8 +26,8 @@ args.source=args.source or Path('C:/OCELOT/WHITE_'+('E' if args.variant=='ea' el
 W=args.work or ROOT/('_work_polwhite_'+args.variant);W.mkdir(exist_ok=True)
 if args.prepare:
     for script,extra in [('happygift_inspect.py',['--source',str(args.source),'--work',str(W)]),
-                         ('happygift_flow.py',['--work',str(W),'--start',str(200 if args.variant=='ea' else 100)])]:
-        subprocess.run([sys.executable,'-B','-X','utf8',str(ROOT/'tools'/script),*extra],check=True)
+                         ('_lib/happygift_flow.py',['--work',str(W),'--start',str(200 if args.variant=='ea' else 100)])]:
+        subprocess.run([sys.executable,'-B','-X','utf8',str(_SCRIPT_DIR/script),*extra],check=True)
 E=json.loads((W/'elements.json').read_text('utf-8'))
 I=json.loads((W/'inspection.json').read_text('utf-8'))
 F=json.loads((W/'flow.json').read_text('utf-8'))

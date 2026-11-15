@@ -22,8 +22,8 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gss_lsdarc as L
-import gss_scr3 as D
+from _lib import gss_lsdarc as L
+from _lib import gss_scr3 as D
 
 # sjistext.csv ShiftJISBinary[1]=橿野(姓) [2]=柘榴(名)  (gss_emulate.cpp default name table)
 NAME_SLOTS = {"1802": "橿野", "0c02": "柘榴"}

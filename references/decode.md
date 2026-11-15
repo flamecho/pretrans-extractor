@@ -87,7 +87,7 @@ ALTOR 的 UTF-16LE 和 CP932 文件并存：
 `H/D/R` 分别为 Huffman、增量和 RLE；`N/B/W/S` 为无加密及字节/小端双字节/大端双字节差分。
 前向差分使用已解出的前值，不用原始前值。
 GARbro 的部分 D/H/W 方法未实现，核对完整参考实现；工作区工具为
-`gss_codec.py/gss_lsdarc.py/gss_scr3.py`。解压长度、结构及脚本签名须一致。
+`_lib/gss_codec.py/_lib/gss_lsdarc.py/_lib/gss_scr3.py`。解压长度、结构及脚本签名须一致。
 
 ### 区间与位置修复
 

@@ -12,7 +12,7 @@ Excluded: 0xfd (name box / graphics), 0x3c/0x3d (audio), 0x3b (image), 0x1d/0x1e
 import sys, os, re
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import himehibi_disasm as H
+from _lib import himehibi_disasm as H
 
 ents, SCRIPTS = H.load()
 def norm(n):

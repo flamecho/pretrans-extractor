@@ -28,7 +28,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stormlover_charset import build_charset
+from _lib.stormlover_charset import build_charset
 
 CS = build_charset()
 NC = len(CS)

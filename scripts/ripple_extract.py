@@ -18,7 +18,7 @@
 import sys, os, struct, re
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ripple_deep import split
+from _lib.ripple_deep import split
 
 SKIP_SCRIPTS = {21}      # 0x15＝タイトル画面「オープニングを見る/見ない」UI 菜单，非正文
 NAME_SLOT = '$500'

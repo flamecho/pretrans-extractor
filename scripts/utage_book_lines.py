@@ -21,7 +21,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools'))
 import UnityPy
-from dd_utage import parse_book
+from _lib.dd_utage import parse_book
 
 TEXT_CMDS = ('', 'Text', 'TextMultiVoice', 'TextVoiceIfDefaultName')
 SEL_CMD = 'Selection'

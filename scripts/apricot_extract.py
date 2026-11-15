@@ -17,8 +17,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from himehibi_lsdarc import read_index      # noqa: E402
-from himehibi_disasm import disasm          # noqa: E402
+from _lib.himehibi_lsdarc import read_index      # noqa: E402
+from _lib.himehibi_disasm import disasm          # noqa: E402
 
 GAME = os.environ.get("APRICOT_DIR", os.path.join(HERE, "..", "_work_apricot", "PSP_GAME"))
 USDIR = os.path.join(GAME, "USRDIR")

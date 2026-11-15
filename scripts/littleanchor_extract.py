@@ -15,7 +15,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stormlover_charset import CHARSET as L
+from _lib.stormlover_charset import CHARSET as L
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 AFS = os.path.join(HERE, '..', '_work_la', 'DATA', 'DATA', 'SC.AFS')

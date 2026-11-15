@@ -9,7 +9,7 @@
 """
 import sys, os, glob, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import shinobi_ns_extract as E
+from _lib import shinobi_ns_extract as E
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DICT = os.path.join(ROOT, '_w_shinobi', 'sys', 'DATABASE', 'dbDictionary.gbin')

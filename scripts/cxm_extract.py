@@ -21,7 +21,7 @@ import os, re, sys, json
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cxm_stream import records, body_tags
+from _lib.cxm_stream import records, body_tags
 
 ROOT = os.path.join(VNTRANS_HOME, '_w_cxm')
 OUT = os.path.join(VNTRANS_HOME, '提取结果/[NS-JP]Collar x Malice for Nintendo Switch.txt')

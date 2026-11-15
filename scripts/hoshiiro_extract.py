@@ -36,8 +36,8 @@ import argparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import gss_lsdarc as L
-import himehibi_disasm as D
+from _lib import gss_lsdarc as L
+from _lib import himehibi_disasm as D
 
 NAME_GIVEN = "\u685c\u8863"   # 桜衣
 NAME_FAMILY = "\u7531\u672c"  # 由本

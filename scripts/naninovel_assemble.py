@@ -40,7 +40,8 @@ def clean_tags(s):
 def load_managed(path):
     """key: value 格式的 Naninovel managed text（日文版，无 '; localization document' 头）。"""
     m = {}
-    for line in open(path, encoding='utf-8', errors='replace').read().split('\n'):
+    from pathlib import Path
+    for line in Path(path).read_text(encoding='utf-8', errors='replace').split('\n'):
         line = line.rstrip('\r')
         if not line or line.startswith(';'):
             continue
@@ -52,7 +53,8 @@ def load_managed(path):
 def load_tips(path):
     """Tips managed text: key: 見出し語 | カテゴリ | 解説  → [(見出し語, 解説)]"""
     out = []
-    for line in open(path, encoding='utf-8', errors='replace').read().split('\n'):
+    from pathlib import Path
+    for line in Path(path).read_text(encoding='utf-8', errors='replace').split('\n'):
         line = line.rstrip('\r')
         if not line or line.startswith(';'):
             continue
@@ -69,14 +71,28 @@ def load_tips(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--scripts', required=True)
+    source = ap.add_mutually_exclusive_group(required=True)
+    source.add_argument('--scripts', help='Previously parsed script JSON')
+    source.add_argument('--bundle', help='Unity script bundle')
+    ap.add_argument('--il2cpp')
+    ap.add_argument('--meta')
+    ap.add_argument('--unity', default='2022.3.42f1')
+    ap.add_argument('--name', default='')
     ap.add_argument('--managed', required=True)
     ap.add_argument('--tips', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--skip', default='')
     a = ap.parse_args()
 
-    data = json.load(open(a.scripts, encoding='utf-8'))
+    if a.bundle:
+        if not a.il2cpp or not a.meta:
+            ap.error('--bundle requires --il2cpp and --meta')
+        from _lib.naninovel_extract import extract
+        data = extract(a.bundle, a.il2cpp, a.meta, a.unity,
+                       {'g_name': a.name} if a.name else {})
+    else:
+        with open(a.scripts, encoding='utf-8') as stream:
+            data = json.load(stream)
     managed = load_managed(a.managed)
     tips = load_tips(a.tips)
 

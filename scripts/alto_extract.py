@@ -19,7 +19,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import yuuki_pkg as P
-import yuuki_yne as W
+from _lib import yuuki_yne as W
 
 
 def load_head(d):

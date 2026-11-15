@@ -16,7 +16,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import seisyun_bin as SB
+from _lib import seisyun_bin as SB
 
 SKIP_RE = re.compile(r'^(mem_|z|zzz|select|wather)', re.I)   # 回想重播 / 调试·测试脚本
 

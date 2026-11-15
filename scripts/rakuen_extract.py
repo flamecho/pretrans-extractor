@@ -22,8 +22,8 @@
 import sys, os, re, collections
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import himehibi_lsdarc as L
-import himehibi_disasm as H
+from _lib import himehibi_lsdarc as L
+from _lib import himehibi_disasm as H
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BIN = os.path.join(ROOT, '_work_rakuen/PSP_GAME/USRDIR/SCRDATA.BIN')

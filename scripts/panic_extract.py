@@ -19,8 +19,8 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gss_lsdarc as L
-import himehibi_disasm as D
+from _lib import gss_lsdarc as L
+from _lib import himehibi_disasm as D
 
 # protagonist name slots: 1802 = surname 依藤, 0c02 = given 亜貴 (renameable)
 NAME_SLOTS = {"1802": "依藤", "0c02": "亜貴"}

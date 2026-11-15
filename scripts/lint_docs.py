@@ -54,7 +54,7 @@ def parse(text):
 def collect(skill, mem=None):
     skill = Path(skill).resolve()
     resources = [skill / 'SKILL.md', *sorted((skill / 'references').rglob('*.md')),
-                 *sorted((skill / 'scripts').glob('*.md'))]
+                 *sorted((skill / 'scripts').rglob('*.md'))]
     resources = [path for path in resources if path.is_file()]
     files = set(resources)
     if mem and Path(mem).is_dir():

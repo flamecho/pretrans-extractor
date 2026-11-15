@@ -33,7 +33,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import cr_dict
+from _lib import cr_dict
 
 ROOTS = [os.path.join(VNTRANS_HOME, '_w_cr/story/SCRIPT'),    # STORY_01.cpk：本篇（155 个 .DAT）
          os.path.join(VNTRANS_HOME, '_w_cr/story2/SCRIPT')]    # STORY_02.cpk：彩虹の花束 FD（56 个 .DAT）

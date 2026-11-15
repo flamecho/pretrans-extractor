@@ -3,7 +3,7 @@
 """リプルのたまご (PS2) HFU2 解包 + 目视 dump 用。"""
 import sys, os, struct
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from arcanafesta_extract import lzs_decode
+from _lib.arcanafesta_extract import lzs_decode
 
 
 def hfu2_entries(data):

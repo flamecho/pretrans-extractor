@@ -1,7 +1,7 @@
 """批量驱动 hanayoi_extract.py：多脚本合并成一份成品（一次点击 = 一行）。"""
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import hanayoi_extract as H
+from _lib import hanayoi_extract as H
 
 # 解析器已按「一条记录 = 一个文本框 = 一次点击」精确切分，不再需要启发式过滤；
 # 仅剔除空文本记录。沉默台词框（如「…………。」）属于真实出现文本，保留。

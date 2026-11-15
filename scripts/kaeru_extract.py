@@ -17,8 +17,8 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gss_lsdarc as L
-import himehibi_disasm as D
+from _lib import gss_lsdarc as L
+from _lib import himehibi_disasm as D
 
 # protagonist name slots (default: 菅野 風羽 / nickname スガ ; renameable in-game)
 NAME_SLOTS = {"1802": "菅野", "0c02": "風羽", "f405": "スガ"}

@@ -4,6 +4,9 @@ L0: kag.parser.js, kag.tag.js, kag.tag_ext.js, scenario/system/macro.ks.
 This driver handles source branches, display macros and CSV dictionary, not ASAR.
 ASAR must be unpacked using @electron/asar; tokens produced with agastar_tokenize.cjs.
 """
+import subprocess
+import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 from pathlib import Path
 from html.parser import HTMLParser
 import argparse, collections, hashlib, json, re
@@ -254,9 +257,11 @@ class Extractor:
         return self.rows
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--work',type=Path,default=Path(__file__).resolve().parents[1]/'_work_agastar')
+    ap=argparse.ArgumentParser();ap.add_argument('--work',type=Path,default=Path(os.environ.get('VNTRANS_HOME', os.getcwd()))/'_work_agastar')
     ap.add_argument('--out',type=Path);a=ap.parse_args()
-    root=Path(__file__).resolve().parents[1];w=a.work
+    root=Path(os.environ.get('VNTRANS_HOME', os.getcwd()));w=a.work
+    if not (w / 'tokens.json').exists():
+        subprocess.run([os.environ.get('NODE', 'node'), str(Path(__file__).resolve().parent / '_lib/agastar_tokenize.cjs'), str(w)], check=True)
     tokens=json.loads((w/'tokens.json').read_text(encoding='utf-8'));e=Extractor(tokens,w/'app');rows=e.run()
     out=a.out or root/'提取结果'/f'{TITLE}.txt';out.parent.mkdir(parents=True,exist_ok=True)
     data=('\ufeff'+'\n'.join(rows)+'\n').encode('utf-8');out.write_bytes(data)

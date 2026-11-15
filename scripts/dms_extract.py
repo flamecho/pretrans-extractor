@@ -17,7 +17,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from arcanafesta_extract import lzs_decode
+from _lib.arcanafesta_extract import lzs_decode
 
 SLOTS = {'\uff04': '夏見', '\u2642': '雷斗', '\u2640': '風斗'}   # ＄=母(主角) / ♂=雷斗 / ♀=風斗
 NAME_OP, SPEECH_OP, CHOICE_OP = 0x3E, 0x3C, 0x41

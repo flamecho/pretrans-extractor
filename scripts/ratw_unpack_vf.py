@@ -1,11 +1,13 @@
 """RATW (LiveMaker) VF 解包：game.ext 目录 + game.dat 数据（offsets 相对 dat）。"""
+from pathlib import Path as _ScriptPath
+_SCRIPT_DIR = _ScriptPath(__file__).resolve().parent
 import collections
 import pathlib
 import re
 import sys
 import zlib
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / 'tools'))
+sys.path.insert(0, str(_SCRIPT_DIR))
 from anotherrewind_extract import VFArchive
 
 BS = chr(92)

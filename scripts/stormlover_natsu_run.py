@@ -24,8 +24,8 @@
 import os, sys, struct, re
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stormlover_natsu_charset import CHARSET, SPECIAL, DECO, LEVEL2_START
-from stormlover_natsu_charset import DECO_SEP, DECO_WORD
+from _lib.stormlover_natsu_charset import CHARSET, SPECIAL, DECO, LEVEL2_START
+from _lib.stormlover_natsu_charset import DECO_SEP, DECO_WORD
 from cpk import CPK
 
 C_NAME, C_BOX, C_BR, C_SEP = 0xFFF0, 0xFFFF, 0xFFFE, 0xFFFB

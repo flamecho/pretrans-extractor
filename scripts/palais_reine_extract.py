@@ -5,12 +5,14 @@ Decode only strings passed by compiled scenario functions to text/choice handler
 Keep original printf templates when --dynamic templates is explicitly selected.
 No font, menu resource, executable-wide string dump, media OCR, or external lookup.
 """
+import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 from pathlib import Path
 import struct
 import json
 import collections
 
-ROOT=Path(__file__).resolve().parent.parent
+ROOT=Path(os.environ.get('VNTRANS_HOME', os.getcwd()))
 DELTA=0xfff80
 DATA=b''
 TEXT_END=0x640080

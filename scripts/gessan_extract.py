@@ -13,8 +13,8 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from himehibi_disasm import disasm  # noqa: E402
-import gss_lsdarc as L  # noqa: E402
+from _lib.himehibi_disasm import disasm  # noqa: E402
+from _lib import gss_lsdarc as L  # noqa: E402
 
 # ---------------- 名字槽（PRG_ROUTE.SCR: 0x132(1802,'冬浦') / 0x132(0c02,'めぐみ')） -------------
 NAME_SLOTS = {"1802": "冬浦", "0c02": "めぐみ"}
@@ -141,7 +141,7 @@ def pick_disasm(code_bytes):
     """按脚本头选反汇编器：SCR 2.00（5B 头）/ SCR 3.00（6B 头）。"""
     ver = code_bytes[:8]
     if ver == b"SCR 3.00":
-        import gss_scr3
+        from _lib import gss_scr3
         return gss_scr3.disasm, "SCR 3.00"
     if ver == b"SCR 2.00":
         return disasm, "SCR 2.00"

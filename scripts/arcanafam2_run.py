@@ -31,7 +31,7 @@
 """
 import sys, os, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from arcanafesta_extract import parse_iso_afs, parse_afs_members, decode_hfu2
+from _lib.arcanafesta_extract import parse_iso_afs, parse_afs_members, decode_hfu2
 
 STR_CMDS = {0x3C, 0x3E, 0x41, 0x4C, 0x4D}      # 字符串在 +4
 STR_CMDS_OFF14 = {0xA7, 0x50}                    # 字符串在 +18（7×u16 参数之后）

@@ -31,7 +31,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gss_scr3 as D
+from _lib import gss_scr3 as D
 
 ROMFS = "_work_koibana/romfs/1"
 ROOT = os.path.join(ROMFS, "OBJ")

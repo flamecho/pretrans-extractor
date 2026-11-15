@@ -15,8 +15,8 @@
 import sys, os, re, io, collections
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import himehibi_lsdarc as L
-import gss_scr3 as G
+from _lib import himehibi_lsdarc as L
+from _lib import gss_scr3 as G
 
 ROMFS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      "_work_himehibi2", "romfs")

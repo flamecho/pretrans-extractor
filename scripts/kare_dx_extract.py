@@ -3,11 +3,13 @@ L0 evidence: original GAMEEXE.INI WINDOW.000.R_COMMAND_MOD=0 and NAME_MOD=1;
 rlvm module_msg.cc Msg_pause/NewPageOnAllAfterLongop, par/HardBrake,
 text_window.cc SetNameWithoutDisplay/RenderNameInBox/RenderToScreen. Visible name tags are retained; see report.
 """
+import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 from pathlib import Path
 import sys,re,json,collections,struct
 from rl_decomp import read_toc,scenario,decompress,XOR
 from rl_parse import Parser
-ROOT=Path(__file__).resolve().parent.parent
+ROOT=Path(os.environ.get('VNTRANS_HOME', os.getcwd()))
 TITLE='[PC-JP]カレと彼の間で -DX ツインズパック版-'
 def unquote(b):
     # Width-aware literal conversion matching TextoutElement::GetText.

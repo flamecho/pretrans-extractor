@@ -15,7 +15,7 @@ import os, re, sys, json
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from lpv_stream import stream
+from _lib.lpv_stream import stream
 
 SD = os.path.join(VNTRANS_HOME, '_w_lpv/story/SCRIPT')
 DICT = os.path.join(VNTRANS_HOME, '_w_lpv/sysx/DATABASE/dbDictionary.gbin')

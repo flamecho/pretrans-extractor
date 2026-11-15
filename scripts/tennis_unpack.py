@@ -16,7 +16,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ml2_type2 import decode as t2decode
+from _lib.ml2_type2 import decode as t2decode
 from ml2_tkl import lzss
 
 SEC = 2048

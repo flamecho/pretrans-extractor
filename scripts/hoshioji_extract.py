@@ -11,7 +11,7 @@ VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import zstandard
-from bezel_scb_lib import asst_entries, member, parse_scb, clean
+from _lib.bezel_scb_lib import asst_entries, member, parse_scb, clean
 
 BEA = os.path.join(VNTRANS_HOME, "还没做/[NS-JP]恋してしまった星の王子 ～誓願院編～/romfs/Archive/script.nxonnx32.bea")
 OUT = os.path.join(VNTRANS_HOME, "提取结果/[NS-JP]恋してしまった星の王子 ～誓願院編～.txt")

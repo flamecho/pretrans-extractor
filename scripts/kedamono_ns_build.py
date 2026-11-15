@@ -8,7 +8,7 @@
 """
 import sys, os, glob, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import kedamono_ns_extract as E
+from _lib import kedamono_ns_extract as E
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, '提取结果', '[NS-JP]猛獣使いと王子様 ～Flower ＆ Snow～ for Nintendo Switch.txt')

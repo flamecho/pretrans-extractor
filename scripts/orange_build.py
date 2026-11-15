@@ -13,7 +13,7 @@
 import glob, os, re, struct, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from orange_ohs import decrypt_text
+from _lib.orange_ohs import decrypt_text
 
 FAMILY = '加瀬'
 NAME = '愛葉'

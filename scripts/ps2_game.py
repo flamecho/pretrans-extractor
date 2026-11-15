@@ -1,7 +1,7 @@
 import struct, glob, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from ps2_scene import extract_records, VAR_NAMES
-import ps2_vm
+from _lib.ps2_scene import extract_records, VAR_NAMES
+from _lib import ps2_vm
 
 PUNC = re.compile(r'[。、！＠？…「」『』（）]')
 HIRA = re.compile(r'[\u3040-\u309f]')

@@ -24,8 +24,8 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gss_lsdarc as L
-import gss_scr3 as D
+from _lib import gss_lsdarc as L
+from _lib import gss_scr3 as D
 
 ROMFS = "_work_shini/romfs"
 ROOT = ROMFS + "/1"

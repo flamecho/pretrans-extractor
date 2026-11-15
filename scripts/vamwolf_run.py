@@ -24,7 +24,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cpk import CPK
-from stormlover_charset import CHARSET      # 基础区＝cp932 原序剔 4 组（与 D3P 系同版，实证）
+from _lib.stormlover_charset import CHARSET      # 基础区＝cp932 原序剔 4 组（与 D3P 系同版，实证）
 
 HDR = 0x2000
 LEVEL2_START = 3456

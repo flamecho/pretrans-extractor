@@ -31,7 +31,7 @@ import zlib
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, 'tools')
-from matsurika_extract import parse_memfs          # noqa: E402
+from _lib.matsurika_extract import parse_memfs          # noqa: E402
 
 PLACEHOLDERS = {'スクリプト中で使用されていません。'}   # 未实装ギャラリー枠的占位
 stats_note = {}

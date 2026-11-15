@@ -1,8 +1,10 @@
+from pathlib import Path as _ScriptPath
+_SCRIPT_DIR = _ScriptPath(__file__).resolve().parent
 from pathlib import Path
 import sys, json, collections, re, hashlib,argparse
 ROOT=Path(__file__).resolve().parent.parent
 WORK=ROOT/'_work_happygift'
-sys.path.insert(0,str(ROOT/'tools'))
+sys.path.insert(0,str(_SCRIPT_DIR))
 from rl_decomp import read_toc, scenario, decompress
 from rl_parse import Parser
 from kare_dx_extract import unquote, decompress_audit

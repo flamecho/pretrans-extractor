@@ -9,8 +9,7 @@
 """
 import sys, os, struct
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from arcanafesta_extract import (parse_iso_afs, parse_afs_members, decode_hfu2,
-                                 iter_str_records, extract_lines)
+from _lib.arcanafesta_extract import parse_iso_afs, parse_afs_members, decode_hfu2, iter_str_records, extract_lines
 
 DICT_S = 0xf0          # 辞典记录 stride
 DICT_TERM_OFF = 12     # 记录内 見出し語 偏移

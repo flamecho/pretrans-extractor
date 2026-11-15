@@ -4,14 +4,25 @@ br 201 / par 3 are layout breaks; ruby 120 arguments are glosses.
 NAME_MOD=1 draws name labels; original #NAME.A/B supply macro defaults.
 No width, punctuation, quote balancing, or lexical filtering determines boundaries.
 """
+import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
+import argparse
+from _lib.step_records import parse_records
 from pathlib import Path
 import json,re,collections,sys,hashlib
-ROOT=Path(__file__).resolve().parent.parent
-WORK=ROOT / '_work_step'
+ROOT=Path(os.environ.get('VNTRANS_HOME', os.getcwd()))
+ap = argparse.ArgumentParser(description=__doc__)
+ap.add_argument('--source', type=Path)
+ap.add_argument('--work', type=Path, default=ROOT / '_work_step')
+ap.add_argument('--out', type=Path)
+ap.add_argument('--publish', action='store_true')
+args = ap.parse_args()
+WORK = args.work
+WORK.mkdir(parents=True, exist_ok=True)
+SOURCE = args.source or next((WORK / 'source').rglob('SEEN.TXT')).parent
 TITLE='[PC-JP]STEP -二人の関係は一歩ずつ-'
-ELTS=json.loads((WORK/'elements.json').read_text(encoding='utf-8'))
-SCENES=json.loads((WORK/'inspection.json').read_text(encoding='utf-8'))
-CONFIG=next((WORK/'source').rglob('GAMEEXE.INI')).read_bytes().decode('cp932')
+ELTS, SCENES = parse_records(SOURCE)
+CONFIG=(SOURCE / 'GAMEEXE.INI').read_bytes().decode('cp932')
 NAMES={m.group(1):m.group(2) for m in re.finditer(r'^#NAME\.([A-Z]+)="([^"]*)"',CONFIG,re.M)}
 assert NAMES['A']=='秋野' and NAMES['B']=='みのり'
 assert re.search(r'^#WINDOW\.000\.R_COMMAND_MOD=0\s*$',CONFIG,re.M)
@@ -28,7 +39,10 @@ def clean(t):
 # jump/gosub commands are included. 9000 has zero incoming references and loops
 # three sample options back to its own entry (development test). System scenes
 # contain only the Halt sentinel, never narrative Textout elements.
-refs=json.loads((WORK/'scene_refs.json').read_text(encoding='utf-8'))
+refs = [{'values': [int.from_bytes(bytes.fromhex(x)[2:6], 'little', signed=True)
+                    for x in e.get('params', []) if x.startswith('24ff') and len(x) == 12]}
+        for e in ELTS if e.get('op', [0, 0])[:2] == [0, 1]
+        and e.get('op', [0, 0, 0])[2] in (11, 12, 13, 14, 15)]
 targets={v for r in refs for v in r['values']}
 body={s['scene'] for s in SCENES['scenes'] if s['text_count']>1}
 assert body-targets=={9000},body-targets
@@ -81,7 +95,7 @@ for sn in order:
     scene_stats.append({'scene':sn,'lines':len(lines)-start,'names':dict(names),**dict(st)})
 assert len(origins)==len(lines)
 assert not any('〔未解析〕' in t or re.search('[＊％][Ａ-Ｚ]',t) for t in lines)
-dest=ROOT/'提取结果'/f'{TITLE}.txt' if '--publish' in sys.argv else WORK/'candidate.txt'
+dest = args.out or (ROOT / '提取结果' / f'{TITLE}.txt' if args.publish else WORK / 'candidate.txt')
 dest.parent.mkdir(exist_ok=True)
 dest.write_text('\n'.join(lines)+'\n',encoding='utf-8-sig',newline='\n')
 totals=collections.Counter()

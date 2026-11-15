@@ -15,4 +15,4 @@ type0可为正文，flags区分名/文/语音参数；type1可为跳转或选择
 
 ## 工具
 
-`scripts/tmrpac.py`、`scripts/tmr_srp.py`；复用前核对格式版本与参数。
+文本入口为 `scripts/tmr_srp.py`；复用前核对格式版本与参数。

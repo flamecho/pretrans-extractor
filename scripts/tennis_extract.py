@@ -18,7 +18,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tennis_scan import load_scriptbin, get_scpt
+from _lib.tennis_scan import load_scriptbin, get_scpt
 
 OUT = '提取结果/[PS2-JP]テニスの王子様 RUSH & DREAM !.txt'
 

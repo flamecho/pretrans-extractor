@@ -18,7 +18,7 @@ import glob
 import collections
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import musketeer_charset as M
+from _lib import musketeer_charset as M
 
 NAME_MACRO = (0x1D, 0x00)
 WRAP_OPEN, WRAP_CLOSE = 0x8DD7, 0x8DD8

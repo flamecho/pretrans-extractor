@@ -8,7 +8,7 @@
 """
 import sys, os, re, glob, json, hashlib
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import lsb
+from _lib import lsb
 
 NAME = '芹香'          # 主角默认名（ELF 名槽 芹香 / 安藤；vndb c35939 安藤 芹香）
 UI = {

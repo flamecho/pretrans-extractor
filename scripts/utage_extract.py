@@ -19,7 +19,7 @@ import sys, os, re, json, struct
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import UnityPy
-from dd_utage import parse_book
+from _lib.dd_utage import parse_book
 
 TEXT_CMDS = ('', 'Text', 'TextMultiVoice', 'TextVoiceIfDefaultName')
 SEL_CMD = 'Selection'

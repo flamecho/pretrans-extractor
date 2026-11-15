@@ -111,7 +111,7 @@ LZSS 的 literal 极性、位域和长度增量按完整调用解释，验证消
   - NSP 实测补充（悪役令嬢，2026-10-05）：① hactool 选项须写 `--keyset=<path>`，`-k <path>` 这份 build 不生效（会回落到默认 prod.keys）。② `hactool --titlekey=` 收的是 `.tik[0x180:0x190]` 里那段「加密」titlekey，hactool 会自己再解一遍并打印 `Titlekey (Decrypted) (From CLI)`；真正生效的 titlekey = `AES_ECB_dec(titlekek_N, tik[0x180:0x190])`。③ titlekek 索引 = NCA 的 Master Key Revision（`max(hdr[0x206],hdr[0x220])-1`），不是 ticket 的 0x285（两者可差 1：本体 NCA 0x10 / ticket 0x11；更新 NCA 0x11 / ticket 0x12）。④ ticket 布局：sig(0x140)+Issuer(0x40)+TitleKeyBlock(0x100 @0x180)+…，`0x280` 版本、`0x281` titlekey type、`0x285` master key rev、`0x2A0` rights id。⑤ 旧 hactool(2020) 本体（titlekey crypto）能整段解 RomFS；但遇 BKTR 增量更新段会 segfault，`--baseromfs`(用 `--romfs=`/`--section1=` 的产物) 亦报 `Failed to read RomFS directory cache!` ⇒ 增量更新落不了地；此时可直接解更新段的 section1 并读其中 RomFS 文件表（文件名明文可辨）来判断更新是否动了文本。⑥ `--exefsdir=`/`--romfsdir=` 可一次解出。⑦ 判定更新只加语言的实例：更新段文件表里同时出现 `adv101.CSR` 与 `adv101_en.CSR` → 仅补英文化。
 
 ### NCA 头 XTS / 段表 / BKTR 增量补丁（OZMAFIA!! -vivace- 1.0.1，2026-10-12）
-- NCA 头 XTS 解密（自写 `scripts/ozmafia_nca.py`，结果与 hactool 打印逐字节一致）：
+- NCA 头 XTS 解密（自写，结果与 hactool 打印逐字节一致）：
   `magic 'NCA3'` 在 0x200（0x000–0x1FF 是 RSA/固定键签名，勿拿 0x0 当 magic）；
   sector tweak = `AES_enc(header_key[16:], sector_idx 大端 16B)`，同一 sector 内每 16B 块 tweak 递进 alpha（GF(2^128)×x，回约 0x87）。
 - 头字段：段表 @0x240（4×0x10，`media_start/media_end` = u32 小端，单位 0x200）；rights_id @0x230（16B）；

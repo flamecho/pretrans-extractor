@@ -19,7 +19,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gss_lsdarc as L  # noqa: E402
+from _lib import gss_lsdarc as L  # noqa: E402
 
 SRC = r"_work_apricot_gaiden/iso"
 OUT = r"提取结果/[PC-JP]怪盗アプリコット 外伝 満編.txt"

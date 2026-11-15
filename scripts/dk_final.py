@@ -9,7 +9,7 @@
 """
 import sys, os, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from dk_lib import walk, expand
+from _lib.dk_lib import walk, expand
 
 OPTEND = {0x4b, 0x4c, 0x12}
 OUT = '提取结果/[PS2-JP]drastic Killer.txt'

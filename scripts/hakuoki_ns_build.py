@@ -18,7 +18,7 @@
 """
 import sys, os, glob, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import hakuoki_ns_extract2 as E
+from _lib import hakuoki_ns_extract2 as E
 
 ROOT = E.ROOT
 SRC = E.SRC

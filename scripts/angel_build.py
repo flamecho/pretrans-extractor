@@ -10,7 +10,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import angel_extract as A
+from _lib import angel_extract as A
 
 EXCLUDE_MOD = {'item_explanation'} | {'help_' + x for x in
               ('bujyutu', 'cook', 'kaiga', 'magic', 'music', 'reihou', 'zagaku')}

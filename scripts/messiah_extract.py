@@ -26,7 +26,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from gspak import Pak, Scw
+from _lib.gspak import Pak, Scw
 
 NAME_TAG = re.compile(r'^#F(【[^】]*】)#F\n?')
 CTRL = re.compile(r'#[A-Za-z]')

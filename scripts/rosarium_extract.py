@@ -1,3 +1,5 @@
+import os
+VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 # Rosarium ～繋がれた少年～ (RealLive / OPTiM 2005) 全文本提取
 # L0 断框: WINDOW.000.R_COMMAND_MOD=0 ⇒ pause(0:3:17)=NewPageOnAllAfterLongop=点击后清屏
 #   spause(0:3:205)=点击不清屏(同框多击) / msgHide(151)/msgClear(152)/page(210)=框界
@@ -110,7 +112,7 @@ def main():
         code = decompress(s[co:co + cl], dl)
         assert len(code) == dl
         extract_scene(sn, code, out, stats)
-    path = Path(__file__).resolve().parent.parent / '提取结果/[JP]Rosarium～繋がれた少年～.txt'
+    path = Path(os.environ.get('VNTRANS_HOME', os.getcwd())) / '提取结果/[JP]Rosarium～繋がれた少年～.txt'
     with open(path, 'w', encoding='utf-8-sig', newline='\n') as f:
         f.write('\n'.join(out) + '\n')
     print('lines', len(out))

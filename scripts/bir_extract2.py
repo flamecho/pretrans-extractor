@@ -17,7 +17,7 @@ import sys
 import glob
 
 sys.path.insert(0, 'tools')
-from matsurika_extract import parse_memfs, read_entry
+from _lib.matsurika_extract import parse_memfs, read_entry
 
 ROOT = '_w_W3_bir/newscript'
 OUT = '提取结果/[NS-JP]ビルシャナ戦姫 ～一樹の風～.txt'

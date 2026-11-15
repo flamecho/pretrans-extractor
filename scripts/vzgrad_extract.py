@@ -34,7 +34,7 @@
 """
 import sys, os, struct
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from arcanafesta_extract import decode_hfu2
+from _lib.arcanafesta_extract import decode_hfu2
 
 SCRIPT_MEMBER = 2
 GLOSS_MEMBER = 1                  # 用語辞典藏在贴图成员（同 b6 作）

@@ -37,8 +37,8 @@ import sys, os, re, io, argparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import gss_lsdarc as L
-import himehibi_disasm as D
+from _lib import gss_lsdarc as L
+from _lib import himehibi_disasm as D
 
 SLOT = {"1c02": "\u3042\u304b\u308a", "3002": "\u897f\u6751", "4402": "\u897f"}
 

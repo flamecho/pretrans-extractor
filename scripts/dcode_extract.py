@@ -19,8 +19,8 @@ import sys
 import collections
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gss_scr3 as D
-import himehibi_lsdarc as L
+from _lib import gss_scr3 as D
+from _lib import himehibi_lsdarc as L
 
 ROM = '_work_dcode/romfs'
 OUT = '提取结果/[NS-JP]DistortedCode ―生者の残り香―.txt'

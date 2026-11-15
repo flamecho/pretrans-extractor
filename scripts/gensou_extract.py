@@ -13,8 +13,8 @@ import os, re, sys
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from xp3 import XP3
-import gensou_decode as GD
-import chou_decrypt as CD
+from _lib import gensou_decode as GD
+from _lib import chou_decrypt as CD
 
 ARC = os.path.join(VNTRANS_HOME, '_work_gensou/_iso/poisonchain_fd/data.xp3')
 OUTDIR = os.path.join(VNTRANS_HOME, '提取结果')

@@ -23,7 +23,7 @@
 import os, sys, glob, re, json, argparse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import orfleur_extract as OE  # hankaku_to_hiragana / strip_tags / secs
+from _lib import orfleur_extract as OE  # hankaku_to_hiragana / strip_tags / secs
 
 # 行首允许字符：半角空格 / 全角空格 / 引号 / 括弧 / 破折号 / 双角引用
 EMIT_HEADS = (' ', '\u3000', '「', '（', '―', '『')

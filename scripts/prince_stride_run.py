@@ -29,7 +29,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cpk import CPK
-from stormlover_charset import CHARSET
+from _lib.stormlover_charset import CHARSET
 
 LEVEL2_START = 3456
 CTRL = 0xFE00

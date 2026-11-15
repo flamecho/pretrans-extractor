@@ -12,7 +12,7 @@ import json
 import re
 import zlib
 
-from system_nnn import read_script
+from _lib.system_nnn import read_script
 from souten_extract import config, names, RUBY
 
 

@@ -17,7 +17,7 @@ LSB 结构（VSC 引擎）
 """
 import struct, sys, os, glob, re, hashlib, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import towa_extract as T
+from _lib import towa_extract as T
 
 NAME, SUR = '鳴美', '時沢'      # 時沢 鳴美（vndb c47591 / v9912）；全库字面出现 0 次 ⇒ 只经宏插入
 PAGE = '\x01'

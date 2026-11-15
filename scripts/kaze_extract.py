@@ -21,7 +21,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import ps2_vm
+from _lib import ps2_vm
 
 PROTAGONIST = 'エリカ'          # vndb v4047 / c39901 エリカ・アレーニア（可改名）
 FLUSH = ('eol', 'p', 'target', 'label', 'select',

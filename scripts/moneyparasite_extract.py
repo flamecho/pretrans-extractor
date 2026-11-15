@@ -4,8 +4,8 @@
 import sys, os, struct, collections
 VNTRANS_HOME = os.environ.get('VNTRANS_HOME', os.getcwd())
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools"))
-from himehibi_lsdarc import read_index
-from himehibi_disasm import disasm
+from _lib.himehibi_lsdarc import read_index
+from _lib.himehibi_disasm import disasm
 
 ROMFS = os.path.join(VNTRANS_HOME, "_work_mp/romfs")
 OUT = os.path.join(VNTRANS_HOME, "提取结果/[NS-JP]Money Parasite 〜嘘つきな女〜.txt")

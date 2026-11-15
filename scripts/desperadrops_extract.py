@@ -12,7 +12,7 @@
 import sys, os, struct, re, io
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import UnityPy
-from dd_utage import parse_book
+from _lib.dd_utage import parse_book
 
 NAME_DEFAULT = 'ミカ'
 

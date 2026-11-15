@@ -20,8 +20,8 @@ import sys, os, re, io, argparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import himehibi_lsdarc as L
-import himehibi_disasm as D
+from _lib import himehibi_lsdarc as L
+from _lib import himehibi_disasm as D
 
 SLOT = {"6402": "真緒", "7002": "藤白", "8402": "まお"}
 

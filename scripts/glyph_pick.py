@@ -8,7 +8,7 @@
 import sys
 
 sys.path.insert(0, __file__.rsplit('\\', 1)[0])
-from koishiba_font import load, nibble, W, H  # noqa: E402
+from _lib.koishiba_font import load, nibble, W, H  # noqa: E402
 
 GS = 128
 

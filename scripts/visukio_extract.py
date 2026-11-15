@@ -24,7 +24,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import yuuki_yne as Y
+from _lib import yuuki_yne as Y
 
 MAGIC = b'\x0cPackageFile2'
 

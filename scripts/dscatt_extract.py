@@ -17,7 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import advhd
-import doublescore_advhd as D
+from _lib import doublescore_advhd as D
 
 _G = dict(D.GENERIC)
 _G[0x66] = 22

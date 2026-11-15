@@ -16,6 +16,7 @@
 
 用法: python scripts/kuro_build.py <all.jsonl> <out.txt> [--dict 目录]
 """
+from _lib.unity_books import read_rows
 import json, csv, os, re, sys
 
 PARAM = {
@@ -55,7 +56,7 @@ def clean(t):
 
 
 def build(jsonl):
-    R = [json.loads(l) for l in open(jsonl, encoding='utf-8')]
+    R = read_rows(jsonl)
     out = []          # 对照版行
     n_click = 0       # 点击版行数
     n_page = 0        # 页版行数

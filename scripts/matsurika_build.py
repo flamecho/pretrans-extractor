@@ -12,7 +12,7 @@
 """
 import os, sys, re, struct
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from matsurika_extract import parse_memfs, read_entry, parse_script
+from _lib.matsurika_extract import parse_memfs, read_entry, parse_script
 
 HEROINE = 'ナーヤ'
 

@@ -22,7 +22,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cpk import CPK  # noqa: E402
-from koishiba_charset import (decode, NAME_SURNAME, NAME_GIVEN)  # noqa: E402
+from _lib.koishiba_charset import decode, NAME_SURNAME, NAME_GIVEN  # noqa: E402
 
 C_NAME, C_BOX, C_BR = 0xFFF0, 0xFFFF, 0xFFFE
 C_SEP, C_END = 0xFFFB, 0xFFFD

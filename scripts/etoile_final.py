@@ -14,7 +14,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from etoile_text import LABEL  # noqa: E402
+from _lib.etoile_text import LABEL  # noqa: E402
 
 HEROINE = 'エンジュ'
 # ▼∋⊆∈ = 0x81A5/B9/BA/B8 message box 分隔；#t1/#t2 = 脚本层的分页控制码

@@ -6,7 +6,7 @@ are rendered story material; '$' graph tokens are variable conditions.
 """
 from pathlib import Path
 import argparse, collections, hashlib, json, re
-from system_nnn import read_script, XOR
+from _lib.system_nnn import read_script, XOR
 
 MESSAGE_OPS={0x22220001,0x22220002,0x22220003}
 ORDER=[f'chart{i:03d}' for i in range(12)]+['_sub01','_sub02']

@@ -33,8 +33,8 @@ import collections
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import gss_lsdarc as L
-import himehibi_disasm as D
+from _lib import gss_lsdarc as L
+from _lib import himehibi_disasm as D
 
 GIVEN = {"male": "\u548c\u771f", "female": "\u60a0\u5e0c"}   # 和真 / 悠希
 SURNAME = "\u85e4\u4e95"                                       # 藤井
