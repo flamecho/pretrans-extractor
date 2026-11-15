@@ -21,7 +21,7 @@ python scripts/identify.py game_dir
 python scripts/identify.py game.cpk
 ```
 
-根据 [引擎与格式索引](references/engines/index.md) 核对格式，再从 [格式与脚本](scripts/by-engine.md) 或 [脚本用途](scripts/by-script.md) 选择实现。
+根据 [引擎与格式索引](references/engines/index.md) 核对格式，再从 [格式与脚本](scripts/by-engine.md) 或 [作品专用脚本](scripts/works.md) 选择实现。
 例如，CPK 容器可这样解包：
 
 ```bash

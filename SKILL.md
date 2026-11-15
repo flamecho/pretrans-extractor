@@ -22,4 +22,4 @@ description: >
 | 清理或技能修订 | [工作区](references/workspace.md#收尾与维护) |
 | 工具参数 | [脚本索引](scripts/index.md) |
 
-发行版工具：[格式与脚本](scripts/by-engine.md)、[脚本用途](scripts/by-script.md)、[第三方依赖](references/third-party.md)。
+发行版工具：[格式与脚本](scripts/by-engine.md)、[作品专用脚本](scripts/works.md)、[第三方依赖](references/third-party.md)。
