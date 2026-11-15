@@ -10,7 +10,7 @@ r"""ネオ アンジェリーク 天使の涙  (PSV-JP, PCSG01068, Otomate / Ide
     -> Data/CORE.DAT = 单文件 zip -> CORE.DAT_
     -> 内层 `DAT ` 归档: [u32 count] + count × (name[0x20] + u32 size + u32 offset) + 数据区
 
-与 学園K V Edition(同引擎, engines/gakuenk-dat-scr.md) 的差异
+与 学園K V Edition(同引擎, engines/dat-pak-scd.md) 的差异
 ------------------------------------------------------------
   * 名札不走 char_id，而是「记录内的 <u16 len> + "名前"」→ 名札串形如 `"レイン"` / `""` / `"&"`
   * 主角名宏: `&` = 名(默认 アンジェリーク) / `#` = 愛称(默认 アンジェ)；`%`(姓 セリーヌ) 正文未用

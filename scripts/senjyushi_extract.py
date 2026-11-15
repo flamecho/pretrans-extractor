@@ -29,7 +29,7 @@ import switch_nca as SN
 SEC1_OFF = 0x1c000          # section 1 file offset
 SEC1_SIZE = 0x2eae94000
 SEC1_CTR = bytes.fromhex('00000002000000000000000000001C00')
-TITLEKEY = bytes.fromhex('1c21bce053719f696dcf31bbe5c2e925')
+TITLEKEY = bytes.fromhex(os.environ['VN_SENJYUSHI_TITLE_KEY_HEX'])
 
 
 class NcaReader:

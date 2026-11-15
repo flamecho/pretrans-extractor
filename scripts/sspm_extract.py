@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Starry☆Sky ~Spring Memories~ (NS-JP, 0100a3d026610000) 全文本提取。
 
-★ 本作要点（2026-10-19 首次跑通，通用结论已写进 skill / engines/platform-switch-nca.md）：
+★ 本作要点（2026-10-19 首次跑通，通用结论已写进 skill / platforms/switch-nca.md）：
   1) NSP(PFS0) → 主 Program NCA（**Titlekey crypto**）。
      - NCA 头 AES-XTS（大端 sector tweak + rev(α) 递进），`scripts/switch_nca.py` 可直接用。
      - **内容密钥＝解密后的 titlekey 本身**（不是 key_area[i]）；

@@ -1,22 +1,11 @@
 #!/usr/bin/env python3
-"""distill.py —— 解析报告 → **沉淀草案**（分类 / 查重 / 建议落位），不改动 skill。
+"""从报告生成文档修订草案。
 
-为什么有它：沉淀慢的根因不是「写」，而是**不知道该写哪、以及是不是已经写过**。
-每次都要把 skill 重读一遍 ⇒ 30~60 分钟。本工具把这两件事变成机器判定：
+提取判据与差异，对技能 references 和工作区 WORKS 做 4-gram 包含度比对，
+输出未覆盖内容、单作特例及建议路径。草案不直接修改技能。
 
-  ① 抽候选：报告/日报里带 `⚠ ★ ※ 判据 坑 注意 必须 不能 禁止 误 差异 特例 ≠` 的行
-  ② 查重：对 skill(`references/` + `pitfalls/`) 与 `memory/engines/` 做 4-gram 包含度比对
-           ≥ 阈值 ⇒ 判「已覆盖」，只列出处，不再重写
-  ③ 分类：按关键词映射到**真实存在**的目标册（`01-*`〜`06-*` / `pitfalls/*` / `engines/`）
-  ④ 输出草案：待沉淀（勾选框 + 建议落位）/ 单作特例 / 已覆盖，写 `<out>`，skill 一字不动
-
-用法:
-  python scripts/distill.py --report "解析报告/XX_解析报告.md"
-  python scripts/distill.py --report R.md --log references/2026-10-18.md --open
-  python scripts/distill.py --report R.md --skill <skill 目录> --mem <memory 目录> --out /tmp/d.md
-
-退出码: 0 = 无待沉淀; 1 = 有待沉淀（提示人工处理）
-"""
+python scripts/distill.py --report R.md --skill DIR --mem DIR --out draft.md
+退出码：0 无待处理内容；1 有待处理内容。"""
 import argparse
 import io
 import os
@@ -24,8 +13,9 @@ import re
 import sys
 from collections import Counter, defaultdict
 
-# 默认取「脚本所在目录的上一级」= 本包根目录（不依赖安装名，换机器也不会指错）
 SKILL_DEF = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if not os.path.isfile(os.path.join(SKILL_DEF, 'SKILL.md')):
+    SKILL_DEF = os.path.expanduser('~/.workbuddy/skills/vn-custom-bytecode-text')
 MEM_DEF = os.path.join(os.getcwd(), '.workbuddy', 'memory')
 
 MARK = re.compile(r'^[\s>\-*]*(\*\*)?[⚠★※◆●▲]|⚠|★|※')
@@ -34,47 +24,45 @@ STRIP = re.compile(r'^[\s>\-*•]+|^\d+[.)]\s*|\*\*')
 
 # 目标册：**只列 references/ 下真实存在的文件**（启动时会校验，缺的自动跳过）
 SLOT = [
-    (r'zRIF|psvpfsparser|header signature|PFS|pfs0dir', 'S2-psv-pfs.md'),
-    (r'EBOOT|~PSP|self2elf|MIPS|PRX|BOOT\.BIN|kirk', 'S2-psp-eboot.md'),
-    (r'hactool|titlekey|NCA|BKTR|prod\.keys|XCI|NSP', 'S2-switch-nca.md'),
-    (r'CHD|chdman|zstd|hunk', 'S1-image-chd.md'),
-    (r'主角名|主人公|一人称|称呼宏|人名宏|FFE6|FFE7|FF08|name\.|f\.family|改名', 'S5-names-macro.md'),
-    (r'XOR|CRILAYLA|zlib|LZSS|LZ4|解压|解密|密钥|码表基址|替换槽|PUA|cp932|CP932|字形|字体|gaiji', 'S5-basics.md'),
-    (r'ELF.*(码表|code)|code→Unicode|分区错位', 'S5-codetable-elf.md'),
-    (r'位图字体|自建字体|GXT|G1T|renderfont|字形图集', 'S5-selffont.md'),
-    (r'AFS|CPK|归档|块单位|定长表|索引表|偏移', 'S3-archive.md'),
-    (r'STCM2', 'S4-stcm2l.md'),
-    (r'opcode|指令|记录|标签|脚本结构|msgid|分支码', 'S4-structure.md'),
-    (r'Unity|IL2CPP|Naninovel|assetbundle|\.bytes', 'S4-unity.md'),
-    (r'名札|话者|说话人|续行|换框|成行|一次点击|选项|合并|折行|引号', 'S6-lines.md'),
-    (r'用語辞典|辞典|豆知識|glossary', 'S6-lines-options.md'),
-    (r'自检|品检|check_text|占位符|报告', 'S7-selfcheck.md'),
-    (r'vndb|外部核对|核对', 'S7-external-report.md'),
-    (r'串数|闭合|漏收|完整性', 'S7-completeness.md'),
-    (r'清理|工作区|记忆|上下文|agent|memo|日志', '00-workspace.md'),
+    (r'Naninovel|PrintText|AddChoice', 'engines/naninovel.md'),
+    (r'SN\.BIN|sn\.bin', 'engines/nis-cpk-snbin.md'),
+    (r'XP3|KiriKiri|KAG|吉里吉里', 'engines/kirikiri.md'),
+    (r'STCM2|UNI2', 'engines/stcm2l.md'),
+    (r'IKA SEQ|HFU2|UFFA', 'engines/hunex-ika.md'),
+    (r'Takuyo|LSDARC|\bgss\b', 'engines/takuyo-gss.md'),
+    (r'LiveMaker|LMScript|TpWord', 'engines/livemaker.md'),
+    (r'NScripter|NSAr', 'engines/nscripter.md'),
+    (r'zRIF|psvpfsparser|header signature|PFS|pfs0dir', 'platforms/psv-pfs.md'),
+    (r'EBOOT|~PSP|self2elf|MIPS|PRX|BOOT\.BIN|kirk', 'decode.md'),
+    (r'hactool|titlekey|NCA|BKTR|prod\.keys|XCI|NSP', 'platforms/switch-nca.md'),
+    (r'CHD|chdman|zstd|hunk', 'engines/images.md'),
+    (r'M2|PSB|PGD|MDF|ADVENGINE', 'engines/m2-psb.md'),
+    (r'主角名|主人公|一人称|称呼宏|人名宏|FFE6|FFE7|FF08|name\.|f\.family|改名', 'names-and-macros.md'),
+    (r'XOR|CRILAYLA|zlib|LZSS|LZ4|解压|解密|密钥|码表基址|替换槽|PUA|cp932|CP932|字形|字体|gaiji', 'decode.md'),
+    (r'ELF.*(码表|code)|code→Unicode|分区错位', 'decode.md'),
+    (r'位图字体|自建字体|GXT|G1T|renderfont|字形图集', 'decode.md'),
+    (r'AFS|CPK|归档|块单位|定长表|索引表|偏移', 'archives.md'),
+    (r'STCM2', 'engines/stcm2l.md'),
+    (r'opcode|指令|记录|标签|脚本结构|msgid|分支码', 'script-structure.md'),
+    (r'Unity|IL2CPP|Naninovel|assetbundle|\.bytes', 'engines/unity.md'),
+    (r'名札|话者|说话人|续行|换页|换框|成行|一次点击|选项|合并|折行|引号', 'layout.md'),
+    (r'用語辞典|辞典|豆知識|glossary', 'layout.md'),
+    (r'自检|品检|check_text|占位符|报告', 'verification.md'),
+    (r'vndb|外部核对|核对', 'verification.md'),
+    (r'串数|闭合|漏收|完整性', 'verification.md'),
+    (r'清理|工作区|记忆|上下文|agent|memo|日志', 'workspace.md'),
 ]
 
 
-# 阶段册 → 坑册（同一条结论常常「阶段册讲怎么做、坑册讲别踩什么」）
-PIT = {
-    'S2-psv-pfs.md': 'pitfalls/A-decode.md',
-    'S2-psp-eboot.md': 'pitfalls/A-decode.md',
-    'S2-switch-nca.md': 'pitfalls/A-decode.md',
-    'S1-image-chd.md': 'pitfalls/A-decode.md',
-    'S5-basics.md': 'pitfalls/A-decode.md',
-    'S5-names-macro.md': 'pitfalls/C-deliver.md',
-    'S5-codetable-elf.md': 'pitfalls/A-decode.md',
-    'S5-selffont.md': 'pitfalls/B-lines.md',
-    'S3-archive.md': 'pitfalls/A-decode.md',
-    'S4-stcm2l.md': 'pitfalls/B-tags-resume.md',
-    'S4-structure.md': 'pitfalls/A-decode.md',
-    'S4-unity.md': 'pitfalls/A-decode.md',
-    'S6-lines.md': 'pitfalls/B-lines.md',
-    'S6-lines-options.md': 'pitfalls/B-encoding-lines.md',
-    'S7-selfcheck.md': 'pitfalls/C-deliver.md',
-    'S7-external-report.md': 'pitfalls/C-deliver.md',
-    'S7-completeness.md': 'pitfalls/C-deliver.md',
-    '00-workspace.md': 'pitfalls/C-deliver.md',
+# 流程册与格式案例的建议目标
+CASES = {
+    'platforms/psv-pfs.md': 'decode-cases.md',
+    'platforms/switch-nca.md': 'decode-cases.md',
+    'decode.md': 'decode-cases.md',
+    'archives.md': 'decode-cases.md',
+    'engines/stcm2l.md': 'script-cases.md',
+    'script-structure.md': 'script-cases.md',
+    'layout.md': 'layout-cases.md',
 }
 
 
@@ -100,11 +88,11 @@ def grams(s, n=4):
 def load_corpus(skill, mem):
     """→ (paras: list[(file, text)], index: gram->set(pid))"""
     files = []
-    for root, pats in ((skill, ['references/*.md', 'references/pitfalls/*.md']),
-                       (mem, ['engines/*.md', 'ENGINES*.md'])):
+    for root, pats in ((skill, ['references/**/*.md']),
+                       (mem, ['WORKS*.md'])):
         for pat in pats:
             import glob
-            files += [f for f in glob.glob(os.path.join(root, pat)) if os.path.isfile(f)]
+            files += [f for f in glob.glob(os.path.join(root, pat), recursive=True) if os.path.isfile(f)]
     paras = []
     for f in files:
         t = read(f)
@@ -191,7 +179,7 @@ def main():
     for root, _, fs in os.walk(ref_root):
         for f in fs:
             if f.endswith('.md'):
-                have.add(f)
+                have.add(os.path.relpath(os.path.join(root, f), ref_root).replace(chr(92), '/'))
 
     items = []
     for srcname, text in src_all:
@@ -215,29 +203,30 @@ def main():
     title = re.sub(r'_解析报告\.md$|\.md$', '', os.path.basename(a.report))
     out.append('# 沉淀草案 · %s\n' % title)
     out.append('> 生成：`distill.py`（skill 语料 %d 册）。**本文件只是草案，skill 未被改动。**' % nfile)
+    out.append('> 引擎册只收共通结构、解码与显示判据；单作参数、统计和状态留在已有报告或 WORKS。')
     out.append('> 判定：4-gram 包含度 ≥ %.2f ⇒ 已覆盖；`本作/该作/仅此作` ⇒ 单作特例。\n' % a.thr)
     out.append('| 候选 | 待沉淀 | 单作特例 | 已覆盖 |')
     out.append('|---|---|---|---|')
     out.append('| %d | **%d** | %d | %d |\n' % (len(items), len(todo), len(local), len(done)))
 
-    out.append('## 1. 待沉淀（勾选后落位；`→` 是建议目标）\n')
+    out.append('## 1. 待复核的格式知识（确认共通性后合并至建议册）\n')
     if not todo:
         out.append('_无。_\n')
     buck = defaultdict(list)
     for x in todo:
         buck[x['slot'] or '（未定/交人工判）'].append(x)
     for slot in sorted(buck):
-        pit = PIT.get(slot)
+        case = CASES.get(slot)
         out.append('### → `%s`（%d 条）%s\n'
                    % (slot, len(buck[slot]),
-                     ('　＋ 可同时补 `%s`' % pit)
-                     if pit and os.path.isfile(os.path.join(ref_root, *pit.split('/'))) else ''))
+                     ('　（格式案例见 `%s`）' % case)
+                     if case and os.path.isfile(os.path.join(ref_root, case)) else ''))
         for x in buck[slot]:
             out.append('- [ ] %s' % x['body'][:400])
             out.append('  - 来源：`%s:%d`　最接近：`%s`（相似度 %.2f）' % (x['src'], x['ln'], x['where'], x['cov']))
         out.append('')
 
-    out.append('## 2. 单作特例（只进 `WORKS` 作品块 / `engines/<slug>.md`，不进通用册）\n')
+    out.append('## 2. 单作特例（写入已有报告或 WORKS）\n')
     if not local:
         out.append('_无。_\n')
     for x in local:

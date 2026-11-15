@@ -153,7 +153,7 @@ def main():
     print('total', len(all_lines))
 
     # 互斥分支同段重复：分支 a 的末句与分支 b 的唯一句逐字相同且相邻（naran1_3a/3b）
-    # ⇒ 同一点击的多版本正文，取一（pitfalls B1-10）；只吃掉完全相同的相邻长行
+    # ⇒ 同一点击的多版本正文，取一（layout-cases.md）；只吃掉完全相同的相邻长行
     dedup, dropped = [], 0
     for l in all_lines:
         if dedup and l == dedup[-1] and len(l) >= 8:

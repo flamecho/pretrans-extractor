@@ -9,7 +9,7 @@
 
 校准（2026-10-26，1.3.0 v262144）：
   keygen=21 / Titlekey crypto ⇒ titlekey = AES-ECB-dec(titlekek_14, tik[0x180:0x190])
-    = 59a798c516bf0b542a9e389580415f3f
+    = <hex>
   hi = LE-u64(fsh+0x140) = 0x0000000200000003（base 为 0x0000000200000000）
   自证：rel 表 pad==0 / bucket_count==1 / total 与 romfs 头一致
 
@@ -278,7 +278,7 @@ def main():
     base = None
     if '--base' in args:
         bp = args[args.index('--base') + 1]
-        base = Base(bp, 0x1F033, '764ea2ad02a123cd860822303341bbb3')
+        base = Base(bp, 0x1F033, os.environ['VN_HANDSOME_BASE_KEY_HEX'])
     if '--info' in args:
         return
     v = Virt(u, base)

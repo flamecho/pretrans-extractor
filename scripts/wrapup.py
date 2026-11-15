@@ -1,185 +1,190 @@
 #!/usr/bin/env python3
-"""wrapup.py —— **一条命令跑完收尾（S8）**：品检 → 手册对账 → 沉淀草案 → 落位片段。
+"""Task-local validation; maintenance steps run only when explicitly selected.
 
-为什么有它：收尾慢在「四件事分别跑、结果分散、还得自己记着谁没做」。
-本工具把它们串起来，最后只输出**一张待办清单**（机器能判的都判完）。
-
-用法:
-  python scripts/wrapup.py --report "解析报告/XX_解析报告.md" \
-                           --text "提取结果/[PSV-JP]XX_全文本.txt" --name 主角名
-  # 只跑部分
-  python scripts/wrapup.py --report R.md                 # 不跑品检
-  python scripts/wrapup.py --text T.txt --name X         # 不跑沉淀/落位
-
-参数:
-  --report  解析报告（做沉淀草案 + 落位片段）
-  --text    成品 txt（跑 check_text）
-  --name    主角名（check_text 用）
-  --game    作品名（缺省从报告 H1 推）
-  --apply   把 WORKS / TOOLS 片段直接追加到目标册（默认只生成）
-  --no-distill / --no-archive  跳过对应步骤
-
-退出码: 0 = 机器项全过; 1 = 有 [E]/待沉淀，需人工处理
+--report R --text T: check the supplied text and declared final row count.
+--report R: read report metadata only; never find or regenerate finished text.
+--checked-sha256 HASH: reuse a recorded successful check of unchanged text.
+--audit-docs / --distill / --archive: opt-in maintenance; --apply implies archive.
+This tool never deletes source or work directories.
 """
 import argparse
-import io
+import hashlib
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-PY = sys.executable or 'python'
+from check_text import report_format, validate_layout
+
+HERE = Path(__file__).resolve().parent
 
 
 def run(script, args):
-    cmd = [PY, os.path.join(HERE, script)] + args
-    p = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
-    return p.returncode, (p.stdout or '') + (p.stderr or '')
+    env = dict(os.environ, PYTHONUTF8='1', PYTHONIOENCODING='utf-8', PYTHONDONTWRITEBYTECODE='1')
+    process = subprocess.run([sys.executable, '-B', '-X', 'utf8', str(HERE / script), *args],
+                             capture_output=True, text=True, encoding='utf-8', env=env)
+    return process.returncode, process.stdout + process.stderr
 
 
-def tail(text, n=6):
-    ls = [l for l in text.split('\n') if l.strip()]
-    return ls[-n:]
+def report_rows(text):
+    """Read the dedicated final-row field from frontmatter, without narrative guessing."""
+    front = re.match(r'\A---\s*\n(.*?)\n---(?:\s*\n|$)', text, re.S)
+    if not front:
+        return None
+    values = re.findall(r'^(?:行数|rows)\s*[:：]\s*[\'\"]?([\d,]+)[\'\"]?\s*(?:#.*)?$',
+                        front.group(1), re.M)
+    rows = {int(value.replace(',', '')) for value in values}
+    if len(rows) > 1:
+        raise ValueError('报告头部有相互冲突的最终行数')
+    return next(iter(rows), None)
+
+
+def show(label, rc, output):
+    print('[%s] %s' % (label, 'PASS' if rc == 0 else 'FAIL'))
+    issues = [line for line in output.splitlines() if '[E]' in line or '[W]' in line]
+    if rc and not issues:
+        issues = [line for line in output.splitlines() if line.strip()][-4:]
+    for line in issues[:8]:
+        print('  ' + line.strip()[:240])
+    if len(issues) > 8:
+        print('  其余 %d 项，详查对应工具输出' % (len(issues) - 8))
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--report')
-    ap.add_argument('--text')
-    ap.add_argument('--name')
-    ap.add_argument('--game')
-    ap.add_argument('--apply', action='store_true')
-    ap.add_argument('--no-distill', action='store_true')
-    ap.add_argument('--no-archive', action='store_true')
-    a = ap.parse_args()
-    if not a.report and not a.text:
-        print('至少给 --report 或 --text')
-        return 2
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--report')
+    parser.add_argument('--text')
+    parser.add_argument('--name', help='品检用的主角名')
+    parser.add_argument('--game', help='记忆落位用的作品名')
+    parser.add_argument('--allow')
+    parser.add_argument('--layout-map')
+    parser.add_argument('--checked-sha256', help='先前品检通过的文件摘要；匹配才复用品检结果')
+    mode_args = parser.add_mutually_exclusive_group()
+    mode_args.add_argument('--dual', action='store_const', const=True, dest='dual')
+    mode_args.add_argument('--single', action='store_const', const=False, dest='dual')
+    parser.add_argument('--inline-name', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--audit-docs', action='store_true')
+    parser.add_argument('--distill', action='store_true')
+    parser.add_argument('--archive', action='store_true')
+    parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--no-distill', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--no-archive', action='store_true', help=argparse.SUPPRESS)
+    args = parser.parse_args()
+    if not args.report and not args.text:
+        parser.error('至少给 --report 或 --text')
+    if (args.distill or args.archive or args.apply) and not args.report:
+        parser.error('沉淀或落位需要明确 --report')
+    if args.no_distill and args.distill:
+        parser.error('--distill 与 --no-distill 冲突')
+    if args.no_archive and (args.archive or args.apply):
+        parser.error('--archive/--apply 与 --no-archive 冲突')
+    if (args.checked_sha256 or args.layout_map or args.allow or args.dual is not None) and not args.text:
+        parser.error('文本品检选项需要明确 --text；不会自动发现成品')
+    if args.checked_sha256 and not re.fullmatch(r'[0-9a-fA-F]{64}', args.checked_sha256):
+        parser.error('--checked-sha256 必须为 64 位十六进制摘要')
 
-    todo, hard = [], []
-
-    # ① 成品品检
-    if a.text:
-        args = [a.text] + (['--name', a.name] if a.name else [])
-        rc, out = run('check_text.py', args)
-        e = len(re.findall(r'\[E\]', out))
-        w = len(re.findall(r'\[W\]', out))
-        tag = 'PASS' if rc == 0 else 'FAIL'
-        print('[1/4] 成品品检  %s   E=%d W=%d' % (tag, e, w))
-        if rc != 0 and e == 0 and w == 0:
-            for l in tail(out, 3):
-                print('       原因：', l.strip()[:160])
-        for l in tail(out, 4):
-            if '[E]' in l or '[W]' in l:
-                print('      ', l.strip()[:150])
-        if rc != 0:
-            hard.append('品检未通过（退出码 %d）⇒ 修完再交付' % rc)
-    else:
-        print('[1/4] 成品品检  跳过（未给 --text）')
-
-    # ①b 行数一致性：报告声称的行数 vs 成品实际行数（防「用错文件 / 成品过期」）
-    if a.text and a.report and os.path.isfile(a.report):
+    failures = []
+    report, mode, claim = '', None, None
+    if args.report:
         try:
-            sys.path.insert(0, HERE)
-            from archive_work import infer
-            d = infer(a.report)
-            claim = re.sub(r'[^\d]', '', (d.get('rows') or ''))
-            if claim and os.path.isfile(a.text):
-                raw = open(a.text, 'rb').read()
-                actual = raw.count(b'\n') + (0 if raw.endswith(b'\n') else 1)
-                if abs(actual - int(claim)) > max(3, int(claim) * 0.01):
-                    print('[1b] 行数一致性  [W] 报告 %s 行 ≠ 成品 %d 行' % (claim, actual))
-                    todo.append('核对行数差异：报告 `%s` vs 成品 `%d`（是否用错文件 / 成品过期 / 报告未更新）'
-                                % (claim, actual))
-                else:
-                    print('[1b] 行数一致性  OK（报告 %s / 成品 %d）' % (claim, actual))
-        except Exception as e:
-            print('[1b] 行数一致性  跳过（%s）' % type(e).__name__)
+            report = Path(args.report).read_text(encoding='utf-8-sig')
+            if args.text:
+                mode, claim = report_format(report), report_rows(report)
+            print('[报告] 已读取指定文件')
+        except (OSError, ValueError) as exc:
+            print('[报告] [E] %s' % exc)
+            return 1
+    dual = args.dual if args.dual is not None else mode == 'dual'
+    if args.text and mode is not None and (mode == 'dual') != dual:
+        print('[报告] [E] 版式与显式参数不一致')
+        return 1
 
-    # ①c 切行判据三行（S6-lines-proof §7）：缺了就提示补报告 —— 别让「猜的行粒度」静默过关
-    if a.report and os.path.isfile(a.report):
+    if args.text:
         try:
-            r = open(a.report, encoding='utf-8-sig', errors='replace').read()
-            has_key = bool(re.search(r'断框判据|框界|换框|点击边界', r))
-            has_proof = bool(re.search(r'L0|L1|覆盖率|串起点|必现|反例|未证|交叉验证|行数演算|直方图|全库|\d{2,}\s*(?:次|条|处)', r))
-            l2 = bool(re.search(r'L2|未证|文本形态', r))
-            if has_key and has_proof:
-                print('[1c] 切行判据  OK%s' % ('（L2/未证已标注 ⇒ 需补代码级证据）' if l2 else ''))
+            raw = Path(args.text).read_bytes()
+            lines = raw.decode('utf-8-sig', 'strict').split('\n')
+            if lines and not lines[-1]:
+                lines.pop()
+        except (OSError, UnicodeError) as exc:
+            print('[文本] [E] %s' % exc)
+            return 1
+        if args.checked_sha256:
+            if hashlib.sha256(raw).hexdigest() != args.checked_sha256.lower():
+                print('[品检] [E] 摘要不同，不能复用通过记录')
+                failures.append('文本已改变，重新品检')
+            elif args.report and mode is None:
+                print('[品检] [E] 报告未声明版式')
+                failures.append('报告缺版式')
             else:
-                print('[1c] 切行判据  [W] 报告缺「断框判据 / 自证」三行')
-                todo.append('补报告切行判据三行（`断框判据`/`自证`/`残余`）→ skill `S6-lines-proof.md` §7')
-        except Exception as e:
-            print('[1c] 切行判据  跳过（%s）' % type(e).__name__)
-
-    # ② 手册对账（体积不再判：2026-10-26 取消硬线，该拆与否只看主题）
-    rc, out = run('lint_docs.py', [])
-    m = re.search(r'断链 (\d+) ｜ 路由缺 (\d+) ｜ 孤儿 (\d+) ｜ 空册 (\d+)', out)
-    if m:
-        print('[2/4] 手册对账  断链 %s / 路由缺 %s / 孤儿 %s / 空册 %s' % m.groups())
-    else:
-        print('[2/4] 手册对账  %s' % ('OK' if rc == 0 else '有问题'))
-    if rc != 0:
-        for l in tail(out, 12):
-            s = l.strip()
-            if s and not s.startswith('---'):
-                print('      ', s[:160])
-        todo.append('修手册对账：`python scripts/lint_docs.py`（断链 → 改指向；孤儿 → 进 00-index）')
-
-    # ③ 沉淀草案
-    if a.report and not a.no_distill:
-        args = ['--report', a.report]
-        if a.name:
-            args += []
-        rc, out = run('distill.py', args)
-        m = re.search(r'候选 (\d+) ｜ 待沉淀 (\d+) ｜ 单作特例 (\d+) ｜ 已覆盖 (\d+)', out)
-        path = ''
-        mm = re.search(r'草案：(.+)', out)
-        if mm:
-            path = mm.group(1).strip()
-        if m:
-            c, t, lc, d = m.groups()
-            print('[3/4] 沉淀草案  候选 %s / 待沉淀 %s / 单作特例 %s / 已覆盖 %s' % (c, t, lc, d))
-            for ln in out.split('\n'):
-                if ln.startswith('   →'):
-                    print('      ', ln.strip()[:120])
-            if int(t) > 0:
-                todo.append('沉淀 %s 条 → 打开 `%s` 勾选后落位' % (t, path))
+                print('[品检] 复用先前通过记录（SHA256 相同）')
+                if args.layout_map:
+                    count, errors = validate_layout(args.layout_map, lines, dual, dual)
+                    for error in errors:
+                        print('[页映射] [E] ' + error)
+                    if errors:
+                        failures.append('页映射未通过')
+                    else:
+                        print('[页映射] PASS（%d 个多段页）' % count)
         else:
-            err = [l for l in out.split('\n') if 'Error' in l or 'Exception' in l]
-            print('[3/4] 沉淀草案  [!!] 未产出：%s' % (err[-1].strip()[:160] if err else '见上'))
-            hard.append('distill 失败')
+            check_args = [args.text]
+            if args.name:
+                check_args += ['--name', args.name]
+            if args.report:
+                check_args += ['--report', args.report]
+            if dual:
+                check_args += ['--dual', '--expect-dual']
+            if args.layout_map:
+                check_args += ['--layout-map', args.layout_map]
+            allow = args.allow
+            if allow is None:
+                text_path = Path(args.text).resolve()
+                allow_dir = text_path.parent.parent / '解析报告' / 'allow'
+                for filename in (text_path.stem + '.allow', text_path.stem + '_allow.txt'):
+                    candidate = allow_dir / filename
+                    if candidate.is_file():
+                        allow = str(candidate)
+                        break
+            if allow:
+                check_args += ['--allow', allow]
+            if args.inline_name:
+                check_args += ['--inline-name']
+            rc, output = run('check_text.py', check_args)
+            show('品检', rc, output)
+            if rc:
+                failures.append('文本品检未通过')
+        if claim is not None:
+            if len(lines) != claim:
+                print('[行数] [E] 报告 %d ≠ 文本 %d' % (claim, len(lines)))
+                failures.append('最终行数不一致')
+            else:
+                print('[行数] PASS（%d）' % claim)
     else:
-        print('[3/4] 沉淀草案  跳过')
+        print('[品检] 未给 --text，不查找或生成成品')
 
-    # ④ 落位片段
-    if a.report and not a.no_archive:
-        args = ['--report', a.report] + (['--apply'] if a.apply else [])
-        if a.game:
-            args = ['--report', a.report, '--name', a.game] + (['--apply'] if a.apply else [])
-        rc, out = run('archive_work.py', args)
-        print('[4/4] 落位片段')
-        for l in out.split('\n'):
-            if re.match(r'^(作品|平台|行数|工具|判据|落位|片段|  \[)', l):
-                print('      ', l.strip()[:150])
-        if rc != 0:
-            hard.append('落位片段生成失败（见上）')
-        elif not a.apply:
-            todo.append('落位片段已生成 → 核对后加 `--apply` 追加到 WORKS / TOOLS 册')
-    else:
-        print('[4/4] 落位片段  跳过')
-
-    print('\n--- 收尾待办（%d 项）---' % (len(hard) + len(todo)))
-    n = 0
-    for h in hard:
-        n += 1
-        print('%d. [必做] %s' % (n, h))
-    for t in todo:
-        n += 1
-        print('%d. %s' % (n, t))
-    if n == 0:
-        print('（无；可直接交付）')
-    return 1 if hard else 0
+    steps = []
+    if args.audit_docs:
+        steps.append(('文档维护', 'lint_docs.py', []))
+    if args.distill:
+        steps.append(('沉淀草案', 'distill.py', ['--report', args.report]))
+    if args.archive or args.apply:
+        archive_args = ['--report', args.report]
+        if args.game:
+            archive_args += ['--work', args.game]
+        if args.apply:
+            archive_args += ['--apply']
+        steps.append(('记忆落位', 'archive_work.py', archive_args))
+    for label, script, step_args in steps:
+        rc, output = run(script, step_args)
+        show(label, rc, output)
+        if rc:
+            failures.append(label + '失败（显式维护项）')
+        else:
+            for line in output.splitlines():
+                if re.match(r'^(草案|片段|落位|候选|作品)', line):
+                    print('  ' + line[:240])
+    print('RESULT:', 'FAIL；' + '；'.join(failures) if failures else 'PASS（所选机器项）')
+    return 1 if failures else 0
 
 
 if __name__ == '__main__':

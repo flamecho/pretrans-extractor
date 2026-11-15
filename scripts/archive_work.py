@@ -1,29 +1,27 @@
 #!/usr/bin/env python3
-"""archive_work.py —— 解析报告 → **四处落位片段**（WORKS 块 / TOOLS 节 / 日报小节 / 引擎提示）。
+"""从解析报告生成作品、工具、日志片段及引擎文档建议。
 
-为什么有它：每作收尾要手写 4 处索引，格式还得跟前 136 条一致 —— 这是收尾慢的主因。
-本工具只做**机械部分**（字段抽取 + 格式对齐 + 归册），判据仍由人 / skill 负责。
+python scripts/archive_work.py --report R.md
+python scripts/archive_work.py --report R.md --apply
+python scripts/archive_work.py --report R.md --apply --apply-log
 
-用法:
-  python scripts/archive_work.py --report "解析报告/XX_解析报告.md"        # 只出片段
-  python scripts/archive_work.py --report R.md --apply                            # 追加到 WORKS/TOOLS
-  python scripts/archive_work.py --report R.md --apply --apply-log                # 连日报也写
-
-字段可覆盖（报告写得含糊时用）:
-  --name 作品名  --rows 12345  --main 主角名  --engine STCM2L  --platform PSP
-
-作为库使用（批量评估 / wrapup 复用）:
-  from archive_work import infer
-  d = infer(report_path)        # → dict(name/plat/fam/eng/rows/main/tools/keys)
-
-退出码: 0 = 成功; 2 = 缺必填 / 报告不存在
-"""
+--work/--name 指作品名；--main 指主角名。--rows、--engine、--platform 可覆盖报告字段。
+片段保存到 _archive/<作品>/；仅自动生成片段默认允许覆盖，--force-frag 可覆盖手写片段。
+作为库使用：infer(report_path) 返回 name/plat/fam/eng/rows/main/tools/keys。
+退出码：0 成功；2 报告缺失或必填字段不全。"""
 import argparse
 import io
 import os
 import re
 import sys
 import time
+
+SKILL_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if not os.path.isfile(os.path.join(SKILL_ROOT, 'SKILL.md')):
+    SKILL_ROOT = os.path.expanduser('~/.workbuddy/skills/vn-custom-bytecode-text')
+
+# 自动生成片段的首行标记（有无这个标记 = 「机器写的」还是「人写的」，据此决定 dry-run 要不要覆盖）
+AUTO = '<!-- auto: archive_work.py（本文件由工具生成；手改过就删掉这行，之后不会被覆盖）-->\n'
 
 FAM = [
     ('cdar', r'CDAR|コルダ|遥か|下天の華|pasc|Ruby Party|アンジェリーク|NeoRomance'),
@@ -33,6 +31,7 @@ FAM = [
     ('konami', r'KONAMI|Girl\'s Side|\.bytes'),
     ('m2', r'ADVENGINE|M2|PSB|PGD'),
     ('mages', r'MAGES\.|MPK|SC3|5pb'),
+    ('boys3', r'Boys3|Swallowtail'),
     ('nnn', r'System-NNN|NNNLib|\.spt'),
     ('unity', r'Unity|IL2CPP|Naninovel|assetbundle'),
     ('evb', r'\.evb|MARC|Otomate VM'),
@@ -240,8 +239,14 @@ def infer(report, name='', plat_='', engine='', rows_='', main_=''):
                 fm=bool(fm.get('作品') or fm.get('主角') or fm.get('行数')))
 
 
-def pick_book(mem, prefix, fam, plat):
+def pick_book(mem, prefix, fam, plat, eng=''):
+    # 引擎专属分册优先（族太粗时会走错册）：{plat} 会被替换
+    SUBBOOK = [(r'NScripter', 'WORKS-misc-{plat}-ns.md')]
     if prefix == 'WORKS':
+        for pat, tpl in SUBBOOK:
+            c = tpl.format(plat=plat)
+            if eng and re.search(pat, eng, re.I) and os.path.isfile(os.path.join(mem, c)):
+                return c, os.path.join(mem, c)
         cands = ['WORKS-%s-%s.md' % (fam, plat), 'WORKS-%s.md' % fam,
                  'WORKS-misc-%s-1.md' % plat, 'WORKS-misc-%s.md' % plat,
                  'WORKS-misc-other.md']
@@ -255,7 +260,7 @@ def pick_book(mem, prefix, fam, plat):
     return cands[0], os.path.join(mem, cands[0])
 
 
-def fragments(d, stamp):
+def fragments(d, stamp, mem=''):
     plat, name = d['plat'], d['name']
     tl = '、'.join('`scripts/%s`' % x for x in d['tools'][:6]) or '（见报告）'
     works = ['### %s' % name,
@@ -263,7 +268,7 @@ def fragments(d, stamp):
                                                d['rows'] or '未统计'),
              '- 主角：%s' % (d['main'] or '—（报告未记）')]
     if d['keys']:
-        works.append('- 判据/坑：')
+        works.append('- 判据与差异：')
         works += ['  - %s' % k for k in d['keys']]
     if d['tools']:
         works.append('- 工具：' + tl)
@@ -273,15 +278,42 @@ def fragments(d, stamp):
                  % (stamp, name, tl, d['rows'] or '未统计', os.path.basename(d['report']), name))
 
     log_txt = ('## %s（%s 行）\n\n- **平台/引擎**：%s · %s\n- **主角**：%s\n- **工具**：%s\n'
-               '- **判据/坑**：\n%s\n- **报告**：`%s`'
+               '- **判据与差异**：\n%s\n- **报告**：`%s`'
                % (name, d['rows'] or '未统计', LAB.get(plat, plat), d['eng'] or d['fam'],
                   d['main'] or '—（未记）', tl,
                   '\n'.join('  - %s' % k for k in d['keys']) or '  - （见报告）',
                   os.path.basename(d['report'])))
 
-    eng_txt = ('# 引擎册提示（%s）\n\n- 归族：`%s`\n- 建议册：`engines/%s`（不存在则新建）\n'
-               '- 追加内容：本作的**容器链路 / 记录形状 / 成行判据**（不含只属本作的主角名等）'
-               % (name, d['fam'], d['eng'] or d['fam']))
+    # 根据格式名称提示已有册；词元命中仅供人工复核。
+    cands = []
+    STOP = {'text', 'mode', 'other', 'works', 'bytes', 'script', 'table', 'engine',
+            'lines', 'variant', 'alpha', 'beta', 'test', 'files', 'tools'}
+    try:
+        blob = read(d['report']).lower() if os.path.isfile(d['report']) else ''
+        edir = os.path.join(SKILL_ROOT, 'references', 'engines')
+        if blob and os.path.isdir(edir):
+            for base, _, names in os.walk(edir):
+                for fn in names:
+                    if not fn.endswith('.md') or fn == 'index.md':
+                        continue
+                    slug = os.path.relpath(os.path.join(base, fn), edir)[:-3].replace(chr(92), '/')
+                    hit = [t for t in re.split(r'[-/]', slug)
+                           if len(t) >= 5 and t not in STOP and t in blob]
+                    if hit:
+                        cands.append((len(hit), slug))
+            cands.sort(reverse=True)
+    except Exception:
+        cands = []
+    tip = '`references/engines/index.md`（按签名与结构定位格式）'
+    if cands:
+        # 只留最高分（并列才并列）：低分命中多是报告里的通用英文词（extra/system/text）
+        top = cands[0][0]
+        best = [s for n, s in cands if n == top][:3]
+        tip = '／'.join('`references/engines/%s.md`' % s for s in best) + '（候选，先核对签名与结构）'
+    eng_txt = ('# 引擎册提示（%s）\n\n- 归族：`%s`\n- 建议册：%s\n'
+               '- 格式册：只合并可复用的容器结构、解码与显示判据\n'
+               '- 变体按签名、头布局和命令语法描述；单作参数、统计、姓名及状态写入已有报告或 WORKS'
+               % (name, d['fam'], tip))
 
     return {'works.md': '\n'.join(works) + '\n', 'tools-works.md': tools_txt + '\n',
             'log.md': log_txt + '\n', 'engines.md': eng_txt + '\n'}
@@ -315,7 +347,7 @@ TEMPLATE = """---
 |---|---|
 |  |  |
 
-## 3. 判据与坑（`⚠` / `★` 行会被 `distill.py` 优先收进沉淀草案）
+## 3. 判据与差异（`⚠` / `★` 行会被 `distill.py` 优先收进沉淀草案）
 
 - ★ 
 - ⚠ 
@@ -338,13 +370,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--report', help='解析报告；用 --template 时可省')
     ap.add_argument('--mem', default=os.path.join(os.getcwd(), '.workbuddy', 'memory'))
-    ap.add_argument('--name')
+    ap.add_argument('--work', help='作品名（覆盖报告推断；一般不用给，报告文件名已能推出）')
+    ap.add_argument('--name', help='[兼容旧调用] 同 --work＝**作品名**；'
+                                  '⚠ 与 wrapup.py 的 --name（＝主角）不同义，别混用')
     ap.add_argument('--rows')
-    ap.add_argument('--main')
+    ap.add_argument('--main', help='主角名（与 wrapup.py 的 --name 等价）')
     ap.add_argument('--engine')
     ap.add_argument('--platform')
     ap.add_argument('--apply', action='store_true')
     ap.add_argument('--apply-log', action='store_true')
+    ap.add_argument('--force-frag', action='store_true',
+                    help='覆盖 _archive/<作品>/ 里手写过的片段（无自动标记的文件）')
     ap.add_argument('--template', nargs='?', const='', metavar='作品名',
                     help='输出报告骨架（含 front-matter）；给作品名则预填')
     ap.add_argument('--out', help='配合 --template：写到该文件（默认打印）')
@@ -365,20 +401,36 @@ def main():
     if not a.report or not os.path.isfile(a.report):
         print('[!!] 报告不存在：%s' % a.report)
         return 2
-    d = infer(a.report, a.name or '', a.platform or '', a.engine or '', a.rows or '', a.main or '')
+    if a.name and not a.work:
+        # 2026-11-01 事故：把主角名「真」传给 --name ⇒ WORKS/TOOLS/日报全写成「真」、还多生出 _archive/真/
+        print('[!] --name 在 archive_work 里是**作品名**（不是主角）；主角请用 --main。')
+        print('    若要改作品名请显式用 --work；报告推断名＝%s'
+              % os.path.basename(a.report).replace('_解析报告.md', ''))
+    d = infer(a.report, a.work or a.name or '', a.platform or '', a.engine or '',
+              a.rows or '', a.main or '')
     if not d['name']:
         print('[!!] 无法确定作品名，用 --name 指定')
         return 2
 
     stamp = time.strftime('%Y-%m-%d')
-    fg = fragments(d, stamp)
-    works_name, works_path = pick_book(a.mem, 'WORKS', d['fam'], d['plat'])
-    tools_name, tools_path = pick_book(a.mem, 'TOOLS-works', d['fam'], d['plat'])
+    fg = fragments(d, stamp, a.mem)
+    works_name, works_path = pick_book(a.mem, 'WORKS', d['fam'], d['plat'], d['eng'])
+    tools_name, tools_path = pick_book(a.mem, 'TOOLS-works', d['fam'], d['plat'], d['eng'])
 
     outdir = os.path.join(os.getcwd(), '_archive', re.sub(r'[\\/:*?"<>|]', '_', d['name']))
     os.makedirs(outdir, exist_ok=True)
+    # 2026-11-01 事故：dry-run 也会写片段，把我手写好的 works.md/log.md 覆盖成骨架。
+    # 规则：生成的片段带 AUTO 标记；目标文件存在且**没有**该标记 ⇒ 视为手写、跳过（--force-frag 才覆盖）。
     for fn, body in fg.items():
-        with io.open(os.path.join(outdir, fn), 'w', encoding='utf-8', newline='') as f:
+        dst = os.path.join(outdir, fn)
+        body = AUTO + body
+        if os.path.isfile(dst) and not a.force_frag:
+            with io.open(dst, encoding='utf-8', errors='replace') as f:
+                old = f.read(400)
+            if AUTO not in old:
+                print('[skip] 手写片段保留：%s（要覆盖加 --force-frag）' % fn)
+                continue
+        with io.open(dst, 'w', encoding='utf-8', newline='') as f:
             f.write(body)
 
     print('作品 : %s' % d['name'])

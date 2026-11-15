@@ -168,7 +168,7 @@ def table_strings(d, fs, end):
 
 def prefix_records(d, fs, pend):
     """前缀区 [fs, fs+0x1800) 另含记录 (子文件头部 0x1800 前的「另一份脚本段」,
-    与代码段分开 ⇒ 只走代码段会漏; 见 engines/idea-factory-stcm2l-psp-cpk.md)。
+    与代码段分开 ⇒ 只走代码段会漏; 见 engines/stcm2l.md)。
     形如 [12B 槽 ×k][ [0][L/4][1][L][cp932] ]*n —— 无收尾 [0][cmd][flag],
     故以「槽块 + 其后连续串组」为一个记录, 组内合并为一行。"""
     i, recs = fs, []

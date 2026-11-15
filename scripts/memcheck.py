@@ -1,27 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""memcheck.py —— 目录体检：只报「真会出问题」的体积，其余仅列大小。
+"""检查记忆入口大小，并列出技能文档体积。
 
-**分册不再按体积判**（2026-10-26 用户取消 10 KB / 12 KB 硬线）。
-理由：分册该多大由**主题**决定，不由字节数决定。按字节硬切会把同一主题拆散
-——曾经的「late-1…late-6」就是这么切出来的，光看文件名读不出内容，
-查一个坑要连开六册。判断该不该拆的唯一标准是「**读者是否需要同时看这两段**」，不是 KB。
+文档按主题组织，不按字节阈值拆分。MEMORY.md 超过 8 KB 返回错误；
+历史日志超过 30 KB 仅提示按章节查询。
 
-保留的两条体积判断都有技术原因，与编辑偏好无关：
-  MEMORY.md   > 8 KB  → [E]  自动注入会话上下文，超了会被截断（信息真的会丢）
-  历史日志    > 30 KB → [i]  只提示；按需 `Grep` 命中段即可，不必整读
-
-用法:
-  python scripts/memcheck.py                    # 查本工作区 memory/ + 本 skill
-  python scripts/memcheck.py --mem DIR --skill DIR --top 40
-退出码: 0 = 无 [E]；1 = MEMORY.md 超 8 KB
-"""
+python scripts/memcheck.py --mem DIR --skill DIR --top 40
+退出码：0 无入口大小错误；1 MEMORY.md 超限。"""
 import argparse
 import glob
 import os
 import sys
 
 DEFAULT_SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if not os.path.isfile(os.path.join(DEFAULT_SKILL, 'SKILL.md')):
+    DEFAULT_SKILL = os.path.expanduser('~/.workbuddy/skills/vn-custom-bytecode-text')
 
 
 def kb(n):
@@ -38,11 +31,11 @@ def main():
     err = 0
     out = []
     for root, label, pats in (
-            (a.mem, '工作区记忆', ['*.md', 'engines/*.md']),
-            (a.skill, 'skill', ['SKILL.md', 'references/*.md', 'references/*/*.md'])):
+            (a.mem, '工作区记忆', ['*.md']),
+            (a.skill, 'skill', ['SKILL.md', 'references/**/*.md'])):
         files = []
         for pat in pats:
-            files += glob.glob(os.path.join(root, pat))
+            files += glob.glob(os.path.join(root, pat), recursive=True)
         files = [f for f in files if os.path.isfile(f)]
         if not files:
             continue

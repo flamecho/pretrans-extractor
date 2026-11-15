@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """：key_area[3] 在所有 KAEK 索引下的试解（16 次，验证 keygen 歧义）。"""
+import os
 import sys
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
@@ -17,7 +18,7 @@ def load_keys(path):
 
 nca = sys.argv[1]
 keys = load_keys(sys.argv[2])
-ka_enc = bytes.fromhex('2EF6D80D5AA22B41E6C0A4D7FD80BF26')  # key_area[3] 密文
+ka_enc = bytes.fromhex(os.environ['VN_UKRONIA_KEY_AREA_HEX'])  # key_area[3] 密文
 hi, lo = 0x0000000200000000, 0x1c00
 f = open(nca, 'rb')
 f.seek(0x1c000)

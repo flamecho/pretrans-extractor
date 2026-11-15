@@ -66,8 +66,12 @@ class XP3:
             elif tag == b'segm':
                 for i in range(0, len(sp)-27, 28):
                     _, off, a, b = struct.unpack_from('<IQQQ', sp, i)
-                    # a = disk size(compressed), b = original size
-                    segs.append((off, a, b))
+                    # ★ 标准 segm 是 `flags, start, originalSize, archivedSize`
+                    #   ⇒ a=原始大小、b=归档(盘上)大小。原先注释写反（a=compressed），
+                    #   只有「不压缩（两者相等）」的包才不暴露；2026-11-04 [JP]IRIS-豪雪の王
+                    #   的 .ks 是 zlib（orig 9218 / archived 9229）⇒ 按错的那个只取 9218 字节，
+                    #   zlib 报 -5 截断，静默返回压缩流。故改为 (off, archived, orig)。
+                    segs.append((off, b, a))
             q += 12 + size
         return name, segs
 

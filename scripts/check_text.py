@@ -6,21 +6,23 @@
       --name 可多个（主角名「出现性」自检，至少一个须命中）。
 退出码: 0=无 ERROR（WARN 不阻断）/ 1=有 ERROR。显示宽度: 全角=1、半角=0.5。
 
-检查项（均来自历史返工点，**别删**；判据与由来见 skill `references/00b-pitfall-deliver.md`）:
-  [E] BOM / CR / U+FFFD / `〓` / 控制符 / 半角假名(U+FF66-FF9F) / PUA / 引号不配对 /
+检查政策见 references/output.md；结构与标点统计仅为警告。
+  [E] BOM / CR / U+FFFD / `〓` / 控制符 / 半角假名(U+FF66-FF9F) / PUA /
       脚本·资源残留（party_xxx / `:ld_n 8:` / `if …==` / `a/b.png` / `cmd 123`） /
-      行首孤立标点 / 说话人残留 / 未解析插入宏·占位符
-  [W] 主角名未出现 / 空行 / 超长行 / 重复行 / 非日文字符 / 标点健全性（含「台词引号内
+      名札包装残留 / 未解析插入宏·占位符
+  [W] 引号不配对 / 行首标点 / 主角名未出现 / 空行 / 超长行 / 重复行 / 非日文字符 / 标点健全性（含「台词引号内
       末句不写。」的引擎判据登记 `#@no-final-period`，见 --allow 说明）/ 半角引号 /
       含拉丁字母 `[a-zA-Z]`（错误指示器：逐行判定 原文/脚本残留/控制码；--allow 可豁免原文行） /
       半角标点(U+FF61-FF65 ｡｢｣､･——可能是原文用字)
 """
 import argparse
 import collections
+import json
 import io
 import re
 import sys
 import os
+from pathlib import Path
 import unicodedata
 
 C0_BAD = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
@@ -68,10 +70,91 @@ def is_jp(ch: str) -> bool:
     return o in (0x0100, 0x00D7, 0x00F7)
 
 
+
+def report_format(report_text):
+    """Read a dedicated format field; incidental mentions are not declarations."""
+    modes = set()
+    for line in report_text.splitlines():
+        line = line.replace('**', '')
+        field = re.match(r'^\s*(?:[-*]\s+)?版式\s*[：:]\s*(.*)$', line)
+        if not field:
+            continue
+        value = re.match(r'^(双版对照|单版|単版)(?=$|[\s（(；;，,。])', field.group(1).strip())
+        if not value:
+            raise ValueError('版式字段须为单版或双版对照')
+        modes.add('dual' if value.group(1) == '双版对照' else 'single')
+    if len(modes) > 1:
+        raise ValueError('报告有相互冲突的版式声明')
+    return next(iter(modes), None)
+
+
+def merged_candidates(lines):
+    """Count exact adjacent concatenations of any segment count, without inferring pages."""
+    count = 0
+    for i, current in enumerate(lines):
+        remaining, parts = len(current), 0
+        for j in range(i - 1, -1, -1):
+            part = lines[j]
+            if not part or len(part) > remaining or not current.endswith(part, 0, remaining):
+                break
+            remaining -= len(part)
+            parts += 1
+            if remaining == 0:
+                if parts >= 2:
+                    count += 1
+                break
+    return count
+
+
+def validate_layout(path, lines, dual=False, expect_dual=False):
+    """Validate an optional extractor-produced, one-based output page map."""
+    errors = []
+    try:
+        with open(path, encoding='utf-8-sig') as f:
+            mapping = json.load(f)
+        if not isinstance(mapping, dict) or not isinstance(mapping.get('pages'), list):
+            raise ValueError('需要对象及 pages 数组')
+        pages = mapping['pages']
+    except (OSError, ValueError) as exc:
+        return 0, ['页映射无法读取：%s' % exc]
+    if pages and not dual:
+        errors.append('单版声明与页映射中的多段合并页冲突')
+    if expect_dual and not pages:
+        errors.append('`--expect-dual`：页映射没有多段合并页')
+    used = set()
+    for number, page in enumerate(pages, 1):
+        label = '页映射 #%d' % number
+        if not isinstance(page, dict):
+            errors.append(label + ' 需要对象')
+            continue
+        segments, merged = page.get('segments'), page.get('merged')
+        if (not isinstance(segments, list) or len(segments) < 2
+                or any(type(n) is not int for n in segments) or type(merged) is not int):
+            errors.append(label + ' 需要至少两条段行及整数合并行号')
+            continue
+        indices = segments + [merged]
+        if any(n < 1 or n > len(lines) for n in indices):
+            errors.append(label + ' 行号越界或产物缺行')
+            continue
+        if indices != list(range(segments[0], merged + 1)):
+            errors.append(label + ' 段行须连续且紧接合并行')
+            continue
+        if used.intersection(indices):
+            errors.append(label + ' 重复使用其他页的输出行')
+            continue
+        used.update(indices)
+        expected = page.get('merged_text', ''.join(lines[n - 1] for n in segments))
+        if not isinstance(expected, str):
+            errors.append(label + ' merged_text 须为字符串')
+        elif lines[merged - 1] != expected:
+            errors.append(label + ' 合并行与来源段/完整页文本不符')
+    return len(pages), errors
+
+
 def check(path: str, names, maxlen: float, quiet: bool, allow=(), inline_name=False,
-          dual=False, expect_dual=False, report=None, engine=None, init_charset=False):
+          dual=False, expect_dual=False, report=None, engine=None, init_charset=False, layout_map=None):
     engine = engine or {}   # `#@` 声明集合；未传时为 None，直接 .get() 会崩（2026-10-27 回归抓到）
-    raw = open(path, 'rb').read()
+    raw = Path(path).read_bytes()
     text = raw.decode('utf-8-sig', 'replace')
     lines = text.split('\n')
     if lines and lines[-1] == '':
@@ -140,16 +223,16 @@ def check(path: str, names, maxlen: float, quiet: bool, allow=(), inline_name=Fa
     for a, b in (('「', '」'), ('『', '』'), ('（', '）'), ('(', ')')):
         ca, cb = quote_text.count(a), quote_text.count(b)
         if ca != cb:
-            (warn if (dual or engine.get('open-quote')) else err).append(
-                '引号不配对 %s=%d / %s=%d%s'
+            warn.append(
+                '引号不配对 %s=%d / %s=%d%s（结构探针，修复须有源码依据）'
                 % (a, ca, b, cb, '（双版对照：段行可半闭，合并行闭合；差 %+d 需归因）' % (cb - ca) if dual else ''))
     # 行中已闭合的正常；只报真正不均衡的行。
     openq = [l for l in lines if l.startswith('「') and l.count('「') > l.count('」')
              and l not in ALLOW]
     if openq:
-        (warn if (dual or engine.get('open-quote')) else err).append(
+        warn.append(
             '行首「未闭合 ×%d%s: %s'
-            % (len(openq), '（双版对照：段行预期）' if dual else '（行被吞/断行）',
+            % (len(openq), '（双版对照：段行预期）' if dual else '（按源点击/页界核对）',
                ' | '.join(l[:30] for l in openq[:3])))
 
     # ---- 脚本 / 资源残留（2026-10-22 用户以 `[a-zA-Z]` 检索发现）----
@@ -192,12 +275,12 @@ def check(path: str, names, maxlen: float, quiet: bool, allow=(), inline_name=Fa
 
     # ---- 含拉丁字母（`[a-zA-Z]` 指示器；用户 2026-10-22 指定为错误探针）----
     # 不是「一有就错」：英文台词/歌词、厂牌乐队（聖飢魔ii）、CM/DVD/ml、颜文字都属原文。
-    # 但**每一个含字母的行都必须被人眼判过一次**——三类：①原文 ②脚本/资源残留 ③控制码。
+    # 所有命中须覆盖审计；重复字符串及已证生成规则可分组——三类：①原文 ②脚本/资源残留 ③控制码。
     # 上面 RESIDUE 已把 ②③ 判 E；这里兜住剩下的，给行号当待查清单。
     asc = [(i, l) for i, l in enumerate(lines, 1)
            if re.search(r'[A-Za-z]', l) and l not in ALLOW]
     if asc:
-        warn.append('含拉丁字母 ×%d 行（须逐行判定：①原文 ②脚本/资源残留 ③控制码；'
+        warn.append('含拉丁字母 ×%d 行（按来源分类，可分组：①原文 ②脚本/资源残留 ③控制码；'
                     '行号 %s…）: %s'
                     % (len(asc), ','.join(str(x[0]) for x in asc[:8]),
                        ' | '.join(x[1][:26] for x in asc[:3])))
@@ -211,17 +294,13 @@ def check(path: str, names, maxlen: float, quiet: bool, allow=(), inline_name=Fa
                     % (len(dq), ' | '.join(l[:30] for l in dq[:3])))
 
     # ---- 行首孤立标点（2026-10-14 用户指出）----
-    # 「一次点击 = 一行」⇒ 行首不会有 、。 等收束标点；出现即前文被切，常见原因＝
-    # 主角名插入宏落在参数区被跳过（实例 マスケティア 名字宏 `1D 00`）。
+    # 行首标点可能是实际点击处的原文，亦可能是宏/边界解析错误；只提供探针。
     LEAD_PUNCT = ('、', '。', '，', '．', ',', '.', '）', ')', '」', '』', '】', '〕')
     leadp = [l for l in lines if l[:1] in LEAD_PUNCT and l not in ALLOW]
     if leadp:
         msg = ('行首孤立标点 ×%d（前文被切/源数据分页）: %s'
                % (len(leadp), ' | '.join(l[:30] for l in leadp[:3])))
-        if is_en:
-            warn.append(msg + '（英文作品：`...` 独立成行为省略号台词，非切行）')
-        else:
-            err.append(msg)
+        warn.append(msg + '（结构探针，须按源边界核对）')
 
     # ---- 标点健全性（2026-10-12）----
     # 判据＝「句号 ≈ 行数量级」；三重拦截（计数 0 / 行尾 0 / 远少于顿号）。
@@ -245,7 +324,7 @@ def check(path: str, names, maxlen: float, quiet: bool, allow=(), inline_name=Fa
                 warn.append(msg + '—— 已登记引擎判据 `#@no-final-period`：%s'
                             % ENGINE['no-final-period'])
             else:
-                err.append(msg + '—— 疑句号被清洗（实例：写在 cp932 '
+                warn.append(msg + '—— 疑句号被清洗（实例：写在 cp932 '
                            '0x8140 槽 ⇒ 解出全角空格后被当填充删掉）')
         elif n_end_period == 0:
             msg = ('行尾 0 个句号「。」（全篇 %d 个；行尾其他收束标点 %d 行）'
@@ -254,7 +333,7 @@ def check(path: str, names, maxlen: float, quiet: bool, allow=(), inline_name=Fa
                 warn.append(msg + '—— 已登记引擎判据 `#@no-final-period`：%s'
                             % ENGINE['no-final-period'])
             else:
-                err.append(msg + '—— 疑行尾标点被清洗（若确为原文：先在报告 §品检 举证'
+                warn.append(msg + '—— 疑行尾标点被清洗（若确为原文：先在报告 §品检 举证'
                                  '「块内句号正常／块尾其他标点齐全／非分页切断」，'
                                  '再在 allow 文件登记 `#@no-final-period: 证据要点`）')
         elif n_period < len(lines) * 0.05:
@@ -297,14 +376,10 @@ def check(path: str, names, maxlen: float, quiet: bool, allow=(), inline_name=Fa
         if rest[:1] in ('', '「', '『', '（', '(', ' ', '\u3000') and l not in ALLOW:
             pre.append(l)
     if pre:
-        if inline_name:
-            # ★ 正文内名札（无独立名字窗）——2026-10-21 ガーネット・クレイドル PC（GsWin）：
-            #   引擎无 name 命令、无 SYSNAMEWND 素材，名字以 `#F【名】#F\n` 直接印在正文框首行
-            #   ⇒ 按 `S6-lines-names.md` 的三条形态判据属「正文内名札」，保留并接同行。此开关默认关闭。
-            if not quiet:
-                print('  [i] 行首【名】＋正文 ×%d（--inline-name：正文内名札，保留）' % len(pre))
-        else:
-            err.append('行首【名】＋正文 ×%d: %s' % (len(pre), ' | '.join(l[:30] for l in pre[:3])))
+        err.append('行首【名】＋正文 ×%d（可见名札也须去包装；源文词条可精确登记例外）: %s'
+                   % (len(pre), ' | '.join(l[:30] for l in pre[:3])))
+    if inline_name:
+        warn.append('`--inline-name` 已废弃：名札按实际可见性处理，仍不保留人为括弧包装')
     pre2 = [l for l in lines
             if NAME_PREFIX_COLON.match(l)
             and re.search(r'[ぁ-んァ-ヶ一-龯]', NAME_PREFIX_COLON.match(l).group(0))
@@ -337,56 +412,32 @@ def check(path: str, names, maxlen: float, quiet: bool, allow=(), inline_name=Fa
         elif not quiet:
             print('  [i] 主角名 %r 出现 %d 行' % (nm, sum(1 for l in lines if nm in l)))
 
-    # ---- 版式：单版 / 双版对照（A,B,C,ABC）（2026-10-22 用户要求入品检，防忘）----
-    # 检出法：某个正文行逐字等于**紧邻上方 2–4 行**的拼接 ⇒ 这就是对照版的「合并行」。
-    # 有合并行 ⇒ 双版对照；没有 ⇒ 单版。两者都必须与 `--dual` 声明一致，
-    # 否则引号/重复行的判据会各自误报（单版被按双版放水，或双版被按单版判 E）。
-    merged = 0
-    for i in range(2, len(lines)):
-        cur = lines[i]
-        if not cur:
-            continue
-        for k in (2, 3, 4):
-            if i - k < 0:
-                break
-            parts = lines[i - k:i]
-            if cur != ''.join(parts):
-                continue
-            # 排除巧合同文：`……` + `…………` = `………………` 这类（长度短/单字重复/碎片太短）
-            if len(cur) < 10 or len(set(cur)) <= 2:
-                break
-            if sum(1 for x in parts if len(x) >= 4) < 2:
-                break
-            merged += 1
-            break
-    # 阈值：单版作里偶有「某句正好＝上两句拼接」的巧合（ヘタリア 实测 1 处/25,144 行），
-    # 故 ≥max(3, 行数×0.1%) 才算双版；1–2 处只当「疑似」提示人工看一眼。
-    # 例外（2026-10-23）：**显式 `--dual` 是人工核过的声明**，优先于比例阈值——
-    # 「局部双版」作（如 恋の花咲く百花園 22.8k 行仅 14 框需对照，占 0.06%）比例永远过不了线，
-    # 但它确实是双版（源里 `\c` 段间等待）。故 dual 声明 + merged≥1 ⇒ 认双版；
-    # merged==0 时仍按下面第 355 行报 E（声明与结构不符）。
-    is_dual = merged >= max(3, len(lines) * 0.001)
-    if dual and merged >= 1:
-        is_dual = True
+    # Format is source-declared; text similarity supplies diagnostics only.
+    merged = merged_candidates(lines)
     if not quiet:
-        print('  [i] 版式：%s' % ('双版对照（%d 个合并行＝上方 2–4 段拼接）' % merged
-                                 if is_dual else '单版（未达双版阈值；合并行 %d 处）' % merged))
-    if merged and not is_dual:
-        warn.append('疑似合并行 ×%d（低于双版阈值，多为巧合同文；请确认不是把相邻两句误并）' % merged)
-    if dual and not is_dual:
-        err.append('`--dual` 声明为双版对照，但未检出足够的合并行（%d 处）；版式不符或合并行被删/被拆' % merged)
-    if is_dual and not dual:
-        err.append('检出双版对照结构 %d 处但未加 `--dual`（引号类判据会误报；若本作本无双版，'
-                   '须查是否把相邻两句误并成一行）' % merged)
-    if expect_dual and not is_dual:
-        err.append('`--expect-dual`：本作应有双版对照，但未检出足够的合并行（%d 处）' % merged)
+        print('  [i] 版式声明：%s；紧邻拼接候选 %d 处（不代表源码页数）'
+              % ('双版对照' if dual else '单版', merged))
+    if expect_dual and not dual:
+        err.append('`--expect-dual` 要求源码已证的 `--dual` 声明')
+    if layout_map:
+        page_count, layout_errors = validate_layout(layout_map, lines, dual, expect_dual)
+        err.extend(layout_errors)
+        if not quiet:
+            print('  [i] 来源页映射：%d 个多段页' % page_count)
+    elif dual and not merged:
+        warn.append('双版声明未检出紧邻拼接候选；按源页映射核对，可能受姓名包装影响')
+    elif merged and not dual:
+        warn.append('紧邻拼接候选 ×%d；单版不据此改判，按来源检查是否巧合同文或误合并' % merged)
     if report:
         try:
-            rt = open(report, encoding='utf-8', errors='replace').read()
-        except OSError:
-            rt = ''
-        if not re.search(r'版式[^\n]{0,60}(双版对照|单版|単版)', rt):
-            err.append('报告未声明版式（缺「版式：双版对照／单版」这一行）: %s' % report)
+            with open(report, encoding='utf-8-sig') as f:
+                mode = report_format(f.read())
+            if mode is None:
+                err.append('报告未声明版式（需独立「版式：双版对照／单版」字段）: %s' % report)
+            elif (mode == 'dual') != dual:
+                err.append('报告版式与 `--dual` 声明不一致')
+        except (OSError, ValueError) as exc:
+            err.append('报告版式无法读取：%s' % exc)
 
     # ---- 行级 ----
     blank = sum(1 for l in lines if l.strip() == '')
@@ -456,16 +507,18 @@ def check(path: str, names, maxlen: float, quiet: bool, allow=(), inline_name=Fa
     base = None
     if os.path.exists(base_path):
         base = set()
-        for l2 in io.open(base_path, encoding='utf-8'):
+        for l2 in Path(base_path).read_text(encoding='utf-8').splitlines():
             l2 = l2.rstrip('\n')
-            if l2 and not l2.startswith('#'):
+            # 注释行只认 '# ' / '#@'（原先任何 '#' 开头都算注释 ⇒ 台账无法登记字符 '#' 本身，
+            # 例 ２人の王子 的颜文字 (ﾟДﾟ#)）
+            if l2 and not (l2.startswith('# ') or l2.startswith('#@')):
                 base.add(l2[0])
     if init_charset:
         os.makedirs(os.path.dirname(base_path), exist_ok=True)
-        io.open(base_path, 'w', encoding='utf-8', newline='\n').write(
+        Path(base_path).write_text(
             '# 非日文字符台账（每行一个字符，首字符生效；人工核对后生成）\n'
             + '\n'.join('%s\t%d' % (ch, len(v)) for ch, v in sorted(inv.items(), key=lambda kv: -len(kv[1])))
-            + '\n')
+            + '\n', encoding='utf-8', newline='\n')
         print('  [i] 非日文字符台账已生成：%s（%d 种）' % (base_path, len(inv)))
     elif base is None:
         err.append('非日文字符台账缺失（%s）；先人工核对非日文字符后用 --init-charset 生成' % os.path.basename(base_path))
@@ -500,20 +553,18 @@ def main():
     ap.add_argument('--maxlen', type=float, default=200.0)
     ap.add_argument('--quiet', action='store_true')
     ap.add_argument('--init-charset', action='store_true', help='生成该作的「非日文字符台账」基线（人工核对后使用）')
-    ap.add_argument('--allow', help='白名单文件：每行一条精确匹配的正文（仅豁免形态类误报）。'
-                                    '另可写 `#@` 引擎判据行登记「聚合类」口径，格式 '
-                                    '`#@no-final-period: 证据要点`（本作台词引号内末句不写「。」；另 `#@open-quote: 证据要点`＝本作「句首「」不收尾」风格，引号类判据降 W；'
-                                    '须先在报告 §品检 举证：块内句号正常、块尾其他标点齐全、非分页切断）')
-    ap.add_argument('--inline-name', action='store_true', help='名札内嵌正文框（无独立名字窗）⇒ 行首【名】＋正文 不算残留')
-    ap.add_argument('--dual', action='store_true', help='双版对照（A,B,C,ABC）：段行可半闭引号，引号类判据降为 W')
-    ap.add_argument('--expect-dual', action='store_true', help='本作应有双版对照（缺合并行即报 E）')
+    ap.add_argument('--allow', help='已按来源核实的精确原文例外，每行一条；#@key: 证据 可记录引擎说明')
+    ap.add_argument('--inline-name', action='store_true', help='废弃兼容参数；不再豁免名札括弧包装')
+    ap.add_argument('--dual', action='store_true', help='声明源码已证的双版；拼接扫描不自动决定版式')
+    ap.add_argument('--expect-dual', action='store_true', help='要求已证 --dual 声明；有 --layout-map 时检查至少一项合并页')
     ap.add_argument('--report', help='解析报告 md：要求内含「版式：双版对照／单版」声明')
+    ap.add_argument('--layout-map', help='提取器输出的页映射 JSON；验证段行/合并行，行号从 1 开始')
     a = ap.parse_args()
     allow = []
     engine = {}
     if a.allow:
         raw_allow = [l.rstrip('\r') for l in
-                     open(a.allow, encoding='utf-8-sig').read().split('\n') if l.strip()]
+                     Path(a.allow).read_text(encoding='utf-8-sig').split('\n') if l.strip()]
         # `#@key: 说明` ＝ 引擎级（聚合判据）口径登记，不参与逐行精确匹配。
         for l in raw_allow:
             if l.startswith('#@'):
@@ -524,7 +575,7 @@ def main():
     ok = True
     for f in a.files:
         ok &= check(f, a.name, a.maxlen, a.quiet, allow, a.inline_name, a.dual,
-                    a.expect_dual, a.report, engine, a.init_charset)
+                    a.expect_dual, a.report, engine, a.init_charset, a.layout_map)
         print()
     print('RESULT:', 'PASS' if ok else 'FAIL(有 ERROR)')
     sys.exit(0 if ok else 1)

@@ -21,7 +21,7 @@ from extract_alice import extract_qpk, extract_cpk
 Z = r"C:\Program Files\7-Zip\7z.exe"
 ISO_DIR = VNTRANS_HOME
 OUT_DIR = VNTRANS_HOME
-TMP = r"D:\_Trans\tmp_alice"
+TMP = os.path.join(VNTRANS_HOME, "tmp_alice")
 
 # (required_substrings, exclude_substring_or_None, output_base_name)
 GAMES = [

@@ -3,7 +3,7 @@
 """レッドベルの慟哭 —— 压缩 NCA(LZ4 bucket-tree) → RomFS 直读。
 
 参数由 NCA 头/FS 头实测（见报告）：
-  sec1 @0x1c000 size 0x1a7f44000 | ctr_hi 0x0000000200000000 | key 618eeafbfced69ea5667ffa85ab851ec
+  sec1 @0x1c000 size 0x1a7f44000 | ctr_hi 0x0000000200000000 | key <hex>
   IVFC level5(数据层) @0xE30000 | CompressionInfo: TableOffset 0x1a6e44000, TableSize 0x2d0000
 用法:
   python scripts/redbell_romfs.py --list
@@ -20,7 +20,7 @@ NCA_BASE = 0x1944
 SEC1_OFF = 0x1c000
 SEC1_SIZE = 0x1a7f44000
 CTR_HI = bytes.fromhex('0000000200000000')
-KEY = bytes.fromhex('618eeafbfced69ea5667ffa85ab851ec')
+KEY = bytes.fromhex(os.environ['VN_REDBELL_SECTION_KEY_HEX'])
 LEVEL5 = 0xE30000
 TBL_OFF = 0x1a6e44000
 

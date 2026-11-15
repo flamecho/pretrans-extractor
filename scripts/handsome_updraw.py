@@ -26,7 +26,7 @@ import handsome_nca as W
 XCI = os.path.join(os.environ.get("VNTRANS_HOME", os.getcwd()), "src", "[NS-JP]ハンサムロンダリング -the mystic lover-", "[APP][010056B024B92000][1.0.0][JP][19.0.0].xci")
 BASE_OFF = 0x1F033
 BASE_L5 = 0x9dc000
-BASE_KEY = '764ea2ad02a123cd860822303341bbb3'
+BASE_KEY = os.environ['VN_HANDSOME_BASE_KEY_HEX']
 
 
 class UpdRomfs:

@@ -48,7 +48,9 @@ def is_cmd(s):
     if not s:
         return True
     c = s[0]
-    if c in ';#*\\?%':
+    if c in ';#*\\?%:':
+        # `:` ＝ NScripter 的命令分隔符 ⇒ 行首 `:` 后面是命令，不是正文
+        # （2026-11-02 CLUTCH☆FEVER：`:選択肢 料理コンテストの下準備に行く` 是作者的备忘行）
         return True
     if CMD_HEAD.match(s):
         return True
@@ -88,7 +90,7 @@ def clean_name(t):
 
 def clean(t):
     t = INLINE_TAG.sub('', t)
-    t = t.replace('\u3000', ' ')
+    # ★ 全文空格**原样保留**（U+3000 是原文用字，勿半角化）；首尾由 strip() 一并剥（U+3000 是空白字符）
     t = re.sub(r'[ \t]+', ' ', t)
     return t.strip()
 
@@ -150,17 +152,54 @@ class Rip:
         txt = clean(txt).strip('◆■☆★▼●○◇※ 　').strip()
         if not txt:
             return
-        if OPT_SYS.match(txt) or OPT_SYS.match(txt.replace(' ', '')):
+        if not self.stats.get('keep_sys_opts') and (
+                OPT_SYS.match(txt) or OPT_SYS.match(txt.replace(' ', ''))):
             self.stats['opt_skipped'] += 1
             return
         self.stats['opts'] += 1
         self.opts.append([self.box, txt])
 
-def parse(text, keep_names=True, mode='click'):
+CLICKSTR = re.compile(r'^\s*clickstr\s+"([^"]+)"', re.M)
+UNDER_ESC = re.compile(r'_(?=[）」』。！？、，,．.])')   # 等待失效标记，不显示
+def find_clickstr(text):
+    """从 *define 区取 `clickstr "文字列",N` 的字符集（引擎级点击符号，L0）。"""
+    m = CLICKSTR.search(text)
+    return m.group(1) if m else ''
+
+
+def split_clickstr(s, clk):
+    """按 clickstr 字符切成「一次点击」的段。
+
+    规则（2026-11-02 CLUTCH☆FEVER）：
+    - 连续的同组收尾符号并入同一段（`。」`／`……！？』` 只算一次点击）；
+    - `_` 前缀 = 引擎的「等待失效」标记 ⇒ 该字符后**不**断段，且 `_` 不显示。
+    """
+    if not clk:
+        return [s]
+    out, buf, i, n = [], '', 0, len(s)
+    while i < n:
+        c = s[i]
+        if c == '_' and i + 1 < n and s[i + 1] in clk:
+            buf += s[i + 1]                  # 抑制：吞掉 `_`，正常输出该字符
+            i += 2
+            continue
+        buf += c
+        i += 1
+        if c in clk:
+            while i < n and s[i] in clk:     # 连续收尾符并入同一段
+                buf += s[i]; i += 1
+            out.append(buf); buf = ''
+    if buf:
+        out.append(buf)
+    return out or [s]
+
+
+def parse(text, keep_names=True, mode='click', clk='', keep_sys_opts=False):
     r = Rip()
     r.flush_on = {'bs'} if mode == 'page' else {'bs', 'at', 'br'}
     r.mode = mode
     r.stats['keep_names'] = 1 if keep_names else 0
+    r.stats['keep_sys_opts'] = 1 if keep_sys_opts else 0
     lines = [l.rstrip('\r') for l in text.split('\n')]
     i = 0
     while i < len(lines):
@@ -175,11 +214,23 @@ def parse(text, keep_names=True, mode='click'):
             continue
         if s.startswith(';'):
             continue
-        m = re.match(r'^(select|csel)\s(.*)$', s)
+        # ★ 2026-11-02 Christmas☆Crasher：`csel` 可以**单独成行**，选项写在随后各行
+        #   （`csel` / `"行く",*sen1a,` / `"行かない",*sen1b`）。旧正则要求 `csel ` 后有空格 ⇒
+        #   裸 `csel` 落到 is_cmd() 被丢弃，34 项选项全丢（opts=0）。
+        m = re.match(r'^(select|csel)(?:\s(.*))?$', s)
         if m:
-            body = m.group(2)
-            while body.rstrip().endswith(',') and i < len(lines):
-                body += lines[i].strip()
+            # ★ 选项面板出现在「当前文本之后」⇒ 先把未收尾的提示框（无 `\` 的 `「選択肢」`）收掉，
+            #   否则选项会被标到提示框**之前**（2026-11-02 复核 7月28日に。型写法时补的保险）。
+            if r.buf:
+                r.advance('bs')
+            body = m.group(2) or ''
+            while i < len(lines):
+                if body and not body.rstrip().endswith(','):
+                    break
+                nxt = lines[i].strip()
+                if not nxt.startswith('"'):
+                    break
+                body += nxt
                 i += 1
             for q in re.findall(r'"([^"]*)"', body):
                 if q.startswith('*') or q.startswith(':'):
@@ -191,6 +242,15 @@ def parse(text, keep_names=True, mode='click'):
             continue
         if s.split()[0] == 'textclear':
             r.advance('bs')          # 清屏命令＝一页结束（无 `\` 时的隐式断页）
+            continue
+        # ★ 2026-11-02：`\` / `@` **独占一行**时，is_cmd() 会把 `\` 当命令头直接跳过
+        #   ⇒ 上一页与下一页并成一行（Christmas☆Crasher 2 处：`・・・` `\` `face…`）。先处理。
+        if all(ch in '\\@ \t' for ch in s):
+            for ch in s:
+                if ch == '\\':
+                    r.advance('bs')
+                elif ch == '@':
+                    r.advance('at')
             continue
         if is_cmd(s):
             continue
@@ -211,7 +271,7 @@ def parse(text, keep_names=True, mode='click'):
                 r.advance('bs')
                 j += 1
                 rest = raw[j:].lstrip()
-                if rest and re.match(r'^[a-z_][a-z_0-9]*(\s|$)', rest):
+                if rest and re.match(r'^[a-z_][a-z_0-9]*(\s|$|["\',])', rest):
                     break          # 同一行尾随命令（如 `…」\\bg "x.jpg",4`）
                 continue
             if c == '@':
@@ -227,6 +287,27 @@ def parse(text, keep_names=True, mode='click'):
     if r.pending:
         r.segs.append([r.box, r.pending, 1])
         r.pending = ''
+    if clk and mode == 'dual':
+        exp, nseg = [], 0
+        for boxid, txt, kind in r.segs:
+            if kind != 0 or not any(ch in clk for ch in txt):
+                exp.append([boxid, txt, kind]); continue
+            parts = split_clickstr(txt, clk)
+            nseg += len(parts)
+            exp.extend([boxid, p, 0] for p in parts)
+        r.segs = exp
+        r.stats['clickstr'] = clk
+        r.stats['click_segs'] = nseg
+    # `_` 是引擎的「等待失效」标记（不显示）：clickstr 切段之后再吞掉，
+    # 这样 `_」` 既不断段、也不会把 `_` 漏进成品（CLUTCH☆FEVER 3 处，均为 `_）`）。
+    n_us = 0
+    for sg in r.segs:
+        if '_' in sg[1]:
+            new = UNDER_ESC.sub('', sg[1])
+            if new != sg[1]:
+                n_us += sg[1].count('_'); sg[1] = new
+    if n_us:
+        r.stats['under_esc'] = n_us
     return r
 
 def merge_quotes(segs, stats, enable=False):
@@ -246,6 +327,35 @@ def merge_quotes(segs, stats, enable=False):
             out.append([boxid, t, 0, kind])
     return out
 
+def reorder_appendix(text, labels):
+    """把指定 `*label` 整块移到末尾（附录：座談会/おまけ等，游戏里在通关后才进入）。
+
+    判据＝**标签块边界**（L0：NScripter 的 `*label` 一律行首），不涉及任何内容判断。
+    `labels` 按给定顺序追加到末尾；不存在的标签忽略。
+    """
+    if not labels:
+        return text, []
+    lines = text.split('\n')
+    head, blocks = [], []
+    for ln in lines:
+        m = re.match(r'^\*(\w+)', ln)
+        if m:
+            blocks.append([m.group(1), [ln]])
+        elif not blocks:
+            head.append(ln)
+        else:
+            blocks[-1][1].append(ln)
+    want = [w for w in labels if any(b[0] == w for b in blocks)]
+    keep = [b for b in blocks if b[0] not in want]
+    tail = []
+    for w in want:
+        for b in blocks:
+            if b[0] == w:
+                tail.extend(b[1])
+    out = list(head) + [x for b in keep for x in b[1]] + tail
+    return '\n'.join(out), want
+
+
 def render(r):
     segs = merge_quotes(r.segs, r.stats, enable=bool(r.stats.get('merge_quote')))
     order, boxmap = [], {}
@@ -260,6 +370,11 @@ def render(r):
     out = []
     r.stats['boxes'] = len(order)
     for b in order:
+        # ★ 2026-11-02 选项插在**下一框之前**（原实现 append 在本框各行之后 ⇒ 差一框：
+        #   `csel` 的选项会落到第一个分支台词之后）。self.box 在 advance() 后才 +1，
+        #   所以 csel 时记下的 box id 就是「下一框」⇒ 在它之前输出才是正确位置。
+        for o in optmap.get(b, []):
+            out.append(o)
         items = boxmap[b]
         names = [t for t, k in items if k == 1]
         g = [t for t, k in items if k == 0]
@@ -271,8 +386,6 @@ def render(r):
                 out.append(''.join(g))     # 页版（同框合并行）
         else:
             out.extend(g)
-        for o in optmap.get(b, []):
-            out.append(o)
     for b in optmap:
         if b not in boxmap:
             out.extend(optmap[b])
@@ -290,6 +403,13 @@ def main():
                     help='click=一次点击一行（@/\\/br 全断）；page=一页一行（只在 \\ 清框处断）')
     ap.add_argument('--names', choices=['keep', 'drop'], default='keep',
                     help='名札处理：keep=并入同一行（正文框内名札，默认）／drop=剔除（独立名字窗）')
+    ap.add_argument('--clickstr', choices=['auto', 'off'], default='auto',
+                    help='auto=读 *define 的 clickstr，dual 模式下按「引擎点击符」把一框再切成多次点击'
+                         '（段行＋合并行）；off=不切')
+    ap.add_argument('--keep-sys-opts', action='store_true',
+                    help='保留匹配系统菜单词的选项（禁止按内容过滤；特典/おまけ入口等）')
+    ap.add_argument('--appendix', default='',
+                    help='逗号分隔的 `*label` 名：整块移到末尾（座談会/おまけ等通关后才进入的附录）')
     a = ap.parse_args()
     title = a.title or os.path.basename(os.path.abspath(a.dir))
     sp = find_script(a.dir)
@@ -298,10 +418,16 @@ def main():
     text, how = decode_dat(sp)
     if text is None:
         print(json.dumps({'title': title, 'error': 'DECODE_FAIL'}, ensure_ascii=False)); sys.exit(3)
-    r = parse(text, keep_names=(a.names == 'keep'), mode=a.mode)
+    app = [x.strip().lstrip('*') for x in a.appendix.split(',') if x.strip()]
+    text, app_done = reorder_appendix(text, app)
+    clk = find_clickstr(text) if a.clickstr == 'auto' else ''
+    r = parse(text, keep_names=(a.names == 'keep'), mode=a.mode, clk=clk,
+              keep_sys_opts=a.keep_sys_opts)
     lines = render(r)
     r.stats['lines'] = len(lines)
     info = dict(title=title, script=os.path.relpath(sp, a.dir), decode=how, mode=a.mode, **r.stats)
+    if app_done:
+        info['appendix'] = app_done
     info['plates'] = dict(sorted(r.plates.items(), key=lambda x: -x[1])[:12])
     if not a.dry:
         os.makedirs(a.out_dir, exist_ok=True)

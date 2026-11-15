@@ -27,7 +27,7 @@ BOM = b'\xef\xbb\xbf'
 CLEAN = 'きょうはいい天気ですね。\n「そうですね。」\n'
 
 
-def case(name, text, e=(), w=(), not_e=(), names=(), bom=True, nl='\n', note='',
+def case(name, text, e=(), w=(), not_e=(), not_w=(), names=(), bom=True, nl='\n', note='',
          kw=None, charset=None, no_charset=False):
     """构造一个样本：text 按 nl 连接行；e/w/not_e 是对 [E]/[W] 消息的子串断言。
 
@@ -37,7 +37,7 @@ def case(name, text, e=(), w=(), not_e=(), names=(), bom=True, nl='\n', note='',
     """
     body = text.replace('\n', nl)
     return dict(name=name, data=(BOM if bom else b'') + body.encode('utf-8'),
-                e=list(e), w=list(w), not_e=list(not_e), names=list(names), note=note,
+                e=list(e), w=list(w), not_e=list(not_e), not_w=list(not_w), names=list(names), note=note,
                 kw=dict(kw or {}), charset=charset, no_charset=no_charset)
 
 
@@ -59,10 +59,10 @@ CASES = [
     case('控制符', 'テスト\x01です。\n', e=['控制符(C0)']),
 
     # ── 引号 / 行首 ───────────────────────────────────────
-    case('引号不配对', 'これは「テストです。\n', e=['引号不配对'],
-         note='第二高频漏检'),
-    case('行首孤立标点', '、これはテストです。\n', e=['行首孤立标点']),
-    case('颜文字单侧括号', 'テスト（￣Д￣；です。\n', not_e=['引号不配对'],
+    case('引号不配对', 'これは「テストです。\n', w=['引号不配对'],
+         note='失衡为来源待查探针，不自动配平'),
+    case('行首孤立标点', '、これはテストです。\n', w=['行首孤立标点']),
+    case('颜文字单侧括号', 'テスト（￣Д￣；です。\n', not_w=['引号不配对'],
          note='颜文本就单侧括号，不得误报'),
 
     # ── 说话人残留 ────────────────────────────────────────
@@ -76,8 +76,8 @@ CASES = [
          note='含句读的【】是上屏特效，非名札'),
 
     # ── 内容层 ────────────────────────────────────────────
-    case('句号缺失', 'テスト、ああ\n' * 320, e=['全篇 0 个句号'],
-         note='cp932 0x8140 槽被当全角空格清洗'),
+    case('句号缺失', 'テスト、ああ\n' * 320, w=['全篇 0 个句号'],
+         note='句号统计仅定位可能的解码问题'),
     case('插入宏残留', 'テスト@GameLastです。\n', e=['未解析插入宏']),
     case('主角名缺失', CLEAN, w=['主角名'], names=['アリス']),
     case('主角名命中', CLEAN + '由奈はここにいる。\n', not_e=[], w=[], names=['由奈']),
@@ -86,10 +86,10 @@ CASES = [
     case('双版-声明且结构相符', "きょうはいい天気ですね。\nはい、そうですね。\nきょうはいい天気ですね。はい、そうですね。\nあしたも晴れるといいですね。\nええ、そう思いますよ。\nあしたも晴れるといいですね。ええ、そう思いますよ。\nそれはよかった。\nほんとうに。\nそれはよかった。ほんとうに。\n", kw={'dual': True},
          not_e=['未检出足够的合并行', '未加 `--dual`'],
          note='三条合并行＋--dual ⇒ 版式一致，不应报版式类 E'),
-    case('双版-声明但无合并行', CLEAN, e=['未检出足够的合并行'], kw={'dual': True},
-         note='单版硬声明 --dual ⇒ 必须报（合并行被删/被拆的典型）'),
-    case('双版-检出但未声明', "きょうはいい天気ですね。\nはい、そうですね。\nきょうはいい天気ですね。はい、そうですね。\nあしたも晴れるといいですね。\nええ、そう思いますよ。\nあしたも晴れるといいですね。ええ、そう思いますよ。\nそれはよかった。\nほんとうに。\nそれはよかった。ほんとうに。\n", e=['未加 `--dual`'],
-         note='有合并行却没 --dual ⇒ 引号类判据会误报，必须拦'),
+    case('双版-声明但无合并行', CLEAN, w=['未检出紧邻拼接候选'], kw={'dual': True},
+         note='没有来源映射时仅警告，不能按拼接统计判版式'),
+    case('双版-检出但未声明', "きょうはいい天気ですね。\nはい、そうですね。\nきょうはいい天気ですね。はい、そうですね。\nあしたも晴れるといいですね。\nええ、そう思いますよ。\nあしたも晴れるといいですね。ええ、そう思いますよ。\nそれはよかった。\nほんとうに。\nそれはよかった。ほんとうに。\n", w=['紧邻拼接候选'],
+         note='巧合同文不自动改判双版，只提供候选'),
 
     # ── 字符台账（2026-10-27 新增）────────────────────────────────
     # ★ 这四条补的是一个真实的网洞：此前所有用例都没有台账，
@@ -144,16 +144,22 @@ def run(c, verbose):
                 chars = sorted({ch for ch in c['data'].decode('utf-8', 'replace')
                                 if ch not in '\n\r' and not CJK(ch) and ch != '\ufeff'})
                 body = '# 自动登记（selftest 基线）\n' + ''.join(ch + '\t1\n' for ch in chars)
-            io.open(os.path.join(allow_dir, 'sample.charset'), 'w',
-                    encoding='utf-8', newline='\n').write(body)
+            with io.open(os.path.join(allow_dir, 'sample.charset'), 'w',
+                         encoding='utf-8', newline='\n') as charset_file:
+                charset_file.write(body)
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            check(p, c['names'], 200.0, True, **c['kw'])
+            passed = check(p, c['names'], 200.0, True, **c['kw'])
         out = buf.getvalue()
     finally:
         shutil.rmtree(d, ignore_errors=True)
     E, W = split_msgs(out)
     bad = []
+    if bool(E) != bool(c['e']) or passed != (not E):
+        bad.append('ERROR 集合或返回值与预期不符')
+    for message in E:
+        if not any(expected in message for expected in c['e']):
+            bad.append('未预期 [E] %r' % message)
     for s in c['e']:
         if not any(s in x for x in E):
             bad.append('应有 [E] %r' % s)
@@ -163,6 +169,9 @@ def run(c, verbose):
     for s in c['not_e']:
         if any(s in x for x in E):
             bad.append('不应有 [E] %r' % s)
+    for s in c['not_w']:
+        if any(s in x for x in W):
+            bad.append('不应有 [W] %r' % s)
     if verbose or bad:
         print('  %s [E] %s' % (c['name'], E or '—'))
         print('  %s [W] %s' % (c['name'], W or '—'))

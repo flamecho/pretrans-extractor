@@ -11,8 +11,8 @@
   `12. …`                   顶层有序列表
 
 用法:
-  python scripts/split_md.py references/S6-lines-options.md --dry-run
-  python scripts/split_md.py references/S6-lines-options.md \
+  python scripts/split_md.py references/layout.md --dry-run
+  python scripts/split_md.py references/layout.md \
          --names "04-lines-options-a.md,04-lines-options-b.md"    # 语义命名（推荐）
   python scripts/split_md.py references --all --limit 10240       # 批量：只处理超限者
 
@@ -209,7 +209,7 @@ def do_one(path, a):
         names = ['%s-%d%s' % (stem, i, ext) for i in range(1, n + 1)]
 
     # 组装：页头 + 首册带原 preamble（去掉原 H1）+ 正文
-    nav = a.nav or '00-index.md'
+    nav = a.nav or 'index.md'
     outs = []
     for i, v in enumerate(vols, 1):
         hdr = ['# %s%s' % (h1, '（%d/%d）' % (i, n) if n > 1 else ''), '',
@@ -273,7 +273,7 @@ def main():
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--force', action='store_true')
     ap.add_argument('--names', help='逗号分隔的新册名，数量须与切点一致')
-    ap.add_argument('--nav', help='导航文件名（默认 00-index.md）')
+    ap.add_argument('--nav', help='导航文件名（默认 index.md）')
     ap.add_argument('--unit', help='自定义边界正则')
     ap.add_argument('--all', action='store_true')
     a = ap.parse_args()

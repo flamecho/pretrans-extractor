@@ -1,0 +1,17 @@
+{
+  "description": "妖ノ宮 Japanese retail v1.0, source-specific scope decisions; see analysis report.",
+  "include_script_speakers": true,
+  "system_files": ["main.txt", "call.txt", "private.txt", "patch.txt", "trial.txt"],
+  "help_functions": ["チュートリアル", "【開幕】虎の巻"],
+  "system_choice_files": ["introduction.txt", "prologue.txt", "70_pet.txt"],
+  "system_text_nodes": {
+    "99_subroutine.txt": [705, 969],
+    "70_pet.txt": [374, 429, 605, 759, 1044, 1054, 1074, 1095, 1161, 1167, 1210, 1227, 1233, 1238, 1246, 1252, 1257, 1265, 1271, 1276, 1284, 1290, 1295, 1303, 1309, 1314, 1322, 1328, 1333, 1341, 1347, 1352, 1518]
+  },
+  "debug_files": ["accident.txt"],
+  "debug_functions": ["各種数値確認"],
+  "preserve_fault_functions": ["帝【真話】０３", "帝【真話】０４"],
+  "debug_speakers": ["テスト"],
+  "narration_speakers": ["", "地の文", "地の分", "状況説明", "解説"],
+  "constants": {"%C_Debug": 0, "%C_Trial": 0, "%C_Version": 1}
+}
